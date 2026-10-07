@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
+    <title>Presupuesto Abierto · Santa Fe</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">Municipalidad de Santa Fe</p>
+        <h1>Presupuesto abierto</h1>
+        <p class="subtitle">Evolución de la ejecución de gastos por objeto</p>
+      </div>
+      <p id="updated-at" class="update-note" aria-live="polite">Cargando información…</p>
+    </header>
+
+    <main>
+      <section class="panel filters" aria-labelledby="filters-title">
+        <div>
+          <p class="eyebrow">Explorar</p>
+          <h2 id="filters-title">Filtros</h2>
+        </div>
+        <div class="filter-grid">
+          <label>Períodos
+            <select id="period-filter" multiple aria-describedby="period-help"></select>
+            <small id="period-help">Usá Ctrl/Cmd para seleccionar más de un mes.</small>
+          </label>
+          <label>Secretaría / jurisdicción
+            <select id="jurisdiction-filter"></select>
+          </label>
+          <label>Programa
+            <select id="program-filter"></select>
+          </label>
+          <label>Fuente de financiamiento
+            <select id="source-filter"></select>
+          </label>
+          <label>Objeto del gasto
+            <select id="object-filter"></select>
+          </label>
+        </div>
+        <button id="clear-filters" class="text-button" type="button">Restablecer filtros</button>
+      </section>
+
+      <section class="summary-grid" aria-label="Resumen del filtro aplicado">
+        <article class="metric"><p>Crédito vigente</p><strong id="metric-current">—</strong></article>
+        <article class="metric"><p>Devengado</p><strong id="metric-accrued">—</strong><small id="metric-accrued-share">—</small></article>
+        <article class="metric"><p>Pagado</p><strong id="metric-paid">—</strong><small id="metric-paid-share">—</small></article>
+        <article class="metric"><p>Disponible</p><strong id="metric-available">—</strong><small id="metric-row-count">—</small></article>
+      </section>
+
+      <section class="two-columns">
+        <article class="panel chart-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Evolución</p>
+              <h2>Devengado y pagado acumulados</h2>
+            </div>
+            <div class="legend"><span class="legend-accrued"></span>Devengado <span class="legend-paid"></span>Pagado</div>
+          </div>
+          <div id="chart" class="chart" role="img" aria-label="Gráfico de evolución de devengado y pagado"></div>
+          <p id="chart-note" class="note"></p>
+        </article>
+
+        <article class="panel change-panel">
+          <p class="eyebrow">Variación</p>
+          <h2>Último período frente al anterior</h2>
+          <dl id="change-summary" class="change-list"></dl>
+          <p class="note">La variación compara el mismo conjunto de filtros en los dos últimos períodos disponibles.</p>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Detalle</p>
+            <h2 id="table-title">Partidas con mayor devengado</h2>
+          </div>
+          <label class="compact-label">Ordenar por
+            <select id="sort-filter">
+              <option value="devengado_centavos">Devengado</option>
+              <option value="credito_vigente_centavos">Crédito vigente</option>
+              <option value="pagado_centavos">Pagado</option>
+              <option value="credito_disponible_centavos">Crédito disponible</option>
+            </select>
+          </label>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Período</th><th>Secretaría / jurisdicción</th><th>Programa</th><th>Fuente</th><th>Objeto</th>
+                <th class="number">Crédito vigente</th><th class="number">Devengado</th><th class="number">Pagado</th><th class="number">Disponible</th>
+              </tr>
+            </thead>
+            <tbody id="detail-table"></tbody>
+          </table>
+        </div>
+        <p id="table-note" class="note"></p>
+      </section>
+    </main>
+
+    <footer>
+      <p>Fuente: Municipalidad de Santa Fe de la Vera Cruz · Estado de Ejecución del Presupuesto de Gastos por Objeto.</p>
+      <p>Los importes se expresan en pesos argentinos y los datos se publican tal como fueron informados en los PDF mensuales.</p>
+    </footer>
+    <script src="app.js"></script>
+  </body>
+</html>
