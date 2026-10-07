@@ -9,9 +9,26 @@ const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "num
 let data = [];
 
 function parseCSV(text) {
-  const [header, ...lines] = text.trim().split(/\r?\n/);
-  const columns = header.split(",");
-  return lines.map((line) => Object.fromEntries(line.split(",").map((value, index) => [columns[index], value])));
+  // Los importes argentinos llevan coma decimal; se respeta el entrecomillado
+  // CSV para no desplazar las columnas al encontrar una coma dentro de un dato.
+  const records = [];
+  let record = [], field = "", quoted = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index], next = text[index + 1];
+    if (char === '"' && quoted && next === '"') { field += '"'; index += 1; }
+    else if (char === '"') quoted = !quoted;
+    else if (char === "," && !quoted) { record.push(field); field = ""; }
+    else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && next === "\n") index += 1;
+      record.push(field);
+      if (record.some((value) => value !== "")) records.push(record);
+      record = []; field = "";
+    } else field += char;
+  }
+  record.push(field);
+  if (record.some((value) => value !== "")) records.push(record);
+  const [columns, ...rows] = records;
+  return rows.map((row) => Object.fromEntries(columns.map((column, index) => [column, row[index] ?? ""])));
 }
 function cents(row, field) { return Number(row[field] || 0); }
 function date(row) { const [day, month, year] = row.fecha_corte.split("/"); return new Date(Date.UTC(year, month - 1, day)); }
@@ -32,6 +49,18 @@ function fillFilters() {
   populateSelect("#program-filter", sortUnique(data.map((r) => r.programa_nombre)), "Todos los programas");
   populateSelect("#source-filter", sortUnique(data.map((r) => r.fuente_financiamiento_nombre)), "Todas las fuentes");
   populateSelect("#object-filter", sortUnique(data.map((r) => `${r.objeto_gasto_codigo} · ${r.objeto_gasto_nombre}`)), "Todos los objetos");
+}
+function renderSecretaryDirectory() {
+  const byJurisdiction = new Map();
+  data.forEach((row) => {
+    const programs = byJurisdiction.get(row.jurisdiccion_nombre) || new Map();
+    programs.set(row.programa_nombre, row.programa_codigo);
+    byJurisdiction.set(row.jurisdiccion_nombre, programs);
+  });
+  $("#secretary-directory").innerHTML = [...byJurisdiction.entries()].sort(([a], [b]) => a.localeCompare(b, "es")).map(([name, programs]) => {
+    const list = [...programs.entries()].sort(([a], [b]) => a.localeCompare(b, "es"));
+    return `<details><summary>${escapeHtml(name)} <span class="note">(${list.length} programas)</span></summary><div class="secretary-content"><button class="filter-secretary" type="button" data-jurisdiction="${escapeHtml(name)}">Ver datos de esta secretaría</button><ul>${list.map(([program, code]) => `<li><strong>${escapeHtml(code)}</strong> · ${escapeHtml(program)}</li>`).join("")}</ul></div></details>`;
+  }).join("");
 }
 function filteredRows() {
   const periods = selectedPeriods();
@@ -88,9 +117,16 @@ function render() { const rows = filteredRows(); renderMetrics(rows); renderChar
 async function init() {
   try {
     data = (await Promise.all(DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
-    fillFilters(); render();
+    fillFilters(); renderSecretaryDirectory(); render();
     $("#updated-at").textContent = `${data.length.toLocaleString("es-AR")} partidas cargadas · último cierre: ${labelPeriod(data.reduce((latest, row) => date(row) > date(latest) ? row : latest))}`;
     document.querySelectorAll("select").forEach((select) => select.addEventListener("change", render));
+    $("#secretary-directory").addEventListener("click", (event) => {
+      const button = event.target.closest(".filter-secretary");
+      if (!button) return;
+      $("#jurisdiction-filter").value = button.dataset.jurisdiction;
+      render();
+      document.querySelector(".summary-grid").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     $("#clear-filters").addEventListener("click", () => {
       ["#jurisdiction-filter", "#program-filter", "#source-filter", "#object-filter", "#sort-filter"].forEach((id) => { $(id).selectedIndex = 0; });
       [...$("#period-filter").options].forEach((option) => option.selected = true);
