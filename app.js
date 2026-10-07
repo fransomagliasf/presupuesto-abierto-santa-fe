@@ -119,7 +119,7 @@ function executionAssessment(values, period) {
   const actual = executionPercent(values.accrued, values.current);
   if (actual === null || !period) return { actual, expected: null, status: "unknown" };
   const month = Number(period.split("/")[1]), expected = month * 100 / 12, difference = actual - expected;
-  const status = difference < -10 ? "red" : difference < -5 ? "yellow" : difference <= 5 ? "green" : "blue";
+  const status = difference < -10 ? "red" : difference < -5 ? "yellow" : difference <= 5 ? "green" : difference < 10 ? "yellow" : "blue";
   return { actual, expected, status };
 }
 function totalCells(values, period) {
