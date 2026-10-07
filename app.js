@@ -1,6 +1,13 @@
 const DATA_FILES = [
   "data/processed/gastos_por_objeto_2026-01-31.csv",
   "data/processed/gastos_por_objeto_2026-02-28.csv",
+  "data/processed/gastos_por_objeto_2026-03-31.csv",
+  "data/processed/gastos_por_objeto_2026-04-30.csv",
+  "data/processed/gastos_por_objeto_2026-05-31.csv",
+  "data/processed/gastos_por_objeto_2026-06-30.csv",
+  "data/processed/gastos_por_objeto_2026-07-31.csv",
+  "data/processed/gastos_por_objeto_2026-08-31.csv",
+  "data/processed/gastos_por_objeto_2026-09-30.csv",
 ];
 const fields = ["credito_vigente_centavos", "devengado_centavos", "pagado_centavos", "credito_disponible_centavos"];
 const $ = (selector) => document.querySelector(selector);
