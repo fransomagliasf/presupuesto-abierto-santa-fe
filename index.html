@@ -54,10 +54,13 @@
                 <div class="program-actions">
                   <button id="select-all-programs" class="small-action" type="button">Todos</button>
                   <button id="clear-programs" class="small-action" type="button">Ninguno</button>
+                  <button id="toggle-program-panel" class="small-action" type="button" aria-expanded="true">Reducir</button>
                 </div>
               </div>
-              <p class="note">Marcá los programas que querés analizar o elegí “Únicamente” para quedarte con uno.</p>
-              <div id="program-filter" class="program-list" role="group" aria-label="Programas incluidos"></div>
+              <div id="program-panel-body">
+                <p class="note">Marcá los programas que querés analizar o elegí “Únicamente” para quedarte con uno.</p>
+                <div id="program-filter" class="program-list" role="group" aria-label="Programas incluidos"></div>
+              </div>
               </section>
             </div>
           </div>
@@ -88,9 +91,9 @@
           <div class="section-heading">
             <div>
               <p class="eyebrow">Evolución</p>
-              <h2>Devengado y pagado acumulados</h2>
+              <h2 id="chart-title">Ejecución real y ritmo esperado</h2>
             </div>
-            <div class="legend"><span class="legend-accrued"></span>Devengado <span class="legend-paid"></span>Pagado</div>
+            <div id="chart-legend" class="legend"><span class="legend-execution"></span>% ejecutado <span class="legend-expected"></span>% esperado</div>
           </div>
           <div class="chart-tabs" role="tablist" aria-label="Tipo de gráfico">
             <button class="chart-tab active" type="button" role="tab" data-chart="line">Líneas</button>
@@ -116,6 +119,7 @@
           </div>
           <label class="compact-label">Desagregar por
             <select id="detail-breakdown-filter">
+              <option value="program">Programa</option>
               <option value="source">Fuente de financiamiento</option>
               <option value="object">Objeto del gasto</option>
             </select>
@@ -127,7 +131,7 @@
               <tr>
                 <th>Secretaría / jurisdicción</th><th>Desagregación</th>
                 <th class="number">Crédito vigente</th><th class="number">Devengado</th><th class="number">Pagado</th><th class="number">Disponible</th>
-                <th class="number">% ejecutado <span class="info-icon" title="Cálculo: devengado ÷ crédito vigente × 100. Referencia lineal: mes de corte ÷ 12 × 100. Verde: dentro de ±5 puntos porcentuales; amarillo: entre 5 y 10 puntos de desvío; rojo: más de 10 puntos por debajo; azul: al menos 10 puntos por encima. El color orienta y no implica una evaluación de calidad del gasto." aria-label="Información sobre el cálculo y la escala">i</span></th>
+                <th class="number">% ejecutado <span class="info-help" tabindex="0" aria-label="Información sobre cálculo y colores">i<span class="info-card"><strong>Cómo se interpreta</strong><span><b class="key-execution">Ejecutado</b> = devengado ÷ crédito vigente × 100.</span><span><b class="key-expected">Esperado</b> = mes de corte ÷ 12 × 100.</span><span class="scale-line"><i class="scale-dot red"></i><b>Rojo:</b> más de 10 puntos por debajo.</span><span class="scale-line"><i class="scale-dot yellow"></i><b>Amarillo:</b> entre 5 y 10 puntos de desvío.</span><span class="scale-line"><i class="scale-dot green"></i><b>Verde:</b> dentro de ±5 puntos.</span><span class="scale-line"><i class="scale-dot blue"></i><b>Azul:</b> al menos 10 puntos por encima.</span><small>Es una referencia temporal, no una evaluación de la calidad del gasto.</small></span></span></th>
               </tr>
             </thead>
             <tbody id="detail-table"></tbody>

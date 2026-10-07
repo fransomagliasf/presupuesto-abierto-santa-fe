@@ -61,14 +61,32 @@ function aggregatePeriods(rows) {
   return [...byPeriod.values()].sort((a, b) => date({ fecha_corte: a.period }) - date({ fecha_corte: b.period }));
 }
 function selectedPeriodSequence() { return [...selectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
+function selectionDetails(latestPeriod, previousPeriod) {
+  const jurisdictionSelected = $("#jurisdiction-filter").value;
+  const availablePrograms = programsForSelectedJurisdiction();
+  const selectedNames = availablePrograms.filter((program) => selectedPrograms.has(program));
+  let programs = "Todos los programas";
+  if (jurisdictionSelected) {
+    if (!selectedNames.length) programs = "Ningún programa";
+    else if (selectedNames.length === availablePrograms.length) programs = `Todos (${selectedNames.length})`;
+    else if (selectedNames.length <= 2) programs = selectedNames.join("; ");
+    else programs = `${selectedNames.slice(0, 2).join("; ")} y ${selectedNames.length - 2} más`;
+  }
+  return {
+    jurisdiction: jurisdictionSelected || "Todas las secretarías",
+    programs,
+    period: latestPeriod ? labelPeriod(latestPeriod) : "Sin período seleccionado",
+    previous: previousPeriod ? labelPeriod(previousPeriod) : "",
+    source: $("#source-filter").value,
+    object: $("#object-filter").value,
+  };
+}
 function selectionDescription(latestPeriod, previousPeriod) {
-  const jurisdiction = $("#jurisdiction-filter").value || "Todas las secretarías";
-  const programCount = selectedPrograms.size;
-  const programLabel = $("#jurisdiction-filter").value ? `${programCount} de ${programsForSelectedJurisdiction().length} programas` : "Todos los programas";
-  const pieces = [jurisdiction, programLabel, `corte ${latestPeriod || "sin períodos"}`];
-  if (previousPeriod) pieces.push(`variación vs. ${previousPeriod}`);
-  if ($("#source-filter").value) pieces.push($("#source-filter").value);
-  if ($("#object-filter").value) pieces.push($("#object-filter").value);
+  const details = selectionDetails(latestPeriod, previousPeriod);
+  const pieces = [`Secretaría: ${details.jurisdiction}`, `Programas: ${details.programs}`, `Período: ${details.period}`];
+  if (details.previous) pieces.push(`Comparación: ${details.previous}`);
+  if (details.source) pieces.push(`Fuente: ${details.source}`);
+  if (details.object) pieces.push(`Objeto: ${details.object}`);
   return pieces.join(" · ");
 }
 function renderMetrics(rows, latestPeriod, previousPeriod, previousRows) {
@@ -81,32 +99,43 @@ function renderMetrics(rows, latestPeriod, previousPeriod, previousRows) {
   const expected = monthNumber ? monthNumber * 100 / 12 : null;
   $("#metric-execution-benchmark").textContent = expected === null ? "Sin período" : `Ritmo lineal: ${formatPercent(expected)}`;
   const previousCredit = previousRows ? sum(previousRows, "credito_vigente_centavos") : null;
-  $("#metric-current-change").textContent = previousCredit === null ? "Sin período previo seleccionado" : `Variación vs. ${previousPeriod}: ${previousCredit <= current ? "+" : "−"}${formatCents(Math.abs(current - previousCredit))}`;
+  $("#metric-current-change").textContent = previousCredit === null ? "Sin período previo seleccionado" : `Variación vs. ${labelPeriod(previousPeriod)}: ${previousCredit <= current ? "+" : "−"}${formatCents(Math.abs(current - previousCredit))}`;
   $("#summary-context").textContent = selectionDescription(latestPeriod, previousPeriod);
 }
 function chartTooltip(value, series) {
+  if (series === "execution" || series === "expected") {
+    const difference = value.execution === null ? null : value.execution - value.expected;
+    return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key key-execution">Ejecución real</span><strong>${formatPercent(value.execution)}</strong></div><div class="tooltip-row"><span class="tooltip-key key-expected">Ritmo esperado</span><strong>${formatPercent(value.expected)}</strong></div><div class="tooltip-divider"></div><div class="tooltip-row"><span>Diferencia</span><strong class="${difference >= 0 ? "positive" : "negative"}">${difference === null ? "—" : `${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`}</strong></div><p>El esperado distribuye el 100% en doce meses.</p>`;
+  }
   const label = series === "accrued" ? "Devengado" : "Pagado";
-  return `<strong>${escapeHtml(labelPeriod(value.period))}</strong><span>${label}: <b>${formatCents(value[series])}</b></span><span>Devengado: <b>${formatCents(value.accrued)}</b></span><span>Ejecutado: <b>${formatPercent(executionPercent(value.accrued, value.current))}</b></span>`;
+  const keywordClass = series === "accrued" ? "key-accrued" : "key-paid";
+  return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key ${keywordClass}">${label}</span><strong>${formatCents(value[series])}</strong></div><div class="tooltip-row"><span>Crédito vigente</span><strong>${formatCents(value.current)}</strong></div><div class="tooltip-row"><span>% ejecutado</span><strong>${formatPercent(value.execution)}</strong></div>`;
 }
 function renderChart(rows) {
-  const values = aggregatePeriods(rows), chart = $("#chart");
+  const values = aggregatePeriods(rows).map((value) => ({ ...value, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 })), chart = $("#chart");
   if (!values.length) { chart.innerHTML = "<p class='note'>No hay datos para esta combinación de filtros.</p>"; return; }
-  const width = 760, height = 290, pad = { top: 22, right: 24, bottom: 42, left: 74 }, max = Math.max(...values.flatMap((v) => [v.accrued, v.paid]), 1);
+  const width = 760, height = 290, pad = { top: 22, right: 24, bottom: 42, left: 74 };
+  const max = activeChart === "line" ? Math.max(100, Math.ceil(Math.max(...values.flatMap((v) => [v.execution || 0, v.expected])) / 25) * 25) : Math.max(...values.flatMap((v) => [v.accrued, v.paid]), 1);
   const x = (i) => values.length === 1 ? width / 2 : pad.left + i * (width - pad.left - pad.right) / (values.length - 1);
   const y = (value) => height - pad.bottom - value / max * (height - pad.top - pad.bottom);
-  const axes = [0, .5, 1].map((share) => { const yy = y(max * share); return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}"/><text class="axis-label" x="${pad.left - 8}" y="${yy + 4}" text-anchor="end">${formatCents(max * share)}</text>`; }).join("");
+  const ticks = activeChart === "line" ? Array.from({ length: Math.floor(max / 25) + 1 }, (_, index) => index * 25) : [0, max * .5, max];
+  const axes = ticks.map((tick) => { const yy = y(tick); return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}"/><text class="axis-label" x="${pad.left - 8}" y="${yy + 4}" text-anchor="end">${activeChart === "line" ? `${tick}%` : formatCents(tick)}</text>`; }).join("");
   const labels = values.map((value, index) => `<text class="axis-label" x="${x(index)}" y="${height - 12}" text-anchor="middle">${escapeHtml(labelPeriod(value.period))}</text>`).join("");
   let marks = "";
   if (activeChart === "line") {
     const path = (field) => values.map((value, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(value[field]).toFixed(1)}`).join(" ");
-    marks = `<path class="line-accrued" d="${path("accrued")}"/><path class="line-paid" d="${path("paid")}"/>` + values.map((value, index) => `<circle class="chart-point point-accrued" data-index="${index}" data-series="accrued" cx="${x(index)}" cy="${y(value.accrued)}" r="5"/><circle class="chart-point point-paid" data-index="${index}" data-series="paid" cx="${x(index)}" cy="${y(value.paid)}" r="5"/>`).join("");
+    marks = `<path class="line-execution" d="${path("execution")}"/><path class="line-expected" d="${path("expected")}"/>` + values.map((value, index) => `<circle class="chart-point point-execution" data-index="${index}" data-series="execution" cx="${x(index)}" cy="${y(value.execution || 0)}" r="5"/><circle class="chart-point point-expected" data-index="${index}" data-series="expected" cx="${x(index)}" cy="${y(value.expected)}" r="4"/>`).join("");
+    $("#chart-title").textContent = "Ejecución real y ritmo esperado";
+    $("#chart-legend").innerHTML = '<span class="legend-execution"></span>% ejecutado <span class="legend-expected"></span>% esperado';
   } else {
     const band = Math.min(26, (width - pad.left - pad.right) / Math.max(values.length * 3, 3));
     marks = values.map((value, index) => `<rect class="chart-point bar-accrued" data-index="${index}" data-series="accrued" x="${x(index) - band - 2}" y="${y(value.accrued)}" width="${band}" height="${height - pad.bottom - y(value.accrued)}" rx="3"/><rect class="chart-point bar-paid" data-index="${index}" data-series="paid" x="${x(index) + 2}" y="${y(value.paid)}" width="${band}" height="${height - pad.bottom - y(value.paid)}" rx="3"/>`).join("");
+    $("#chart-title").textContent = "Devengado y pagado acumulados";
+    $("#chart-legend").innerHTML = '<span class="legend-accrued"></span>Devengado <span class="legend-paid"></span>Pagado';
   }
   chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${axes}${marks}${labels}</svg><div id="chart-tooltip" class="chart-tooltip" role="status"></div>`;
   chart.dataset.values = JSON.stringify(values);
-  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : "Los valores son acumulados al cierre de cada mes. Posate sobre un punto o barra para ver el detalle.";
+  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "Los importes son acumulados al cierre de cada mes. Posate sobre una barra para ver el detalle.";
 }
 function renderChanges(rows) {
   const values = aggregatePeriods(rows), container = $("#change-summary");
@@ -122,23 +151,27 @@ function executionAssessment(values, period) {
   const status = difference < -10 ? "red" : difference < -5 ? "yellow" : difference <= 5 ? "green" : difference < 10 ? "yellow" : "blue";
   return { actual, expected, status };
 }
-function totalCells(values, period) {
+function columnShare(value, total) { return total ? `${(value / total * 100).toLocaleString("es-AR", { maximumFractionDigits: 1 })}%` : "—"; }
+function amountCell(value, columnTotal) { return `<td class="number"><span>${formatCents(value)}</span><small class="cell-share">(${columnShare(value, columnTotal)} del total)</small></td>`; }
+function totalCells(values, period, columnTotals) {
   const assessment = executionAssessment(values, period);
   const difference = assessment.actual === null ? null : assessment.actual - assessment.expected;
   const title = assessment.expected === null ? "Porcentaje no disponible" : `${formatPercent(assessment.actual)} ejecutado; ritmo lineal esperado a ${period}: ${formatPercent(assessment.expected)}; diferencia ${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} puntos porcentuales.`;
-  return `<td class="number">${formatCents(values.current)}</td><td class="number">${formatCents(values.accrued)}</td><td class="number">${formatCents(values.paid)}</td><td class="number">${formatCents(values.available)}</td><td class="number"><span class="execution-pill execution-${assessment.status}" title="${escapeHtml(title)}">${formatPercent(assessment.actual)}</span></td>`;
+  return `${amountCell(values.current, columnTotals.current)}${amountCell(values.accrued, columnTotals.accrued)}${amountCell(values.paid, columnTotals.paid)}${amountCell(values.available, columnTotals.available)}<td class="number"><span class="execution-pill execution-${assessment.status}" title="${escapeHtml(title)}">${formatPercent(assessment.actual)}</span></td>`;
 }
 function renderTable(rows) {
   const latestPeriod = aggregatePeriods(rows).at(-1)?.period, visibleRows = rows.filter((row) => row.fecha_corte === latestPeriod), breakdown = $("#detail-breakdown-filter").value;
+  const columnTotals = totals(visibleRows);
   const bySecretary = new Map(); visibleRows.forEach((row) => { const group = bySecretary.get(row.jurisdiccion_nombre) || []; group.push(row); bySecretary.set(row.jurisdiccion_nombre, group); });
   const entries = [...bySecretary.entries()].sort(([, a], [, b]) => totals(b).accrued - totals(a).accrued);
   $("#detail-table").innerHTML = entries.map(([name, secretaryRows]) => {
     const open = expandedSecretaries.has(name), subdivisions = new Map();
-    secretaryRows.forEach((row) => { const label = breakdown === "source" ? row.fuente_financiamiento_nombre : `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`; const group = subdivisions.get(label) || []; group.push(row); subdivisions.set(label, group); });
-    const children = open ? [...subdivisions.entries()].sort(([, a], [, b]) => totals(b).accrued - totals(a).accrued).map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod)}</tr>`).join("") : "";
-    return `<tr class="secretary-total"><td><button class="expand-row" type="button" data-secretary="${escapeHtml(name)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(name)}</button></td><td>Total de secretaría</td>${totalCells(totals(secretaryRows), latestPeriod)}</tr>${children}`;
+    secretaryRows.forEach((row) => { const label = breakdown === "program" ? `${row.programa_codigo} · ${row.programa_nombre}` : breakdown === "source" ? row.fuente_financiamiento_nombre : `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`; const group = subdivisions.get(label) || []; group.push(row); subdivisions.set(label, group); });
+    const children = open ? [...subdivisions.entries()].sort(([, a], [, b]) => totals(b).accrued - totals(a).accrued).map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod, columnTotals)}</tr>`).join("") : "";
+    return `<tr class="secretary-total"><td><button class="expand-row" type="button" data-secretary="${escapeHtml(name)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(name)}</button></td><td>Total de secretaría</td>${totalCells(totals(secretaryRows), latestPeriod, columnTotals)}</tr>${children}`;
   }).join("");
-  $("#table-note").textContent = latestPeriod ? `Totales al ${latestPeriod}. Usá la flecha de cada secretaría para ver el detalle por ${breakdown === "source" ? "fuente de financiamiento" : "objeto del gasto"}.` : "No hay partidas para mostrar.";
+  const breakdownName = { program: "programa", source: "fuente de financiamiento", object: "objeto del gasto" }[breakdown];
+  $("#table-note").textContent = latestPeriod ? `Totales de ${labelPeriod(latestPeriod)}. Los porcentajes entre paréntesis muestran la participación sobre el total visible de cada columna. Usá la flecha para ver el detalle por ${breakdownName}.` : "No hay partidas para mostrar.";
 }
 function render() {
   const rows = filteredRows(), periodsSelected = selectedPeriodSequence(), latestPeriod = periodsSelected.at(-1), previousPeriod = periodsSelected.at(-2);
@@ -153,28 +186,28 @@ function resetFilters() {
 }
 function downloadSummary() {
   const canvas = document.createElement("canvas"), context = canvas.getContext("2d");
-  canvas.width = 1200; canvas.height = 675;
+  const selected = selectedPeriodSequence(), latestPeriod = selected.at(-1), previousPeriod = selected.at(-2), details = selectionDetails(latestPeriod, previousPeriod);
+  canvas.width = 1200; canvas.height = 760;
   context.fillStyle = "#f3f6fa"; context.fillRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = "#0b365b"; context.fillRect(0, 0, canvas.width, 190);
-  context.fillStyle = "#bfdef5"; context.font = "700 22px system-ui, sans-serif"; context.fillText("MUNICIPALIDAD DE SANTA FE", 64, 58);
-  context.fillStyle = "#ffffff"; context.font = "700 46px system-ui, sans-serif"; context.fillText("Resumen presupuestario", 64, 118);
-  context.fillStyle = "#d8e9f7"; context.font = "400 19px system-ui, sans-serif";
-  const summary = $("#summary-context").textContent;
-  context.fillText(summary.slice(0, 100), 64, 157);
+  context.fillStyle = "#0b365b"; context.fillRect(0, 0, canvas.width, 235);
+  context.fillStyle = "#bfdef5"; context.font = "700 20px system-ui, sans-serif"; context.fillText("MUNICIPALIDAD DE SANTA FE", 64, 45);
+  context.fillStyle = "#ffffff"; context.font = "700 42px system-ui, sans-serif"; context.fillText("Resumen de ejecución presupuestaria", 64, 98);
+  context.font = "600 18px system-ui, sans-serif"; context.fillStyle = "#ffffff"; context.fillText(`Secretaría: ${details.jurisdiction}`, 64, 138, 1070);
+  context.font = "400 17px system-ui, sans-serif"; context.fillStyle = "#d8e9f7"; context.fillText(`Programa(s): ${details.programs}`, 64, 171, 1070);
+  context.fillText(`Período analizado: ${details.period}${details.previous ? ` · Comparación: ${details.previous}` : ""}`, 64, 202, 1070);
   const items = [
-    ["Crédito vigente", "#metric-current"], ["Devengado", "#metric-accrued"], ["Pagado", "#metric-paid"],
-    ["Disponible", "#metric-available"], ["% ejecutado", "#metric-execution"],
+    ["Crédito vigente", "#metric-current", "#metric-current-change"], ["Devengado", "#metric-accrued", "#metric-accrued-share"], ["Pagado", "#metric-paid", "#metric-paid-share"],
+    ["Disponible", "#metric-available", "#metric-row-count"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"],
   ];
-  const gap = 18, margin = 64, cardWidth = (canvas.width - margin * 2 - gap * 2) / 3, cardHeight = 140, startY = 235;
-  items.forEach(([label, selector], index) => {
+  const gap = 18, margin = 64, cardWidth = (canvas.width - margin * 2 - gap * 2) / 3, cardHeight = 150, startY = 275;
+  items.forEach(([label, selector, detailSelector], index) => {
     const col = index % 3, row = Math.floor(index / 3), x = margin + col * (cardWidth + gap), y = startY + row * (cardHeight + gap);
     context.fillStyle = "#ffffff"; context.beginPath(); context.roundRect(x, y, cardWidth, cardHeight, 14); context.fill();
     context.fillStyle = "#60708a"; context.font = "600 18px system-ui, sans-serif"; context.fillText(label, x + 22, y + 39);
     context.fillStyle = "#15233b"; context.font = "700 28px system-ui, sans-serif"; context.fillText($(selector).textContent, x + 22, y + 88, cardWidth - 44);
-    if (label === "Crédito vigente") { context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText($("#metric-current-change").textContent, x + 22, y + 116, cardWidth - 44); }
-    if (label === "% ejecutado") { context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText($("#metric-execution-benchmark").textContent, x + 22, y + 116); }
+    context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText($(detailSelector).textContent, x + 22, y + 121, cardWidth - 44);
   });
-  context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText("Fuente: Estado de Ejecución del Presupuesto de Gastos por Objeto · Municipalidad de Santa Fe", 64, 642);
+  context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText("Fuente: Estado de Ejecución del Presupuesto de Gastos por Objeto · Municipalidad de Santa Fe", 64, 725);
   canvas.toBlob((blob) => {
     if (!blob) return;
     const url = URL.createObjectURL(blob), anchor = document.createElement("a");
@@ -206,9 +239,10 @@ async function init() {
     $("#program-filter").addEventListener("click", (event) => { const onlyButton = event.target.closest("[data-only-program]"); if (!onlyButton) return; selectedPrograms = new Set([onlyButton.dataset.onlyProgram]); renderProgramChips(); render(); });
     $("#select-all-programs").addEventListener("click", () => { selectedPrograms = new Set(programsForSelectedJurisdiction()); renderProgramChips(); render(); });
     $("#clear-programs").addEventListener("click", () => { selectedPrograms.clear(); renderProgramChips(); render(); });
+    $("#toggle-program-panel").addEventListener("click", () => { const body = $("#program-panel-body"), collapsed = !body.hidden; body.hidden = collapsed; $("#toggle-program-panel").textContent = collapsed ? "Mostrar" : "Reducir"; $("#toggle-program-panel").setAttribute("aria-expanded", String(!collapsed)); });
     $("#toggle-periods").addEventListener("click", () => { selectedPeriods = selectedPeriods.size === periods().length ? new Set() : new Set(periods()); $("#toggle-periods").textContent = selectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.toggle("active", selectedPeriods.has(chip.dataset.period)); chip.setAttribute("aria-pressed", selectedPeriods.has(chip.dataset.period)); }); render(); });
     ["#source-filter", "#object-filter", "#detail-breakdown-filter"].forEach((id) => $(id).addEventListener("change", render));
-    $("#chart").addEventListener("pointermove", (event) => { const mark = event.target.closest(".chart-point"), tooltip = $("#chart-tooltip"); if (!mark || !tooltip) { if (tooltip) tooltip.classList.remove("visible"); return; } const value = JSON.parse($("#chart").dataset.values)[Number(mark.dataset.index)]; tooltip.innerHTML = chartTooltip(value, mark.dataset.series); const rect = $("#chart").getBoundingClientRect(); tooltip.style.left = `${Math.max(4, Math.min(event.clientX - rect.left + 12, rect.width - 210))}px`; tooltip.style.top = `${Math.max(event.clientY - rect.top - 95, 4)}px`; tooltip.classList.add("visible"); });
+    $("#chart").addEventListener("pointermove", (event) => { const mark = event.target.closest(".chart-point"), tooltip = $("#chart-tooltip"); if (!mark || !tooltip) { if (tooltip) tooltip.classList.remove("visible"); return; } const value = JSON.parse($("#chart").dataset.values)[Number(mark.dataset.index)]; tooltip.innerHTML = chartTooltip(value, mark.dataset.series); const rect = $("#chart").getBoundingClientRect(); tooltip.style.left = `${Math.max(4, Math.min(event.clientX - rect.left + 12, rect.width - 270))}px`; tooltip.style.top = `${Math.max(event.clientY - rect.top - 130, 4)}px`; tooltip.classList.add("visible"); });
     $("#chart").addEventListener("pointerleave", () => $("#chart-tooltip")?.classList.remove("visible"));
     document.querySelectorAll(".chart-tab").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll(".chart-tab").forEach((item) => item.classList.toggle("active", item === tab)); renderChart(filteredRows()); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });
