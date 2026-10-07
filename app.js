@@ -36,7 +36,9 @@ function periods() { return unique(data.map((row) => row.fecha_corte)).sort((a, 
 
 function fillFilters() {
   selectedPeriods = new Set(periods());
-  $("#period-filter").innerHTML = periods().map((period) => `<button type="button" class="filter-chip active" data-period="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period))}</button>`).join("");
+  const byYear = new Map();
+  periods().forEach((period) => { const year = period.split("/")[2]; byYear.set(year, [...(byYear.get(year) || []), period]); });
+  $("#period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => `<section class="period-year"><div class="period-year-heading"><strong>${year}</strong><button class="small-action" type="button" data-year="${year}">Todo el año</button></div><div class="month-list">${yearPeriods.map((period) => `<button type="button" class="month-option active" data-period="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period).split(" ")[0])}</button>`).join("")}</div></section>`).join("");
   populateSelect("#jurisdiction-filter", unique(data.map((r) => r.jurisdiccion_nombre)), "Todas las secretarías");
   populateSelect("#source-filter", unique(data.map((r) => r.fuente_financiamiento_nombre)), "Todas las fuentes");
   populateSelect("#object-filter", unique(data.map((r) => `${r.objeto_gasto_codigo} · ${r.objeto_gasto_nombre}`)), "Todos los objetos");
@@ -47,7 +49,7 @@ function renderProgramChips() {
   panel.hidden = !programs.length;
   if (!programs.length) return;
   $("#program-title").textContent = `Programas de ${$("#jurisdiction-filter").value}`;
-  $("#program-filter").innerHTML = programs.map((program) => `<button type="button" class="filter-chip ${selectedPrograms.has(program) ? "active" : ""}" data-program="${escapeHtml(program)}" aria-pressed="${selectedPrograms.has(program)}">${escapeHtml(program)}</button>`).join("");
+  $("#program-filter").innerHTML = programs.map((program) => `<div class="program-option"><label><input type="checkbox" data-program="${escapeHtml(program)}" ${selectedPrograms.has(program) ? "checked" : ""}><span>${escapeHtml(program)}</span></label><button class="only-program" type="button" data-only-program="${escapeHtml(program)}">Únicamente</button></div>`).join("");
 }
 function filteredRows() {
   const jurisdiction = $("#jurisdiction-filter").value, source = $("#source-filter").value, object = $("#object-filter").value;
@@ -58,10 +60,29 @@ function aggregatePeriods(rows) {
   rows.forEach((row) => { const values = byPeriod.get(row.fecha_corte) || { period: row.fecha_corte, current: 0, accrued: 0, paid: 0 }; values.current += cents(row, "credito_vigente_centavos"); values.accrued += cents(row, "devengado_centavos"); values.paid += cents(row, "pagado_centavos"); byPeriod.set(row.fecha_corte, values); });
   return [...byPeriod.values()].sort((a, b) => date({ fecha_corte: a.period }) - date({ fecha_corte: b.period }));
 }
-function renderMetrics(rows) {
-  const current = sum(rows, "credito_vigente_centavos"), accrued = sum(rows, "devengado_centavos"), paid = sum(rows, "pagado_centavos"), available = sum(rows, "credito_disponible_centavos");
+function selectedPeriodSequence() { return [...selectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
+function selectionDescription(latestPeriod, previousPeriod) {
+  const jurisdiction = $("#jurisdiction-filter").value || "Todas las secretarías";
+  const programCount = selectedPrograms.size;
+  const programLabel = $("#jurisdiction-filter").value ? `${programCount} de ${programsForSelectedJurisdiction().length} programas` : "Todos los programas";
+  const pieces = [jurisdiction, programLabel, `corte ${latestPeriod || "sin períodos"}`];
+  if (previousPeriod) pieces.push(`variación vs. ${previousPeriod}`);
+  if ($("#source-filter").value) pieces.push($("#source-filter").value);
+  if ($("#object-filter").value) pieces.push($("#object-filter").value);
+  return pieces.join(" · ");
+}
+function renderMetrics(rows, latestPeriod, previousPeriod, previousRows) {
+  const values = totals(rows), current = values.current, accrued = values.accrued, paid = values.paid, available = values.available;
+  const execution = executionPercent(accrued, current);
   $("#metric-current").textContent = formatCents(current); $("#metric-accrued").textContent = formatCents(accrued); $("#metric-paid").textContent = formatCents(paid); $("#metric-available").textContent = formatCents(available);
-  $("#metric-accrued-share").textContent = `${formatPercent(executionPercent(accrued, current))} ejecutado`; $("#metric-paid-share").textContent = current ? `${formatPercent(paid / current * 100)} pagado` : "Sin crédito vigente"; $("#metric-row-count").textContent = `${rows.length.toLocaleString("es-AR")} partidas`;
+  $("#metric-accrued-share").textContent = `${formatPercent(execution)} ejecutado`; $("#metric-paid-share").textContent = current ? `${formatPercent(paid / current * 100)} del crédito vigente` : "Sin crédito vigente"; $("#metric-row-count").textContent = `${rows.length.toLocaleString("es-AR")} partidas`;
+  $("#metric-execution").textContent = formatPercent(execution);
+  const monthNumber = latestPeriod ? Number(latestPeriod.split("/")[1]) : 0;
+  const expected = monthNumber ? monthNumber * 100 / 12 : null;
+  $("#metric-execution-benchmark").textContent = expected === null ? "Sin período" : `Ritmo lineal: ${formatPercent(expected)}`;
+  const previousCredit = previousRows ? sum(previousRows, "credito_vigente_centavos") : null;
+  $("#metric-current-change").textContent = previousCredit === null ? "Sin período previo seleccionado" : `Variación vs. ${previousPeriod}: ${previousCredit <= current ? "+" : "−"}${formatCents(Math.abs(current - previousCredit))}`;
+  $("#summary-context").textContent = selectionDescription(latestPeriod, previousPeriod);
 }
 function chartTooltip(value, series) {
   const label = series === "accrued" ? "Devengado" : "Pagado";
@@ -94,7 +115,19 @@ function renderChanges(rows) {
   container.innerHTML = [["Crédito vigente", latest.current - previous.current], ["Devengado", latest.accrued - previous.accrued], ["Pagado", latest.paid - previous.paid]].map(([name, change]) => `<dt>${name}</dt><dd class="${change >= 0 ? "positive" : "negative"}">${change >= 0 ? "+" : ""}${formatCents(change)}</dd>`).join("");
 }
 function totals(rows) { return { current: sum(rows, "credito_vigente_centavos"), accrued: sum(rows, "devengado_centavos"), paid: sum(rows, "pagado_centavos"), available: sum(rows, "credito_disponible_centavos") }; }
-function totalCells(values) { return `<td class="number">${formatCents(values.current)}</td><td class="number">${formatCents(values.accrued)}</td><td class="number">${formatCents(values.paid)}</td><td class="number">${formatCents(values.available)}</td><td class="number">${formatPercent(executionPercent(values.accrued, values.current))}</td>`; }
+function executionAssessment(values, period) {
+  const actual = executionPercent(values.accrued, values.current);
+  if (actual === null || !period) return { actual, expected: null, status: "unknown" };
+  const month = Number(period.split("/")[1]), expected = month * 100 / 12, difference = actual - expected;
+  const status = difference < -10 ? "red" : difference < -5 ? "yellow" : difference <= 5 ? "green" : "blue";
+  return { actual, expected, status };
+}
+function totalCells(values, period) {
+  const assessment = executionAssessment(values, period);
+  const difference = assessment.actual === null ? null : assessment.actual - assessment.expected;
+  const title = assessment.expected === null ? "Porcentaje no disponible" : `${formatPercent(assessment.actual)} ejecutado; ritmo lineal esperado a ${period}: ${formatPercent(assessment.expected)}; diferencia ${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} puntos porcentuales.`;
+  return `<td class="number">${formatCents(values.current)}</td><td class="number">${formatCents(values.accrued)}</td><td class="number">${formatCents(values.paid)}</td><td class="number">${formatCents(values.available)}</td><td class="number"><span class="execution-pill execution-${assessment.status}" title="${escapeHtml(title)}">${formatPercent(assessment.actual)}</span></td>`;
+}
 function renderTable(rows) {
   const latestPeriod = aggregatePeriods(rows).at(-1)?.period, visibleRows = rows.filter((row) => row.fecha_corte === latestPeriod), breakdown = $("#detail-breakdown-filter").value;
   const bySecretary = new Map(); visibleRows.forEach((row) => { const group = bySecretary.get(row.jurisdiccion_nombre) || []; group.push(row); bySecretary.set(row.jurisdiccion_nombre, group); });
@@ -102,31 +135,85 @@ function renderTable(rows) {
   $("#detail-table").innerHTML = entries.map(([name, secretaryRows]) => {
     const open = expandedSecretaries.has(name), subdivisions = new Map();
     secretaryRows.forEach((row) => { const label = breakdown === "source" ? row.fuente_financiamiento_nombre : `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`; const group = subdivisions.get(label) || []; group.push(row); subdivisions.set(label, group); });
-    const children = open ? [...subdivisions.entries()].sort(([, a], [, b]) => totals(b).accrued - totals(a).accrued).map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group))}</tr>`).join("") : "";
-    return `<tr class="secretary-total"><td><button class="expand-row" type="button" data-secretary="${escapeHtml(name)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(name)}</button></td><td>Total de secretaría</td>${totalCells(totals(secretaryRows))}</tr>${children}`;
+    const children = open ? [...subdivisions.entries()].sort(([, a], [, b]) => totals(b).accrued - totals(a).accrued).map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod)}</tr>`).join("") : "";
+    return `<tr class="secretary-total"><td><button class="expand-row" type="button" data-secretary="${escapeHtml(name)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(name)}</button></td><td>Total de secretaría</td>${totalCells(totals(secretaryRows), latestPeriod)}</tr>${children}`;
   }).join("");
   $("#table-note").textContent = latestPeriod ? `Totales al ${latestPeriod}. Usá la flecha de cada secretaría para ver el detalle por ${breakdown === "source" ? "fuente de financiamiento" : "objeto del gasto"}.` : "No hay partidas para mostrar.";
 }
-function render() { const rows = filteredRows(); renderMetrics(rows); renderChart(rows); renderChanges(rows); renderTable(rows); }
+function render() {
+  const rows = filteredRows(), periodsSelected = selectedPeriodSequence(), latestPeriod = periodsSelected.at(-1), previousPeriod = periodsSelected.at(-2);
+  const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod);
+  const previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
+  renderMetrics(latestRows, latestPeriod, previousPeriod, previousRows); renderChart(rows); renderChanges(rows); renderTable(rows);
+}
 function resetFilters() {
   selectedPeriods = new Set(periods()); selectedPrograms.clear(); expandedSecretaries.clear(); $("#jurisdiction-filter").value = ""; $("#source-filter").value = ""; $("#object-filter").value = "";
-  document.querySelectorAll(".filter-chip[data-period]").forEach((chip) => { chip.classList.add("active"); chip.setAttribute("aria-pressed", "true"); }); renderProgramChips(); render();
+  document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.add("active"); chip.setAttribute("aria-pressed", "true"); });
+  $("#toggle-periods").textContent = "Quitar todos"; renderProgramChips(); render();
+}
+function downloadSummary() {
+  const canvas = document.createElement("canvas"), context = canvas.getContext("2d");
+  canvas.width = 1200; canvas.height = 675;
+  context.fillStyle = "#f3f6fa"; context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = "#0b365b"; context.fillRect(0, 0, canvas.width, 190);
+  context.fillStyle = "#bfdef5"; context.font = "700 22px system-ui, sans-serif"; context.fillText("MUNICIPALIDAD DE SANTA FE", 64, 58);
+  context.fillStyle = "#ffffff"; context.font = "700 46px system-ui, sans-serif"; context.fillText("Resumen presupuestario", 64, 118);
+  context.fillStyle = "#d8e9f7"; context.font = "400 19px system-ui, sans-serif";
+  const summary = $("#summary-context").textContent;
+  context.fillText(summary.slice(0, 100), 64, 157);
+  const items = [
+    ["Crédito vigente", "#metric-current"], ["Devengado", "#metric-accrued"], ["Pagado", "#metric-paid"],
+    ["Disponible", "#metric-available"], ["% ejecutado", "#metric-execution"],
+  ];
+  const gap = 18, margin = 64, cardWidth = (canvas.width - margin * 2 - gap * 2) / 3, cardHeight = 140, startY = 235;
+  items.forEach(([label, selector], index) => {
+    const col = index % 3, row = Math.floor(index / 3), x = margin + col * (cardWidth + gap), y = startY + row * (cardHeight + gap);
+    context.fillStyle = "#ffffff"; context.beginPath(); context.roundRect(x, y, cardWidth, cardHeight, 14); context.fill();
+    context.fillStyle = "#60708a"; context.font = "600 18px system-ui, sans-serif"; context.fillText(label, x + 22, y + 39);
+    context.fillStyle = "#15233b"; context.font = "700 28px system-ui, sans-serif"; context.fillText($(selector).textContent, x + 22, y + 88, cardWidth - 44);
+    if (label === "Crédito vigente") { context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText($("#metric-current-change").textContent, x + 22, y + 116, cardWidth - 44); }
+    if (label === "% ejecutado") { context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText($("#metric-execution-benchmark").textContent, x + 22, y + 116); }
+  });
+  context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText("Fuente: Estado de Ejecución del Presupuesto de Gastos por Objeto · Municipalidad de Santa Fe", 64, 642);
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob), anchor = document.createElement("a");
+    const filePeriod = (selectedPeriodSequence().at(-1) || "santa-fe").replaceAll("/", "-");
+    anchor.href = url; anchor.download = `resumen-presupuestario-${filePeriod}.png`; anchor.click(); URL.revokeObjectURL(url);
+  }, "image/png");
 }
 async function init() {
   try {
     data = (await Promise.all(DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     fillFilters(); render();
     $("#updated-at").textContent = `${data.length.toLocaleString("es-AR")} partidas cargadas · último cierre: ${labelPeriod(periods().at(-1))}`;
-    $("#period-filter").addEventListener("click", (event) => { const chip = event.target.closest("[data-period]"); if (!chip) return; const period = chip.dataset.period; selectedPeriods.has(period) ? selectedPeriods.delete(period) : selectedPeriods.add(period); chip.classList.toggle("active", selectedPeriods.has(period)); chip.setAttribute("aria-pressed", selectedPeriods.has(period)); render(); });
+    $("#period-filter").addEventListener("click", (event) => {
+      const yearButton = event.target.closest("[data-year]");
+      if (yearButton) {
+        const year = yearButton.dataset.year, yearPeriods = periods().filter((period) => period.endsWith(`/${year}`)), allSelected = yearPeriods.every((period) => selectedPeriods.has(period));
+        yearPeriods.forEach((period) => allSelected ? selectedPeriods.delete(period) : selectedPeriods.add(period));
+      } else {
+        const chip = event.target.closest("[data-period]"); if (!chip) return;
+        const period = chip.dataset.period; selectedPeriods.has(period) ? selectedPeriods.delete(period) : selectedPeriods.add(period);
+      }
+      document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.toggle("active", selectedPeriods.has(chip.dataset.period)); chip.setAttribute("aria-pressed", selectedPeriods.has(chip.dataset.period)); });
+      const isAllSelected = selectedPeriods.size === periods().length;
+      $("#toggle-periods").textContent = isAllSelected ? "Quitar todos" : "Seleccionar todos";
+      render();
+    });
     $("#jurisdiction-filter").addEventListener("change", () => { selectedPrograms = new Set(programsForSelectedJurisdiction()); expandedSecretaries.clear(); renderProgramChips(); render(); });
-    $("#program-filter").addEventListener("click", (event) => { const chip = event.target.closest("[data-program]"); if (!chip) return; const program = chip.dataset.program; selectedPrograms.has(program) ? selectedPrograms.delete(program) : selectedPrograms.add(program); renderProgramChips(); render(); });
+    $("#program-filter").addEventListener("change", (event) => { const checkbox = event.target.closest("[data-program]"); if (!checkbox) return; checkbox.checked ? selectedPrograms.add(checkbox.dataset.program) : selectedPrograms.delete(checkbox.dataset.program); renderProgramChips(); render(); });
+    $("#program-filter").addEventListener("click", (event) => { const onlyButton = event.target.closest("[data-only-program]"); if (!onlyButton) return; selectedPrograms = new Set([onlyButton.dataset.onlyProgram]); renderProgramChips(); render(); });
     $("#select-all-programs").addEventListener("click", () => { selectedPrograms = new Set(programsForSelectedJurisdiction()); renderProgramChips(); render(); });
+    $("#clear-programs").addEventListener("click", () => { selectedPrograms.clear(); renderProgramChips(); render(); });
+    $("#toggle-periods").addEventListener("click", () => { selectedPeriods = selectedPeriods.size === periods().length ? new Set() : new Set(periods()); $("#toggle-periods").textContent = selectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.toggle("active", selectedPeriods.has(chip.dataset.period)); chip.setAttribute("aria-pressed", selectedPeriods.has(chip.dataset.period)); }); render(); });
     ["#source-filter", "#object-filter", "#detail-breakdown-filter"].forEach((id) => $(id).addEventListener("change", render));
     $("#chart").addEventListener("pointermove", (event) => { const mark = event.target.closest(".chart-point"), tooltip = $("#chart-tooltip"); if (!mark || !tooltip) { if (tooltip) tooltip.classList.remove("visible"); return; } const value = JSON.parse($("#chart").dataset.values)[Number(mark.dataset.index)]; tooltip.innerHTML = chartTooltip(value, mark.dataset.series); const rect = $("#chart").getBoundingClientRect(); tooltip.style.left = `${Math.max(4, Math.min(event.clientX - rect.left + 12, rect.width - 210))}px`; tooltip.style.top = `${Math.max(event.clientY - rect.top - 95, 4)}px`; tooltip.classList.add("visible"); });
     $("#chart").addEventListener("pointerleave", () => $("#chart-tooltip")?.classList.remove("visible"));
     document.querySelectorAll(".chart-tab").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll(".chart-tab").forEach((item) => item.classList.toggle("active", item === tab)); renderChart(filteredRows()); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });
     $("#clear-filters").addEventListener("click", resetFilters);
+    $("#download-summary").addEventListener("click", downloadSummary);
   } catch (error) { $("#updated-at").textContent = "No se pudieron cargar los datos."; console.error(error); }
 }
 init();

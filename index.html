@@ -23,44 +23,64 @@
           <p class="eyebrow">Explorar</p>
           <h2 id="filters-title">Filtros</h2>
         </div>
-        <div class="filter-content">
-          <div>
-            <p class="filter-label">Períodos incluidos</p>
-            <div id="period-filter" class="chip-list" role="group" aria-label="Períodos incluidos"></div>
+        <div class="filter-columns">
+          <div class="filter-block">
+            <div class="filter-heading">
+              <p class="filter-label">Períodos incluidos</p>
+              <button id="toggle-periods" class="small-action" type="button">Quitar todos</button>
+            </div>
+            <div id="period-filter" class="period-picker" aria-label="Períodos incluidos"></div>
           </div>
-          <div class="filter-grid">
-            <label>Secretaría / jurisdicción
-              <select id="jurisdiction-filter"></select>
-            </label>
-            <details class="advanced-filters">
-              <summary>Más filtros</summary>
-              <div>
-                <label>Fuente de financiamiento <select id="source-filter"></select></label>
-                <label>Objeto del gasto <select id="object-filter"></select></label>
+          <div class="filter-block sector-block">
+            <div class="sector-controls">
+              <div class="sector-filters">
+                <label>Secretaría / jurisdicción
+                  <select id="jurisdiction-filter"></select>
+                </label>
+                <details class="advanced-filters">
+                  <summary>Más filtros</summary>
+                  <div>
+                    <label>Fuente de financiamiento <select id="source-filter"></select></label>
+                    <label>Objeto del gasto <select id="object-filter"></select></label>
+                  </div>
+                </details>
               </div>
-            </details>
+              <section id="program-panel" class="program-panel" aria-labelledby="program-title" hidden>
+              <div class="program-heading">
+                <div>
+                  <p class="eyebrow">Programas incluidos</p>
+                  <h3 id="program-title">Programas de la secretaría</h3>
+                </div>
+                <div class="program-actions">
+                  <button id="select-all-programs" class="small-action" type="button">Todos</button>
+                  <button id="clear-programs" class="small-action" type="button">Ninguno</button>
+                </div>
+              </div>
+              <p class="note">Marcá los programas que querés analizar o elegí “Únicamente” para quedarte con uno.</p>
+              <div id="program-filter" class="program-list" role="group" aria-label="Programas incluidos"></div>
+              </section>
+            </div>
           </div>
         </div>
         <button id="clear-filters" class="text-button" type="button">Restablecer filtros</button>
       </section>
 
-      <section id="program-panel" class="panel program-panel" aria-labelledby="program-title" hidden>
-        <div class="section-heading">
+      <section class="summary-section" aria-labelledby="summary-title">
+        <div class="summary-heading">
           <div>
-            <p class="eyebrow">Subfiltro</p>
-            <h2 id="program-title">Programas de la secretaría</h2>
+            <p class="eyebrow">Indicadores</p>
+            <h2 id="summary-title">Resumen</h2>
+            <p id="summary-context" class="note"></p>
           </div>
-          <button id="select-all-programs" class="text-button inline-button" type="button">Seleccionar todos</button>
+          <button id="download-summary" class="download-button" type="button">Descargar resumen PNG</button>
         </div>
-        <p class="note">Elegí qué programas integran el total analizado. Al seleccionar una secretaría, todos sus programas comienzan incluidos.</p>
-        <div id="program-filter" class="chip-list program-chips" role="group" aria-label="Programas incluidos"></div>
-      </section>
-
-      <section class="summary-grid" aria-label="Resumen del filtro aplicado">
-        <article class="metric"><p>Crédito vigente</p><strong id="metric-current">—</strong></article>
-        <article class="metric"><p>Devengado</p><strong id="metric-accrued">—</strong><small id="metric-accrued-share">—</small></article>
-        <article class="metric"><p>Pagado</p><strong id="metric-paid">—</strong><small id="metric-paid-share">—</small></article>
-        <article class="metric"><p>Disponible</p><strong id="metric-available">—</strong><small id="metric-row-count">—</small></article>
+        <div class="summary-grid" aria-label="Resumen del período más reciente seleccionado">
+          <article class="metric"><p>Crédito vigente</p><strong id="metric-current">—</strong><small id="metric-current-change">—</small></article>
+          <article class="metric"><p>Devengado</p><strong id="metric-accrued">—</strong><small id="metric-accrued-share">—</small></article>
+          <article class="metric"><p>Pagado</p><strong id="metric-paid">—</strong><small id="metric-paid-share">—</small></article>
+          <article class="metric"><p>Disponible</p><strong id="metric-available">—</strong><small id="metric-row-count">—</small></article>
+          <article class="metric metric-execution"><p>% ejecutado</p><strong id="metric-execution">—</strong><small id="metric-execution-benchmark">—</small></article>
+        </div>
       </section>
 
       <section class="two-columns">
@@ -107,7 +127,7 @@
               <tr>
                 <th>Secretaría / jurisdicción</th><th>Desagregación</th>
                 <th class="number">Crédito vigente</th><th class="number">Devengado</th><th class="number">Pagado</th><th class="number">Disponible</th>
-                <th class="number">% ejecutado <span class="info-icon" title="Devengado ÷ crédito vigente × 100. Equivale a 100 − ((crédito vigente − devengado) ÷ crédito vigente × 100)." aria-label="Información sobre el cálculo">i</span></th>
+                <th class="number">% ejecutado <span class="info-icon" title="Cálculo: devengado ÷ crédito vigente × 100. Referencia lineal: mes de corte ÷ 12 × 100. Verde: hasta 5 puntos porcentuales de diferencia respecto del ritmo esperado; amarillo: entre 5 y 10 puntos por debajo; rojo: más de 10 puntos por debajo; azul: más de 5 puntos por encima. El color orienta y no implica una evaluación de calidad del gasto." aria-label="Información sobre el cálculo y la escala">i</span></th>
               </tr>
             </thead>
             <tbody id="detail-table"></tbody>
