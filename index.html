@@ -189,6 +189,17 @@
         </div>
         <p id="table-note" class="note"></p>
       </section>
+
+      <section class="insights-lab" aria-labelledby="insights-title">
+        <div class="lab-heading"><p class="eyebrow">Laboratorio</p><h2 id="insights-title">Nuevas formas de analizar los datos</h2><p>Prototipos vinculados a los filtros actuales para evaluar qué visualizaciones conviene profundizar.</p></div>
+        <div class="insights-grid">
+          <article class="panel insight-card insight-wide"><p class="eyebrow">Ritmo de ejecución</p><h3>Mapa de calor por programa y mes</h3><p class="insight-description">Compara cada programa con el ritmo esperado para el mes.</p><div id="execution-heatmap" class="heatmap-wrap"></div></article>
+          <article class="panel insight-card"><p class="eyebrow">Origen del cambio</p><h3>Contribución a las modificaciones</h3><p id="contribution-note" class="insight-description"></p><div class="mini-chart"><canvas id="contribution-chart"></canvas></div></article>
+          <article class="panel insight-card"><p class="eyebrow">Priorización</p><h3>Alertas relevantes</h3><p class="insight-description">Combina atraso de ejecución y tamaño del crédito vigente.</p><ol id="budget-alerts" class="alert-list"></ol></article>
+          <article class="panel insight-card insight-wide"><p class="eyebrow">Puente presupuestario</p><h3>Del crédito aprobado al vigente</h3><p class="insight-description">Cada paso muestra cómo las modificaciones mensuales construyen el cambio acumulado.</p><div class="waterfall-summary"><span id="waterfall-approved"></span><span id="waterfall-current"></span></div><div class="mini-chart waterfall-chart"><canvas id="waterfall-chart"></canvas></div></article>
+          <article class="panel insight-card insight-wide year-comparison"><div><p class="eyebrow">Próxima etapa</p><h3>Comparación entre años</h3><p class="insight-description">El panel está preparado para comparar el mismo mes entre ejercicios cuando incorporemos datos de 2025 o 2027.</p></div><div class="year-placeholder"><strong>2026</strong><span>Primer año disponible</span></div></article>
+        </div>
+      </section>
       </section>
 
       <section id="page-guide" class="page-view landing-panel" hidden>
