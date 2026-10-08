@@ -6,7 +6,7 @@ const DATA_FILES = [
 const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
-let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "line";
+let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "line", tableSort = { key: "accrued", direction: "desc" };
 
 function parseCSV(text) {
   const records = []; let record = [], field = "", quoted = false;
@@ -90,9 +90,11 @@ function selectionDescription(latestPeriod, previousPeriod) {
   return pieces.join(" · ");
 }
 function renderMetrics(rows, latestPeriod, previousPeriod, previousRows) {
-  const values = totals(rows), current = values.current, accrued = values.accrued, paid = values.paid, available = values.available;
+  const values = totals(rows), approved = values.approved, current = values.current, accrued = values.accrued, paid = values.paid, available = values.available;
   const execution = executionPercent(accrued, current);
-  $("#metric-current").textContent = formatCents(current); $("#metric-accrued").textContent = formatCents(accrued); $("#metric-paid").textContent = formatCents(paid); $("#metric-available").textContent = formatCents(available);
+  $("#metric-approved").textContent = formatCents(approved); $("#metric-current").textContent = formatCents(current); $("#metric-accrued").textContent = formatCents(accrued); $("#metric-paid").textContent = formatCents(paid); $("#metric-available").textContent = formatCents(available);
+  const modification = current - approved;
+  $("#metric-approved-change").textContent = `Modificación acumulada: ${modification >= 0 ? "+" : "−"}${formatCents(Math.abs(modification))}`;
   $("#metric-accrued-share").textContent = `${formatPercent(execution)} ejecutado`; $("#metric-paid-share").textContent = current ? `${formatPercent(paid / current * 100)} del crédito vigente` : "Sin crédito vigente"; $("#metric-row-count").textContent = `${rows.length.toLocaleString("es-AR")} partidas`;
   $("#metric-execution").textContent = formatPercent(execution);
   const monthNumber = latestPeriod ? Number(latestPeriod.split("/")[1]) : 0;
@@ -143,7 +145,39 @@ function renderChanges(rows) {
   const previous = values.at(-2), latest = values.at(-1);
   container.innerHTML = [["Crédito vigente", latest.current - previous.current], ["Devengado", latest.accrued - previous.accrued], ["Pagado", latest.paid - previous.paid]].map(([name, change]) => `<dt>${name}</dt><dd class="${change >= 0 ? "positive" : "negative"}">${change >= 0 ? "+" : ""}${formatCents(change)}</dd>`).join("");
 }
-function totals(rows) { return { current: sum(rows, "credito_vigente_centavos"), accrued: sum(rows, "devengado_centavos"), paid: sum(rows, "pagado_centavos"), available: sum(rows, "credito_disponible_centavos") }; }
+function rankingLabel(row, dimension) {
+  if (dimension === "program") return `${row.jurisdiccion_nombre} · ${row.programa_codigo} · ${row.programa_nombre}`;
+  if (dimension === "source") return row.fuente_financiamiento_nombre;
+  if (dimension === "object") return `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`;
+  return row.jurisdiccion_nombre;
+}
+function rankingGroups(rows, dimension, period) {
+  const groups = new Map();
+  rows.forEach((row) => { const label = rankingLabel(row, dimension), group = groups.get(label) || []; group.push(row); groups.set(label, group); });
+  const expected = period ? Number(period.split("/")[1]) * 100 / 12 : 0;
+  return [...groups.entries()].map(([label, group]) => {
+    const values = totals(group), execution = executionPercent(values.accrued, values.current);
+    return { label, values, execution, expected, modification: values.current - values.approved, shortfall: execution === null ? null : expected - execution };
+  });
+}
+function rankingList(items, valueRenderer, emptyMessage) {
+  if (!items.length) return `<li class="ranking-empty">${escapeHtml(emptyMessage)}</li>`;
+  return items.slice(0, 5).map((item, index) => `<li><span class="ranking-position">${index + 1}</span><div><strong title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</strong><small>${valueRenderer(item)}</small></div></li>`).join("");
+}
+function renderRankings(rows, latestPeriod) {
+  const dimension = $("#ranking-dimension").value, groups = rankingGroups(rows, dimension, latestPeriod);
+  const under = groups.filter((item) => item.execution !== null && item.shortfall > 0).sort((a, b) => b.shortfall - a.shortfall);
+  const defunded = groups.filter((item) => item.modification < 0).sort((a, b) => a.modification - b.modification);
+  const funded = groups.filter((item) => item.modification > 0).sort((a, b) => b.modification - a.modification);
+  const over = groups.filter((item) => item.execution !== null).sort((a, b) => b.execution - a.execution);
+  $("#ranking-under").innerHTML = rankingList(under, (item) => `${formatPercent(item.execution)} ejecutado · esperado ${formatPercent(item.expected)}`, "Sin grupos con crédito vigente");
+  $("#ranking-defunded").innerHTML = rankingList(defunded, (item) => `${formatCents(Math.abs(item.modification))} menos que el aprobado`, "Sin reducciones de crédito");
+  $("#ranking-funded").innerHTML = rankingList(funded, (item) => `+${formatCents(item.modification)} sobre el aprobado`, "Sin aumentos de crédito");
+  $("#ranking-over").innerHTML = rankingList(over, (item) => `${formatPercent(item.execution)} del crédito vigente`, "Sin grupos con crédito vigente");
+  const dimensionName = { jurisdiction: "secretaría", program: "programa", source: "fuente", object: "objeto del gasto" }[dimension];
+  $("#ranking-context").textContent = latestPeriod ? `Ranking por ${dimensionName} para ${labelPeriod(latestPeriod)}, dentro de los filtros seleccionados.` : "Seleccioná al menos un período para calcular los rankings.";
+}
+function totals(rows) { return { approved: sum(rows, "credito_aprobado_centavos"), current: sum(rows, "credito_vigente_centavos"), accrued: sum(rows, "devengado_centavos"), paid: sum(rows, "pagado_centavos"), available: sum(rows, "credito_disponible_centavos") }; }
 function executionAssessment(values, period) {
   const actual = executionPercent(values.accrued, values.current);
   if (actual === null || !period) return { actual, expected: null, status: "unknown" };
@@ -157,27 +191,42 @@ function totalCells(values, period, columnTotals) {
   const assessment = executionAssessment(values, period);
   const difference = assessment.actual === null ? null : assessment.actual - assessment.expected;
   const title = assessment.expected === null ? "Porcentaje no disponible" : `${formatPercent(assessment.actual)} ejecutado; ritmo lineal esperado a ${period}: ${formatPercent(assessment.expected)}; diferencia ${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} puntos porcentuales.`;
-  return `${amountCell(values.current, columnTotals.current)}${amountCell(values.accrued, columnTotals.accrued)}${amountCell(values.paid, columnTotals.paid)}${amountCell(values.available, columnTotals.available)}<td class="number"><span class="execution-pill execution-${assessment.status}" title="${escapeHtml(title)}">${formatPercent(assessment.actual)}</span></td>`;
+  return `${amountCell(values.approved, columnTotals.approved)}${amountCell(values.current, columnTotals.current)}${amountCell(values.accrued, columnTotals.accrued)}${amountCell(values.paid, columnTotals.paid)}${amountCell(values.available, columnTotals.available)}<td class="number"><span class="execution-pill execution-${assessment.status}" title="${escapeHtml(title)}">${formatPercent(assessment.actual)}</span></td>`;
+}
+function sortedGroups(entries) {
+  const direction = tableSort.direction === "asc" ? 1 : -1;
+  return [...entries].sort(([labelA, rowsA], [labelB, rowsB]) => {
+    if (tableSort.key === "name" || tableSort.key === "breakdown") return labelA.localeCompare(labelB, "es") * direction;
+    const valuesA = totals(rowsA), valuesB = totals(rowsB);
+    const metric = tableSort.key === "execution" ? null : tableSort.key;
+    const a = metric ? valuesA[metric] : executionPercent(valuesA.accrued, valuesA.current) ?? -Infinity;
+    const b = metric ? valuesB[metric] : executionPercent(valuesB.accrued, valuesB.current) ?? -Infinity;
+    return (a - b) * direction;
+  });
+}
+function updateSortHeaders() {
+  document.querySelectorAll(".sort-header").forEach((button) => { const active = button.dataset.sort === tableSort.key; button.classList.toggle("active", active); button.querySelector("span").textContent = active ? tableSort.direction === "asc" ? "↑" : "↓" : ""; });
 }
 function renderTable(rows) {
   const latestPeriod = aggregatePeriods(rows).at(-1)?.period, visibleRows = rows.filter((row) => row.fecha_corte === latestPeriod), breakdown = $("#detail-breakdown-filter").value;
   const columnTotals = totals(visibleRows);
   const bySecretary = new Map(); visibleRows.forEach((row) => { const group = bySecretary.get(row.jurisdiccion_nombre) || []; group.push(row); bySecretary.set(row.jurisdiccion_nombre, group); });
-  const entries = [...bySecretary.entries()].sort(([, a], [, b]) => totals(b).accrued - totals(a).accrued);
+  const entries = sortedGroups([...bySecretary.entries()]);
   $("#detail-table").innerHTML = entries.map(([name, secretaryRows]) => {
     const open = expandedSecretaries.has(name), subdivisions = new Map();
     secretaryRows.forEach((row) => { const label = breakdown === "program" ? `${row.programa_codigo} · ${row.programa_nombre}` : breakdown === "source" ? row.fuente_financiamiento_nombre : `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`; const group = subdivisions.get(label) || []; group.push(row); subdivisions.set(label, group); });
-    const children = open ? [...subdivisions.entries()].sort(([, a], [, b]) => totals(b).accrued - totals(a).accrued).map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod, columnTotals)}</tr>`).join("") : "";
+    const children = open ? sortedGroups([...subdivisions.entries()]).map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod, columnTotals)}</tr>`).join("") : "";
     return `<tr class="secretary-total"><td><button class="expand-row" type="button" data-secretary="${escapeHtml(name)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(name)}</button></td><td>Total de secretaría</td>${totalCells(totals(secretaryRows), latestPeriod, columnTotals)}</tr>${children}`;
   }).join("");
   const breakdownName = { program: "programa", source: "fuente de financiamiento", object: "objeto del gasto" }[breakdown];
   $("#table-note").textContent = latestPeriod ? `Totales de ${labelPeriod(latestPeriod)}. Los porcentajes entre paréntesis muestran la participación sobre el total visible de cada columna. Usá la flecha para ver el detalle por ${breakdownName}.` : "No hay partidas para mostrar.";
+  updateSortHeaders();
 }
 function render() {
   const rows = filteredRows(), periodsSelected = selectedPeriodSequence(), latestPeriod = periodsSelected.at(-1), previousPeriod = periodsSelected.at(-2);
   const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod);
   const previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
-  renderMetrics(latestRows, latestPeriod, previousPeriod, previousRows); renderChart(rows); renderChanges(rows); renderTable(rows);
+  renderMetrics(latestRows, latestPeriod, previousPeriod, previousRows); renderRankings(latestRows, latestPeriod); renderChart(rows); renderChanges(rows); renderTable(rows);
 }
 function resetFilters() {
   selectedPeriods = new Set(periods()); selectedPrograms.clear(); expandedSecretaries.clear(); $("#jurisdiction-filter").value = ""; $("#source-filter").value = ""; $("#object-filter").value = "";
@@ -196,8 +245,8 @@ function downloadSummary() {
   context.font = "400 17px system-ui, sans-serif"; context.fillStyle = "#d8e9f7"; context.fillText(`Programa(s): ${details.programs}`, 64, 171, 1070);
   context.fillText(`Período analizado: ${details.period}${details.previous ? ` · Comparación: ${details.previous}` : ""}`, 64, 202, 1070);
   const items = [
-    ["Crédito vigente", "#metric-current", "#metric-current-change"], ["Devengado", "#metric-accrued", "#metric-accrued-share"], ["Pagado", "#metric-paid", "#metric-paid-share"],
-    ["Disponible", "#metric-available", "#metric-row-count"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"],
+    ["Crédito aprobado", "#metric-approved", "#metric-approved-change"], ["Crédito vigente", "#metric-current", "#metric-current-change"], ["Devengado", "#metric-accrued", "#metric-accrued-share"],
+    ["Pagado", "#metric-paid", "#metric-paid-share"], ["Disponible", "#metric-available", "#metric-row-count"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"],
   ];
   const gap = 18, margin = 64, cardWidth = (canvas.width - margin * 2 - gap * 2) / 3, cardHeight = 150, startY = 275;
   items.forEach(([label, selector, detailSelector], index) => {
@@ -240,12 +289,14 @@ async function init() {
     $("#select-all-programs").addEventListener("click", () => { selectedPrograms = new Set(programsForSelectedJurisdiction()); renderProgramChips(); render(); });
     $("#clear-programs").addEventListener("click", () => { selectedPrograms.clear(); renderProgramChips(); render(); });
     $("#toggle-program-panel").addEventListener("click", () => { const body = $("#program-panel-body"), collapsed = !body.hidden; body.hidden = collapsed; $("#toggle-program-panel").textContent = collapsed ? "Mostrar" : "Reducir"; $("#toggle-program-panel").setAttribute("aria-expanded", String(!collapsed)); });
+    $("#toggle-filter-sidebar").addEventListener("click", () => { const body = $("#filter-sidebar-body"), collapsed = !body.hidden; body.hidden = collapsed; $("#dashboard-layout").classList.toggle("filters-collapsed", collapsed); $("#toggle-filter-sidebar").textContent = collapsed ? "›" : "‹"; $("#toggle-filter-sidebar").setAttribute("aria-expanded", String(!collapsed)); $("#toggle-filter-sidebar").setAttribute("aria-label", collapsed ? "Desplegar filtros" : "Plegar filtros"); });
     $("#toggle-periods").addEventListener("click", () => { selectedPeriods = selectedPeriods.size === periods().length ? new Set() : new Set(periods()); $("#toggle-periods").textContent = selectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.toggle("active", selectedPeriods.has(chip.dataset.period)); chip.setAttribute("aria-pressed", selectedPeriods.has(chip.dataset.period)); }); render(); });
-    ["#source-filter", "#object-filter", "#detail-breakdown-filter"].forEach((id) => $(id).addEventListener("change", render));
+    ["#source-filter", "#object-filter", "#detail-breakdown-filter", "#ranking-dimension"].forEach((id) => $(id).addEventListener("change", render));
     $("#chart").addEventListener("pointermove", (event) => { const mark = event.target.closest(".chart-point"), tooltip = $("#chart-tooltip"); if (!mark || !tooltip) { if (tooltip) tooltip.classList.remove("visible"); return; } const value = JSON.parse($("#chart").dataset.values)[Number(mark.dataset.index)]; tooltip.innerHTML = chartTooltip(value, mark.dataset.series); const rect = $("#chart").getBoundingClientRect(); tooltip.style.left = `${Math.max(4, Math.min(event.clientX - rect.left + 12, rect.width - 270))}px`; tooltip.style.top = `${Math.max(event.clientY - rect.top - 130, 4)}px`; tooltip.classList.add("visible"); });
     $("#chart").addEventListener("pointerleave", () => $("#chart-tooltip")?.classList.remove("visible"));
     document.querySelectorAll(".chart-tab").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll(".chart-tab").forEach((item) => item.classList.toggle("active", item === tab)); renderChart(filteredRows()); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });
+    document.querySelectorAll(".sort-header").forEach((button) => button.addEventListener("click", () => { const key = button.dataset.sort; if (tableSort.key === key) tableSort.direction = tableSort.direction === "asc" ? "desc" : "asc"; else { tableSort.key = key; tableSort.direction = key === "name" || key === "breakdown" ? "asc" : "desc"; } renderTable(filteredRows()); }));
     $("#clear-filters").addEventListener("click", resetFilters);
     $("#download-summary").addEventListener("click", downloadSummary);
   } catch (error) { $("#updated-at").textContent = "No se pudieron cargar los datos."; console.error(error); }

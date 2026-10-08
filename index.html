@@ -18,11 +18,16 @@
     </header>
 
     <main>
-      <section class="panel filters" aria-labelledby="filters-title">
-        <div>
-          <p class="eyebrow">Explorar</p>
-          <h2 id="filters-title">Filtros</h2>
+      <div id="dashboard-layout" class="dashboard-layout">
+      <aside id="filter-sidebar" class="panel filter-sidebar" aria-labelledby="filters-title">
+        <div class="filter-sidebar-heading">
+          <div>
+            <p class="eyebrow">Explorar</p>
+            <h2 id="filters-title">Filtros</h2>
+          </div>
+          <button id="toggle-filter-sidebar" class="sidebar-toggle" type="button" aria-expanded="true" aria-label="Plegar filtros">‹</button>
         </div>
+        <div id="filter-sidebar-body">
         <div class="filter-columns">
           <div class="filter-block">
             <div class="filter-heading">
@@ -66,7 +71,10 @@
           </div>
         </div>
         <button id="clear-filters" class="text-button" type="button">Restablecer filtros</button>
-      </section>
+        </div>
+      </aside>
+
+      <div class="dashboard-primary">
 
       <section class="summary-section" aria-labelledby="summary-title">
         <div class="summary-heading">
@@ -78,11 +86,36 @@
           <button id="download-summary" class="download-button" type="button">Descargar resumen PNG</button>
         </div>
         <div class="summary-grid" aria-label="Resumen del período más reciente seleccionado">
+          <article class="metric"><p>Crédito aprobado</p><strong id="metric-approved">—</strong><small id="metric-approved-change">—</small></article>
           <article class="metric"><p>Crédito vigente</p><strong id="metric-current">—</strong><small id="metric-current-change">—</small></article>
           <article class="metric"><p>Devengado</p><strong id="metric-accrued">—</strong><small id="metric-accrued-share">—</small></article>
           <article class="metric"><p>Pagado</p><strong id="metric-paid">—</strong><small id="metric-paid-share">—</small></article>
           <article class="metric"><p>Disponible</p><strong id="metric-available">—</strong><small id="metric-row-count">—</small></article>
           <article class="metric metric-execution"><p>% ejecutado</p><strong id="metric-execution">—</strong><small id="metric-execution-benchmark">—</small></article>
+        </div>
+      </section>
+
+      <section class="panel ranking-panel" aria-labelledby="ranking-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Alertas y movimientos</p>
+            <h2 id="ranking-title">Principales variaciones</h2>
+          </div>
+          <label class="compact-label">Analizar por
+            <select id="ranking-dimension">
+              <option value="jurisdiction">Secretaría</option>
+              <option value="program">Programa</option>
+              <option value="source">Fuente de financiamiento</option>
+              <option value="object">Objeto del gasto</option>
+            </select>
+          </label>
+        </div>
+        <p id="ranking-context" class="note"></p>
+        <div class="ranking-grid">
+          <article class="ranking-card ranking-under"><h3>Menor ejecución</h3><p>Mayor distancia por debajo del ritmo esperado.</p><ol id="ranking-under"></ol></article>
+          <article class="ranking-card ranking-defunded"><h3>Más desfinanciados</h3><p>Mayor caída entre crédito aprobado y vigente.</p><ol id="ranking-defunded"></ol></article>
+          <article class="ranking-card ranking-funded"><h3>Más financiados</h3><p>Mayor aumento entre crédito aprobado y vigente.</p><ol id="ranking-funded"></ol></article>
+          <article class="ranking-card ranking-over"><h3>Mayor ejecución</h3><p>Porcentaje ejecutado más alto.</p><ol id="ranking-over"></ol></article>
         </div>
       </section>
 
@@ -110,6 +143,8 @@
           <p class="note">La variación compara el mismo conjunto de filtros en los dos últimos períodos disponibles.</p>
         </article>
       </section>
+      </div>
+      </div>
 
       <section class="panel">
         <div class="section-heading">
@@ -129,9 +164,14 @@
           <table>
             <thead>
               <tr>
-                <th>Secretaría / jurisdicción</th><th>Desagregación</th>
-                <th class="number">Crédito vigente</th><th class="number">Devengado</th><th class="number">Pagado</th><th class="number">Disponible</th>
-                <th class="number">% ejecutado <span class="info-help" tabindex="0" aria-label="Información sobre cálculo y colores">i<span class="info-card"><strong>Cómo se interpreta</strong><span><b class="key-execution">Ejecutado</b> = devengado ÷ crédito vigente × 100.</span><span><b class="key-expected">Esperado</b> = mes de corte ÷ 12 × 100.</span><span class="scale-line"><i class="scale-dot red"></i><b>Rojo:</b> más de 10 puntos por debajo.</span><span class="scale-line"><i class="scale-dot yellow"></i><b>Amarillo:</b> entre 5 y 10 puntos de desvío.</span><span class="scale-line"><i class="scale-dot green"></i><b>Verde:</b> dentro de ±5 puntos.</span><span class="scale-line"><i class="scale-dot blue"></i><b>Azul:</b> al menos 10 puntos por encima.</span><small>Es una referencia temporal, no una evaluación de la calidad del gasto.</small></span></span></th>
+                <th><button class="sort-header" type="button" data-sort="name">Secretaría / jurisdicción <span></span></button></th>
+                <th><button class="sort-header" type="button" data-sort="breakdown">Desagregación <span></span></button></th>
+                <th class="number"><button class="sort-header" type="button" data-sort="approved">Crédito aprobado <span></span></button></th>
+                <th class="number"><button class="sort-header" type="button" data-sort="current">Crédito vigente <span></span></button></th>
+                <th class="number"><button class="sort-header active" type="button" data-sort="accrued">Devengado <span>↓</span></button></th>
+                <th class="number"><button class="sort-header" type="button" data-sort="paid">Pagado <span></span></button></th>
+                <th class="number"><button class="sort-header" type="button" data-sort="available">Disponible <span></span></button></th>
+                <th class="number"><button class="sort-header" type="button" data-sort="execution">% ejecutado <span></span></button> <span class="info-help" tabindex="0" aria-label="Información sobre cálculo y colores">i<span class="info-card"><strong>Cómo se interpreta</strong><span><b class="key-execution">Ejecutado</b> = devengado ÷ crédito vigente × 100.</span><span><b class="key-expected">Esperado</b> = mes de corte ÷ 12 × 100.</span><span class="scale-line"><i class="scale-dot red"></i><b>Rojo:</b> más de 10 puntos por debajo.</span><span class="scale-line"><i class="scale-dot yellow"></i><b>Amarillo:</b> entre 5 y 10 puntos de desvío.</span><span class="scale-line"><i class="scale-dot green"></i><b>Verde:</b> dentro de ±5 puntos.</span><span class="scale-line"><i class="scale-dot blue"></i><b>Azul:</b> al menos 10 puntos por encima.</span><small>Es una referencia temporal, no una evaluación de la calidad del gasto.</small></span></span></th>
               </tr>
             </thead>
             <tbody id="detail-table"></tbody>
@@ -141,9 +181,10 @@
       </section>
     </main>
 
-    <footer>
-      <p>Fuente: Municipalidad de Santa Fe de la Vera Cruz · Estado de Ejecución del Presupuesto de Gastos por Objeto.</p>
-      <p>Los importes se expresan en pesos argentinos y los datos se publican tal como fueron informados en los PDF mensuales.</p>
+    <footer class="site-footer">
+      <div><strong>Presupuesto Abierto Santa Fe</strong><p>Una herramienta ciudadana para explorar la evolución del presupuesto municipal.</p></div>
+      <div class="footer-social"><strong>Redes sociales</strong><p>Instagram · X · Facebook · <a href="https://github.com/fransomagliasf/presupuesto-abierto-santa-fe">GitHub</a></p></div>
+      <div><strong>Datos y metodología</strong><p>Fuente: Municipalidad de Santa Fe. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="app.js"></script>
   </body>
