@@ -6,7 +6,7 @@ const DATA_FILES = [
 const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
-let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "line", showBarValues = false, budgetChart = null, tableSort = { key: "accrued", direction: "desc" };
+let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, budgetChart = null, tableSort = { key: "accrued", direction: "desc" };
 
 function parseCSV(text) {
   const records = []; let record = [], field = "", quoted = false;
@@ -145,7 +145,7 @@ function renderChart(rows) {
     const largest = Math.max(...values.flatMap((value) => [Math.abs(value.monthlyModification), Math.abs(value.modification)]), 1), step = niceStep(largest / 3), limit = Math.max(step, Math.ceil(largest / step) * step);
     datasets = [
       { id: "monthly", type: "bar", label: "Movimiento mensual", data: values.map((value) => value.monthlyModification), backgroundColor: values.map((value) => value.monthlyModification > 0 ? "#26905f" : value.monthlyModification < 0 ? "#c74c56" : "#8c99a9"), borderRadius: 5, maxBarThickness: 54, order: 1 },
-      { id: "cumulative", type: "line", label: "Modificación acumulada", data: values.map((value) => value.modification), borderColor: "#1264a3", backgroundColor: "#1264a3", pointBackgroundColor: "#fff", pointBorderColor: "#1264a3", pointBorderWidth: 3, pointRadius: 4, pointHoverRadius: 6, borderWidth: 3, tension: .25, order: 2 },
+      { id: "cumulative", type: "line", label: "Modificación acumulada", data: values.map((value) => value.modification), borderColor: "rgba(18, 100, 163, .48)", backgroundColor: "rgba(18, 100, 163, .48)", pointBackgroundColor: "rgba(255, 255, 255, .82)", pointBorderColor: "rgba(18, 100, 163, .62)", pointBorderWidth: 2, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2, tension: .25, order: 2 },
     ];
     yOptions = { min: -limit, max: limit, ticks: { stepSize: step, callback: formatAxisAmount } };
     $("#chart-title").textContent = "Movimientos mensuales y modificación acumulada";

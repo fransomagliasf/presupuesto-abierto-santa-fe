@@ -138,16 +138,16 @@
           <div class="section-heading">
             <div>
               <p class="eyebrow">Evolución</p>
-              <h2 id="chart-title">Ejecución real y ritmo esperado</h2>
+              <h2 id="chart-title">Movimientos mensuales y modificación acumulada</h2>
             </div>
-            <div id="chart-legend" class="legend"><span class="legend-execution"></span>% ejecutado <span class="legend-expected"></span>% esperado</div>
+            <div id="chart-legend" class="legend"><span class="legend-positive"></span>Aumento mensual <span class="legend-negative"></span>Reducción mensual <span class="legend-cumulative"></span>Acumulado</div>
           </div>
           <div class="chart-controls">
             <div class="chart-tabs" role="tablist" aria-label="Tipo de gráfico">
-              <button class="chart-tab active" type="button" role="tab" data-chart="line" aria-selected="true">Líneas</button>
-              <button class="chart-tab" type="button" role="tab" data-chart="bar" aria-selected="false">Barras</button>
+              <button class="chart-tab active" type="button" role="tab" data-chart="bar" aria-selected="true">Modificaciones</button>
+              <button class="chart-tab" type="button" role="tab" data-chart="line" aria-selected="false">% ejecutado</button>
             </div>
-            <label id="bar-value-control" class="chart-value-toggle" hidden><input id="show-bar-values" type="checkbox"> Mostrar valores</label>
+            <label id="bar-value-control" class="chart-value-toggle"><input id="show-bar-values" type="checkbox"> Mostrar valores</label>
           </div>
           <p id="chart-total" class="chart-total" hidden></p>
           <div id="chart" class="chart" role="img" aria-label="Gráfico de evolución presupuestaria"><canvas id="budget-chart"></canvas><p id="chart-empty" class="note" hidden>No hay datos para esta combinación de filtros.</p></div>
