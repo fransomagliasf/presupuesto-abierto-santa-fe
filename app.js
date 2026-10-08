@@ -57,7 +57,7 @@ function filteredRows() {
 }
 function aggregatePeriods(rows) {
   const byPeriod = new Map();
-  rows.forEach((row) => { const values = byPeriod.get(row.fecha_corte) || { period: row.fecha_corte, current: 0, accrued: 0, paid: 0 }; values.current += cents(row, "credito_vigente_centavos"); values.accrued += cents(row, "devengado_centavos"); values.paid += cents(row, "pagado_centavos"); byPeriod.set(row.fecha_corte, values); });
+  rows.forEach((row) => { const values = byPeriod.get(row.fecha_corte) || { period: row.fecha_corte, approved: 0, current: 0, accrued: 0 }; values.approved += cents(row, "credito_aprobado_centavos"); values.current += cents(row, "credito_vigente_centavos"); values.accrued += cents(row, "devengado_centavos"); byPeriod.set(row.fecha_corte, values); });
   return [...byPeriod.values()].sort((a, b) => date({ fecha_corte: a.period }) - date({ fecha_corte: b.period }));
 }
 function selectedPeriodSequence() { return [...selectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
@@ -90,18 +90,21 @@ function selectionDescription(latestPeriod, previousPeriod) {
   return pieces.join(" · ");
 }
 function renderMetrics(rows, latestPeriod, previousPeriod, previousRows) {
-  const values = totals(rows), approved = values.approved, current = values.current, accrued = values.accrued, paid = values.paid, available = values.available;
+  const values = totals(rows), approved = values.approved, current = values.current, accrued = values.accrued, available = values.available;
   const execution = executionPercent(accrued, current);
-  $("#metric-approved").textContent = formatCents(approved); $("#metric-current").textContent = formatCents(current); $("#metric-accrued").textContent = formatCents(accrued); $("#metric-paid").textContent = formatCents(paid); $("#metric-available").textContent = formatCents(available);
+  $("#metric-approved").textContent = formatCents(approved); $("#metric-current").textContent = formatCents(current); $("#metric-accrued").textContent = formatCents(accrued); $("#metric-available").textContent = formatCents(available);
+  const setTrend = (selector, label, change) => { const element = $(selector); element.classList.remove("positive", "negative"); element.textContent = change === null ? "Sin período previo seleccionado" : `${label}: ${change >= 0 ? "+" : "−"}${formatCents(Math.abs(change))}`; if (change !== null && change !== 0) element.classList.add(change > 0 ? "positive" : "negative"); };
   const modification = current - approved;
-  $("#metric-approved-change").textContent = `Modificación acumulada: ${modification >= 0 ? "+" : "−"}${formatCents(Math.abs(modification))}`;
-  $("#metric-accrued-share").textContent = `${formatPercent(execution)} ejecutado`; $("#metric-paid-share").textContent = current ? `${formatPercent(paid / current * 100)} del crédito vigente` : "Sin crédito vigente"; $("#metric-row-count").textContent = `${rows.length.toLocaleString("es-AR")} partidas`;
+  setTrend("#metric-approved-change", "Modificación acumulada", modification);
+  const previousValues = previousRows ? totals(previousRows) : null;
+  setTrend("#metric-current-change", previousPeriod ? `Variación vs. ${labelPeriod(previousPeriod)}` : "Variación", previousValues ? current - previousValues.current : null);
+  setTrend("#metric-accrued-change", previousPeriod ? `Variación vs. ${labelPeriod(previousPeriod)}` : "Variación", previousValues ? accrued - previousValues.accrued : null);
+  setTrend("#metric-available-change", previousPeriod ? `Variación vs. ${labelPeriod(previousPeriod)}` : "Variación", previousValues ? available - previousValues.available : null);
   $("#metric-execution").textContent = formatPercent(execution);
   const monthNumber = latestPeriod ? Number(latestPeriod.split("/")[1]) : 0;
   const expected = monthNumber ? monthNumber * 100 / 12 : null;
-  $("#metric-execution-benchmark").textContent = expected === null ? "Sin período" : `Ritmo lineal: ${formatPercent(expected)}`;
-  const previousCredit = previousRows ? sum(previousRows, "credito_vigente_centavos") : null;
-  $("#metric-current-change").textContent = previousCredit === null ? "Sin período previo seleccionado" : `Variación vs. ${labelPeriod(previousPeriod)}: ${previousCredit <= current ? "+" : "−"}${formatCents(Math.abs(current - previousCredit))}`;
+  const executionDifference = execution === null || expected === null ? null : execution - expected;
+  const executionNote = $("#metric-execution-benchmark"); executionNote.classList.remove("positive", "negative"); executionNote.textContent = executionDifference === null ? "Sin período" : `${executionDifference >= 0 ? "+" : "−"}${Math.abs(executionDifference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p. frente al ritmo esperado`; if (executionDifference !== null && executionDifference !== 0) executionNote.classList.add(executionDifference > 0 ? "positive" : "negative");
   $("#summary-context").textContent = selectionDescription(latestPeriod, previousPeriod);
 }
 function chartTooltip(value, series) {
@@ -109,18 +112,19 @@ function chartTooltip(value, series) {
     const difference = value.execution === null ? null : value.execution - value.expected;
     return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key key-execution">Ejecución real</span><strong>${formatPercent(value.execution)}</strong></div><div class="tooltip-row"><span class="tooltip-key key-expected">Ritmo esperado</span><strong>${formatPercent(value.expected)}</strong></div><div class="tooltip-divider"></div><div class="tooltip-row"><span>Diferencia</span><strong class="${difference >= 0 ? "positive" : "negative"}">${difference === null ? "—" : `${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`}</strong></div><p>El esperado distribuye el 100% en doce meses.</p>`;
   }
-  const label = series === "accrued" ? "Devengado" : "Pagado";
-  const keywordClass = series === "accrued" ? "key-accrued" : "key-paid";
+  const label = series === "accrued" ? "Devengado" : "Modificación";
+  const keywordClass = series === "accrued" ? "key-accrued" : "key-modification";
   return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key ${keywordClass}">${label}</span><strong>${formatCents(value[series])}</strong></div><div class="tooltip-row"><span>Crédito vigente</span><strong>${formatCents(value.current)}</strong></div><div class="tooltip-row"><span>% ejecutado</span><strong>${formatPercent(value.execution)}</strong></div>`;
 }
 function renderChart(rows) {
-  const values = aggregatePeriods(rows).map((value) => ({ ...value, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 })), chart = $("#chart");
+  const values = aggregatePeriods(rows).map((value) => ({ ...value, modification: value.current - value.approved, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 })), chart = $("#chart");
   if (!values.length) { chart.innerHTML = "<p class='note'>No hay datos para esta combinación de filtros.</p>"; return; }
   const width = 760, height = 290, pad = { top: 22, right: 24, bottom: 42, left: 74 };
-  const max = activeChart === "line" ? Math.max(100, Math.ceil(Math.max(...values.flatMap((v) => [v.execution || 0, v.expected])) / 25) * 25) : Math.max(...values.flatMap((v) => [v.accrued, v.paid]), 1);
+  const max = activeChart === "line" ? Math.max(100, Math.ceil(Math.max(...values.flatMap((v) => [v.execution || 0, v.expected])) / 25) * 25) : Math.max(...values.flatMap((v) => [v.accrued, v.modification]), 1);
+  const min = activeChart === "line" ? 0 : Math.min(...values.map((v) => v.modification), 0);
   const x = (i) => values.length === 1 ? width / 2 : pad.left + i * (width - pad.left - pad.right) / (values.length - 1);
-  const y = (value) => height - pad.bottom - value / max * (height - pad.top - pad.bottom);
-  const ticks = activeChart === "line" ? Array.from({ length: Math.floor(max / 25) + 1 }, (_, index) => index * 25) : [0, max * .5, max];
+  const y = (value) => height - pad.bottom - (value - min) / (max - min || 1) * (height - pad.top - pad.bottom);
+  const ticks = activeChart === "line" ? Array.from({ length: Math.floor(max / 25) + 1 }, (_, index) => index * 25) : [...new Set([min, 0, max])];
   const axes = ticks.map((tick) => { const yy = y(tick); return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}"/><text class="axis-label" x="${pad.left - 8}" y="${yy + 4}" text-anchor="end">${activeChart === "line" ? `${tick}%` : formatCents(tick)}</text>`; }).join("");
   const labels = values.map((value, index) => `<text class="axis-label" x="${x(index)}" y="${height - 12}" text-anchor="middle">${escapeHtml(labelPeriod(value.period))}</text>`).join("");
   let marks = "";
@@ -131,19 +135,14 @@ function renderChart(rows) {
     $("#chart-legend").innerHTML = '<span class="legend-execution"></span>% ejecutado <span class="legend-expected"></span>% esperado';
   } else {
     const band = Math.min(26, (width - pad.left - pad.right) / Math.max(values.length * 3, 3));
-    marks = values.map((value, index) => `<rect class="chart-point bar-accrued" data-index="${index}" data-series="accrued" x="${x(index) - band - 2}" y="${y(value.accrued)}" width="${band}" height="${height - pad.bottom - y(value.accrued)}" rx="3"/><rect class="chart-point bar-paid" data-index="${index}" data-series="paid" x="${x(index) + 2}" y="${y(value.paid)}" width="${band}" height="${height - pad.bottom - y(value.paid)}" rx="3"/>`).join("");
-    $("#chart-title").textContent = "Devengado y pagado acumulados";
-    $("#chart-legend").innerHTML = '<span class="legend-accrued"></span>Devengado <span class="legend-paid"></span>Pagado';
+    const zeroY = y(0);
+    marks = values.map((value, index) => { const modificationY = y(value.modification); return `<rect class="chart-point bar-accrued" data-index="${index}" data-series="accrued" x="${x(index) - band - 2}" y="${y(value.accrued)}" width="${band}" height="${zeroY - y(value.accrued)}" rx="3"/><rect class="chart-point bar-modification ${value.modification < 0 ? "negative-bar" : ""}" data-index="${index}" data-series="modification" x="${x(index) + 2}" y="${Math.min(zeroY, modificationY)}" width="${band}" height="${Math.abs(zeroY - modificationY)}" rx="3"/>`; }).join("");
+    $("#chart-title").textContent = "Devengado y modificaciones acumuladas";
+    $("#chart-legend").innerHTML = '<span class="legend-accrued"></span>Devengado <span class="legend-modification"></span>Modificación';
   }
   chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${axes}${marks}${labels}</svg><div id="chart-tooltip" class="chart-tooltip" role="status"></div>`;
   chart.dataset.values = JSON.stringify(values);
-  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "Los importes son acumulados al cierre de cada mes. Posate sobre una barra para ver el detalle.";
-}
-function renderChanges(rows) {
-  const values = aggregatePeriods(rows), container = $("#change-summary");
-  if (values.length < 2) { container.innerHTML = "<dt>Comparación</dt><dd>Seleccioná dos períodos</dd>"; return; }
-  const previous = values.at(-2), latest = values.at(-1);
-  container.innerHTML = [["Crédito vigente", latest.current - previous.current], ["Devengado", latest.accrued - previous.accrued], ["Pagado", latest.paid - previous.paid]].map(([name, change]) => `<dt>${name}</dt><dd class="${change >= 0 ? "positive" : "negative"}">${change >= 0 ? "+" : ""}${formatCents(change)}</dd>`).join("");
+  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "La modificación es la diferencia entre crédito vigente y aprobado. Las barras negativas indican reducciones. Posate sobre una barra para ver el detalle.";
 }
 function rankingLabel(row, dimension) {
   if (dimension === "program") return `${row.jurisdiccion_nombre} · ${row.programa_codigo} · ${row.programa_nombre}`;
@@ -177,7 +176,7 @@ function renderRankings(rows, latestPeriod) {
   const dimensionName = { jurisdiction: "secretaría", program: "programa", source: "fuente", object: "objeto del gasto" }[dimension];
   $("#ranking-context").textContent = latestPeriod ? `Ranking por ${dimensionName} para ${labelPeriod(latestPeriod)}, dentro de los filtros seleccionados.` : "Seleccioná al menos un período para calcular los rankings.";
 }
-function totals(rows) { return { approved: sum(rows, "credito_aprobado_centavos"), current: sum(rows, "credito_vigente_centavos"), accrued: sum(rows, "devengado_centavos"), paid: sum(rows, "pagado_centavos"), available: sum(rows, "credito_disponible_centavos") }; }
+function totals(rows) { return { approved: sum(rows, "credito_aprobado_centavos"), current: sum(rows, "credito_vigente_centavos"), accrued: sum(rows, "devengado_centavos"), available: sum(rows, "credito_disponible_centavos") }; }
 function executionAssessment(values, period) {
   const actual = executionPercent(values.accrued, values.current);
   if (actual === null || !period) return { actual, expected: null, status: "unknown" };
@@ -191,7 +190,7 @@ function totalCells(values, period, columnTotals) {
   const assessment = executionAssessment(values, period);
   const difference = assessment.actual === null ? null : assessment.actual - assessment.expected;
   const title = assessment.expected === null ? "Porcentaje no disponible" : `${formatPercent(assessment.actual)} ejecutado; ritmo lineal esperado a ${period}: ${formatPercent(assessment.expected)}; diferencia ${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} puntos porcentuales.`;
-  return `${amountCell(values.approved, columnTotals.approved)}${amountCell(values.current, columnTotals.current)}${amountCell(values.accrued, columnTotals.accrued)}${amountCell(values.paid, columnTotals.paid)}${amountCell(values.available, columnTotals.available)}<td class="number"><span class="execution-pill execution-${assessment.status}" title="${escapeHtml(title)}">${formatPercent(assessment.actual)}</span></td>`;
+  return `${amountCell(values.approved, columnTotals.approved)}${amountCell(values.current, columnTotals.current)}${amountCell(values.accrued, columnTotals.accrued)}${amountCell(values.available, columnTotals.available)}<td class="number"><span class="execution-pill execution-${assessment.status}" title="${escapeHtml(title)}">${formatPercent(assessment.actual)}</span></td>`;
 }
 function sortedGroups(entries) {
   const direction = tableSort.direction === "asc" ? 1 : -1;
@@ -226,7 +225,7 @@ function render() {
   const rows = filteredRows(), periodsSelected = selectedPeriodSequence(), latestPeriod = periodsSelected.at(-1), previousPeriod = periodsSelected.at(-2);
   const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod);
   const previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
-  renderMetrics(latestRows, latestPeriod, previousPeriod, previousRows); renderRankings(latestRows, latestPeriod); renderChart(rows); renderChanges(rows); renderTable(rows);
+  renderMetrics(latestRows, latestPeriod, previousPeriod, previousRows); renderRankings(latestRows, latestPeriod); renderChart(rows); renderTable(rows);
 }
 function resetFilters() {
   selectedPeriods = new Set(periods()); selectedPrograms.clear(); expandedSecretaries.clear(); $("#jurisdiction-filter").value = ""; $("#source-filter").value = ""; $("#object-filter").value = "";
@@ -245,8 +244,8 @@ function downloadSummary() {
   context.font = "400 17px system-ui, sans-serif"; context.fillStyle = "#d8e9f7"; context.fillText(`Programa(s): ${details.programs}`, 64, 171, 1070);
   context.fillText(`Período analizado: ${details.period}${details.previous ? ` · Comparación: ${details.previous}` : ""}`, 64, 202, 1070);
   const items = [
-    ["Crédito aprobado", "#metric-approved", "#metric-approved-change"], ["Crédito vigente", "#metric-current", "#metric-current-change"], ["Devengado", "#metric-accrued", "#metric-accrued-share"],
-    ["Pagado", "#metric-paid", "#metric-paid-share"], ["Disponible", "#metric-available", "#metric-row-count"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"],
+    ["Crédito aprobado", "#metric-approved", "#metric-approved-change"], ["Crédito vigente", "#metric-current", "#metric-current-change"], ["Devengado", "#metric-accrued", "#metric-accrued-change"],
+    ["Disponible", "#metric-available", "#metric-available-change"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"],
   ];
   const gap = 18, margin = 64, cardWidth = (canvas.width - margin * 2 - gap * 2) / 3, cardHeight = 150, startY = 275;
   items.forEach(([label, selector, detailSelector], index) => {
