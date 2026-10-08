@@ -73,3 +73,26 @@ main { width: min(1440px, calc(100% - 2.5rem)); }
 @media (max-width: 1120px) { .dashboard-primary .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .dashboard-layout, .dashboard-layout.filters-collapsed { grid-template-columns: 1fr; }.filter-sidebar { position: static; max-height: none; }.filters-collapsed .filter-sidebar { padding: .75rem; }.filters-collapsed .filter-sidebar-heading { justify-content: space-between; }.filters-collapsed .filter-sidebar-heading > div { display: block; }.ranking-grid { grid-template-columns: 1fr; }.site-footer { grid-template-columns: 1fr; }.footer-social { text-align: left; } }
 @media (max-width: 560px) { .dashboard-primary .summary-grid { grid-template-columns: 1fr 1fr; }.ranking-panel .section-heading { display: block; } }
+
+/* Navegación principal y visualizaciones editoriales */
+.site-header { display: block; padding-bottom: 0; }
+.header-top { display: flex; justify-content: space-between; gap: 2rem; align-items: flex-end; }
+.header-tabs { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: 2rem; }
+.header-tabs button { padding: .78rem 1rem; border: 0; border-bottom: 3px solid transparent; color: #d5e8f6; background: transparent; cursor: pointer; font: inherit; font-size: .9rem; font-weight: 700; }
+.header-tabs button:hover { color: white; background: rgb(255 255 255 / 8%); }
+.header-tabs button.active { border-bottom-color: #f4b942; color: white; background: rgb(255 255 255 / 11%); }
+.landing-panel { min-height: 420px; padding: clamp(2rem, 5vw, 4.5rem); border: 1px solid var(--line); border-radius: 14px; background: white; box-shadow: 0 2px 8px rgb(20 38 65 / 5%); }
+.landing-panel > h2 { max-width: 700px; font-size: clamp(1.8rem, 3.5vw, 2.8rem); }.landing-panel > p:not(.eyebrow) { max-width: 760px; color: var(--muted); font-size: 1.05rem; }
+.placeholder-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2.5rem; }.placeholder-grid article { padding: 1.25rem; border: 1px solid var(--line); border-radius: 10px; background: #f8fafc; }.placeholder-grid strong, .placeholder-grid span { display: block; }.placeholder-grid span { margin-top: .4rem; color: var(--muted); font-size: .86rem; }
+.guide-steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }.guide-steps article { display: flex; gap: .9rem; padding: 1.15rem; border: 1px solid var(--line); border-radius: 10px; }.guide-steps article > span { display: grid; width: 2rem; height: 2rem; flex: none; place-items: center; border-radius: 50%; color: white; background: var(--blue); font-weight: 750; }.guide-steps p { margin: .3rem 0 0; color: var(--muted); font-size: .86rem; }
+.chart-controls { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-top: 1rem; }
+.chart-tabs { margin-top: 0; }
+.chart-value-toggle { display: flex; gap: .45rem; align-items: center; padding: .4rem .65rem; border: 1px solid #c8d3df; border-radius: 7px; color: #46556d; background: #f8fafc; cursor: pointer; font-size: .8rem; }.chart-value-toggle input { margin: 0; accent-color: var(--blue); }
+.chart-value-toggle[hidden] { display: none; }
+.chart-panel .grid-line { stroke: #dce3eb; stroke-dasharray: 3 5; }
+.chart-panel .zero-line { stroke: #526176; stroke-width: 2; stroke-dasharray: none; }
+.bar-modification { transition: opacity .15s ease; }.bar-modification:hover { opacity: .82; }
+.bar-value { fill: #34435a; font-size: 10px; font-weight: 750; pointer-events: none; }.bar-value-positive { fill: #187347; }.bar-value-negative { fill: #a93642; }
+
+@media (max-width: 800px) { .header-top { display: block; }.header-tabs { margin-top: 1.5rem; }.header-tabs button { flex: 1 1 auto; }.placeholder-grid, .guide-steps { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .chart-controls { align-items: flex-start; flex-direction: column; }.landing-panel { padding: 1.4rem; }.header-tabs { display: grid; grid-template-columns: 1fr; }.header-tabs button { text-align: left; } }

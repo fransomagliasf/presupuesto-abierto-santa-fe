@@ -9,15 +9,30 @@
   </head>
   <body>
     <header class="site-header">
-      <div>
-        <p class="eyebrow">Municipalidad de Santa Fe</p>
-        <h1>Presupuesto abierto</h1>
-        <p class="subtitle">Evolución de la ejecución de gastos por objeto</p>
+      <div class="header-top">
+        <div>
+          <p class="eyebrow">Municipalidad de Santa Fe</p>
+          <h1>Presupuesto abierto</h1>
+          <p class="subtitle">Evolución de la ejecución de gastos por objeto</p>
+        </div>
+        <p id="updated-at" class="update-note" aria-live="polite">Cargando información…</p>
       </div>
-      <p id="updated-at" class="update-note" aria-live="polite">Cargando información…</p>
+      <nav class="header-tabs" aria-label="Secciones principales">
+        <button type="button" data-page="summary" aria-selected="false">Resumen</button>
+        <button class="active" type="button" data-page="tracking" aria-selected="true">Seguimiento mensual</button>
+        <button type="button" data-page="guide" aria-selected="false">¿Cómo leer el presupuesto?</button>
+      </nav>
     </header>
 
     <main>
+      <section id="page-summary" class="page-view landing-panel" hidden>
+        <p class="eyebrow">Vista general</p>
+        <h2>Resumen del presupuesto municipal</h2>
+        <p>Este espacio reunirá los principales indicadores anuales, los cambios más relevantes y una lectura rápida del estado general del presupuesto de la ciudad.</p>
+        <div class="placeholder-grid"><article><strong>Panorama anual</strong><span>Indicadores consolidados y evolución global.</span></article><article><strong>Principales movimientos</strong><span>Cambios de crédito y niveles de ejecución destacados.</span></article><article><strong>Datos para compartir</strong><span>Resúmenes visuales preparados para difusión.</span></article></div>
+      </section>
+
+      <section id="page-tracking" class="page-view">
       <div id="dashboard-layout" class="dashboard-layout">
       <aside id="filter-sidebar" class="panel filter-sidebar" aria-labelledby="filters-title">
         <div class="filter-sidebar-heading">
@@ -127,9 +142,12 @@
             </div>
             <div id="chart-legend" class="legend"><span class="legend-execution"></span>% ejecutado <span class="legend-expected"></span>% esperado</div>
           </div>
-          <div class="chart-tabs" role="tablist" aria-label="Tipo de gráfico">
-            <button class="chart-tab active" type="button" role="tab" data-chart="line">Líneas</button>
-            <button class="chart-tab" type="button" role="tab" data-chart="bar">Barras</button>
+          <div class="chart-controls">
+            <div class="chart-tabs" role="tablist" aria-label="Tipo de gráfico">
+              <button class="chart-tab active" type="button" role="tab" data-chart="line" aria-selected="true">Líneas</button>
+              <button class="chart-tab" type="button" role="tab" data-chart="bar" aria-selected="false">Barras</button>
+            </div>
+            <label id="bar-value-control" class="chart-value-toggle" hidden><input id="show-bar-values" type="checkbox"> Mostrar valores</label>
           </div>
           <div id="chart" class="chart" role="img" aria-label="Gráfico de evolución presupuestaria"></div>
           <p id="chart-note" class="note"></p>
@@ -169,6 +187,14 @@
           </table>
         </div>
         <p id="table-note" class="note"></p>
+      </section>
+      </section>
+
+      <section id="page-guide" class="page-view landing-panel" hidden>
+        <p class="eyebrow">Guía inicial</p>
+        <h2>¿Cómo leer el presupuesto?</h2>
+        <p>El presupuesto muestra cuánto se autorizó gastar, cómo cambió esa autorización durante el año y cuánto del crédito disponible ya se utilizó.</p>
+        <div class="guide-steps"><article><span>1</span><div><strong>Crédito aprobado</strong><p>Es el monto autorizado al comenzar el ejercicio y funciona como punto de partida.</p></div></article><article><span>2</span><div><strong>Crédito vigente</strong><p>Incluye ampliaciones y reducciones realizadas después de la aprobación.</p></div></article><article><span>3</span><div><strong>Devengado</strong><p>Registra obligaciones reconocidas por bienes, servicios u obras ya recibidos.</p></div></article><article><span>4</span><div><strong>Porcentaje ejecutado</strong><p>Surge de dividir el devengado por el crédito vigente y multiplicarlo por 100.</p></div></article></div>
       </section>
     </main>
 

@@ -6,7 +6,7 @@ const DATA_FILES = [
 const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
-let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "line", tableSort = { key: "accrued", direction: "desc" };
+let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "line", showBarValues = false, tableSort = { key: "accrued", direction: "desc" };
 
 function parseCSV(text) {
   const records = []; let record = [], field = "", quoted = false;
@@ -29,6 +29,7 @@ function unique(values) { return [...new Set(values)].sort((a, b) => a.localeCom
 function escapeHtml(value) { return String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]); }
 function formatCents(value) { return currency.format(value / 100); }
 function formatAxisAmount(value) { const pesos = Math.abs(value) / 100, sign = value < 0 ? "−" : ""; if (pesos >= 1e9) return `${sign}$ ${(pesos / 1e9).toLocaleString("es-AR", { maximumFractionDigits: 1 })} mil M`; if (pesos >= 1e6) return `${sign}$ ${(pesos / 1e6).toLocaleString("es-AR", { maximumFractionDigits: 1 })} M`; return `${sign}${currency.format(pesos)}`; }
+function niceStep(value) { if (!value || value <= 0) return 1; const magnitude = 10 ** Math.floor(Math.log10(value)), fraction = value / magnitude, rounded = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10; return rounded * magnitude; }
 function sum(rows, field) { return rows.reduce((total, row) => total + cents(row, field), 0); }
 function executionPercent(accrued, current) { return current > 0 ? accrued / current * 100 : null; }
 function formatPercent(value) { return value === null ? "—" : `${value.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`; }
@@ -117,6 +118,7 @@ function chartTooltip(value, series) {
 }
 function renderChart(rows) {
   const values = aggregatePeriods(rows).map((value) => ({ ...value, modification: value.current - value.approved, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 })), chart = $("#chart");
+  $("#bar-value-control").hidden = activeChart !== "bar";
   if (!values.length) { chart.innerHTML = "<p class='note'>No hay datos para esta combinación de filtros.</p>"; return; }
   const width = 900, height = 340, pad = { top: 26, right: 28, bottom: 54, left: 96 };
   let min = 0, max, ticks;
@@ -124,12 +126,11 @@ function renderChart(rows) {
     max = Math.max(100, Math.ceil(Math.max(...values.flatMap((value) => [value.execution || 0, value.expected])) / 25) * 25);
     ticks = Array.from({ length: Math.floor(max / 25) + 1 }, (_, index) => index * 25);
   } else {
-    min = Math.min(0, ...values.map((value) => value.modification)); max = Math.max(0, ...values.map((value) => value.modification));
-    if (min === max) max = 1;
-    if (min < 0) min *= 1.08; if (max > 0) max *= 1.08;
-    ticks = [...new Set([min, min < 0 ? min / 2 : 0, 0, max > 0 ? max / 2 : 0, max])].sort((a, b) => a - b);
+    const largest = Math.max(...values.map((value) => Math.abs(value.modification)), 1), step = niceStep(largest / 3), limit = Math.max(step, Math.ceil(largest / step) * step);
+    min = -limit; max = limit; ticks = []; for (let tick = min; tick <= max + step / 2; tick += step) ticks.push(Math.abs(tick) < step / 1000 ? 0 : tick);
   }
-  const x = (i) => values.length === 1 ? width / 2 : pad.left + i * (width - pad.left - pad.right) / (values.length - 1);
+  const plotWidth = width - pad.left - pad.right;
+  const x = (i) => activeChart === "bar" ? pad.left + (i + .5) * plotWidth / values.length : values.length === 1 ? width / 2 : pad.left + 18 + i * (plotWidth - 36) / (values.length - 1);
   const y = (value) => height - pad.bottom - (value - min) / (max - min || 1) * (height - pad.top - pad.bottom);
   const axes = ticks.map((tick) => { const yy = y(tick); return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}"/><text class="axis-label" x="${pad.left - 12}" y="${yy + 4}" text-anchor="end">${activeChart === "line" ? `${tick}%` : formatAxisAmount(tick)}</text>`; }).join("");
   const labels = values.map((value, index) => `<text class="axis-label" x="${x(index)}" y="${height - 16}" text-anchor="middle">${escapeHtml(labelPeriod(value.period))}</text>`).join("");
@@ -143,7 +144,7 @@ function renderChart(rows) {
     const band = Math.min(52, (width - pad.left - pad.right) / Math.max(values.length * 1.8, 2));
     const zeroY = y(0);
     zeroLine = `<line class="zero-line" x1="${pad.left}" x2="${width - pad.right}" y1="${zeroY}" y2="${zeroY}"/>`;
-    marks = values.map((value, index) => { const modificationY = y(value.modification), status = value.modification > 0 ? "positive-bar" : value.modification < 0 ? "negative-bar" : "zero-bar"; return `<rect class="chart-point bar-modification ${status}" data-index="${index}" data-series="modification" x="${x(index) - band / 2}" y="${Math.min(zeroY, modificationY)}" width="${band}" height="${Math.max(2, Math.abs(zeroY - modificationY))}" rx="5"/>`; }).join("");
+    marks = values.map((value, index) => { const modificationY = y(value.modification), status = value.modification > 0 ? "positive-bar" : value.modification < 0 ? "negative-bar" : "zero-bar", valueLabel = showBarValues ? `<text class="bar-value ${value.modification >= 0 ? "bar-value-positive" : "bar-value-negative"}" x="${x(index)}" y="${value.modification >= 0 ? modificationY - 9 : modificationY + 18}" text-anchor="middle">${escapeHtml(formatAxisAmount(value.modification))}</text>` : ""; return `<rect class="chart-point bar-modification ${status}" data-index="${index}" data-series="modification" x="${x(index) - band / 2}" y="${Math.min(zeroY, modificationY)}" width="${band}" height="${Math.max(2, Math.abs(zeroY - modificationY))}" rx="5"/>${valueLabel}`; }).join("");
     $("#chart-title").textContent = "Evolución de las modificaciones presupuestarias";
     $("#chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento <span class="legend-negative"></span>Reducción';
   }
@@ -300,7 +301,9 @@ async function init() {
     ["#source-filter", "#object-filter", "#detail-breakdown-filter", "#ranking-dimension"].forEach((id) => $(id).addEventListener("change", render));
     $("#chart").addEventListener("pointermove", (event) => { const mark = event.target.closest(".chart-point"), tooltip = $("#chart-tooltip"); if (!mark || !tooltip) { if (tooltip) tooltip.classList.remove("visible"); return; } const value = JSON.parse($("#chart").dataset.values)[Number(mark.dataset.index)]; tooltip.innerHTML = chartTooltip(value, mark.dataset.series); const rect = $("#chart").getBoundingClientRect(); tooltip.style.left = `${Math.max(4, Math.min(event.clientX - rect.left + 12, rect.width - 270))}px`; tooltip.style.top = `${Math.max(event.clientY - rect.top - 130, 4)}px`; tooltip.classList.add("visible"); });
     $("#chart").addEventListener("pointerleave", () => $("#chart-tooltip")?.classList.remove("visible"));
-    document.querySelectorAll(".chart-tab").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll(".chart-tab").forEach((item) => item.classList.toggle("active", item === tab)); renderChart(filteredRows()); }));
+    document.querySelectorAll(".chart-tab").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll(".chart-tab").forEach((item) => { item.classList.toggle("active", item === tab); item.setAttribute("aria-selected", String(item === tab)); }); renderChart(filteredRows()); }));
+    $("#show-bar-values").addEventListener("change", (event) => { showBarValues = event.target.checked; renderChart(filteredRows()); });
+    document.querySelectorAll(".header-tabs [data-page]").forEach((button) => button.addEventListener("click", () => { const page = button.dataset.page; document.querySelectorAll(".page-view").forEach((view) => { view.hidden = view.id !== `page-${page}`; }); document.querySelectorAll(".header-tabs [data-page]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });
     document.querySelectorAll(".sort-header").forEach((button) => button.addEventListener("click", () => { const key = button.dataset.sort; if (tableSort.key === key) tableSort.direction = tableSort.direction === "asc" ? "desc" : "asc"; else { tableSort.key = key; tableSort.direction = key === "name" || key === "breakdown" ? "asc" : "desc"; } renderTable(filteredRows()); }));
     $("#clear-filters").addEventListener("click", resetFilters);
