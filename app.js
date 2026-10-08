@@ -53,9 +53,9 @@ function renderProgramChips() {
   $("#program-title").textContent = `Programas de ${$("#jurisdiction-filter").value}`;
   $("#program-filter").innerHTML = programs.map((program) => `<div class="program-option"><label><input type="checkbox" data-program="${escapeHtml(program)}" ${selectedPrograms.has(program) ? "checked" : ""}><span>${escapeHtml(program)}</span></label><button class="only-program" type="button" data-only-program="${escapeHtml(program)}">Únicamente</button></div>`).join("");
 }
-function filteredRows() {
+function filteredRows(includeAllPeriods = false) {
   const jurisdiction = $("#jurisdiction-filter").value, source = $("#source-filter").value, object = $("#object-filter").value;
-  return data.filter((row) => selectedPeriods.has(row.fecha_corte) && (!jurisdiction || row.jurisdiccion_nombre === jurisdiction) && (!jurisdiction || selectedPrograms.has(row.programa_nombre)) && (!source || row.fuente_financiamiento_nombre === source) && (!object || `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}` === object));
+  return data.filter((row) => (includeAllPeriods || selectedPeriods.has(row.fecha_corte)) && (!jurisdiction || row.jurisdiccion_nombre === jurisdiction) && (!jurisdiction || selectedPrograms.has(row.programa_nombre)) && (!source || row.fuente_financiamiento_nombre === source) && (!object || `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}` === object));
 }
 function aggregatePeriods(rows) {
   const byPeriod = new Map();
@@ -114,19 +114,24 @@ function chartTooltip(value, series) {
     const difference = value.execution === null ? null : value.execution - value.expected;
     return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key key-execution">Ejecución real</span><strong>${formatPercent(value.execution)}</strong></div><div class="tooltip-row"><span class="tooltip-key key-expected">Ritmo esperado</span><strong>${formatPercent(value.expected)}</strong></div><div class="tooltip-divider"></div><div class="tooltip-row"><span>Diferencia</span><strong class="${difference >= 0 ? "positive" : "negative"}">${difference === null ? "—" : `${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`}</strong></div><p>El esperado distribuye el 100% en doce meses.</p>`;
   }
-  return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key key-modification">Modificación</span><strong class="${value.modification >= 0 ? "positive" : "negative"}">${value.modification >= 0 ? "+" : ""}${formatCents(value.modification)}</strong></div><div class="tooltip-divider"></div><div class="tooltip-row"><span>Crédito aprobado</span><strong>${formatCents(value.approved)}</strong></div><div class="tooltip-row"><span>Crédito vigente</span><strong>${formatCents(value.current)}</strong></div>`;
+  const mainValue = series === "cumulative" ? value.modification : value.monthlyModification;
+  const mainLabel = series === "cumulative" ? "Modificación acumulada" : "Movimiento del mes";
+  return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key key-modification">${mainLabel}</span><strong class="${mainValue >= 0 ? "positive" : "negative"}">${mainValue >= 0 ? "+" : ""}${formatCents(mainValue)}</strong></div><div class="tooltip-divider"></div><div class="tooltip-row"><span>Acumulado</span><strong>${value.modification >= 0 ? "+" : ""}${formatCents(value.modification)}</strong></div><div class="tooltip-row"><span>Crédito aprobado</span><strong>${formatCents(value.approved)}</strong></div><div class="tooltip-row"><span>Crédito vigente</span><strong>${formatCents(value.current)}</strong></div>`;
 }
 function renderChart(rows) {
-  const values = aggregatePeriods(rows).map((value) => ({ ...value, modification: value.current - value.approved, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 })), chart = $("#chart");
+  const periodValues = aggregatePeriods(rows), comparisonValues = aggregatePeriods(filteredRows(true)), comparisonIndex = new Map(comparisonValues.map((value, index) => [value.period, index]));
+  const values = periodValues.map((value) => { const modification = value.current - value.approved, index = comparisonIndex.get(value.period), previous = index > 0 ? comparisonValues[index - 1] : null, previousModification = previous ? previous.current - previous.approved : 0; return { ...value, modification, monthlyModification: modification - previousModification, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 }; }), chart = $("#chart"), chartTotal = $("#chart-total");
   $("#bar-value-control").hidden = activeChart !== "bar";
+  chartTotal.hidden = activeChart !== "bar" || !values.length;
   if (!values.length) { chart.innerHTML = "<p class='note'>No hay datos para esta combinación de filtros.</p>"; return; }
+  if (activeChart === "bar") { const latest = values.at(-1); chartTotal.innerHTML = `Modificación acumulada a ${escapeHtml(labelPeriod(latest.period))}: <strong class="${latest.modification >= 0 ? "positive" : "negative"}">${latest.modification >= 0 ? "+" : ""}${formatCents(latest.modification)}</strong>`; }
   const width = 900, height = 340, pad = { top: 26, right: 28, bottom: 54, left: 96 };
   let min = 0, max, ticks;
   if (activeChart === "line") {
     max = Math.max(100, Math.ceil(Math.max(...values.flatMap((value) => [value.execution || 0, value.expected])) / 25) * 25);
     ticks = Array.from({ length: Math.floor(max / 25) + 1 }, (_, index) => index * 25);
   } else {
-    const largest = Math.max(...values.map((value) => Math.abs(value.modification)), 1), step = niceStep(largest / 3), limit = Math.max(step, Math.ceil(largest / step) * step);
+    const largest = Math.max(...values.flatMap((value) => [Math.abs(value.monthlyModification), Math.abs(value.modification)]), 1), step = niceStep(largest / 3), limit = Math.max(step, Math.ceil(largest / step) * step);
     min = -limit; max = limit; ticks = []; for (let tick = min; tick <= max + step / 2; tick += step) ticks.push(Math.abs(tick) < step / 1000 ? 0 : tick);
   }
   const plotWidth = width - pad.left - pad.right;
@@ -144,13 +149,17 @@ function renderChart(rows) {
     const band = Math.min(52, (width - pad.left - pad.right) / Math.max(values.length * 1.8, 2));
     const zeroY = y(0);
     zeroLine = `<line class="zero-line" x1="${pad.left}" x2="${width - pad.right}" y1="${zeroY}" y2="${zeroY}"/>`;
-    marks = values.map((value, index) => { const modificationY = y(value.modification), status = value.modification > 0 ? "positive-bar" : value.modification < 0 ? "negative-bar" : "zero-bar", valueLabel = showBarValues ? `<text class="bar-value ${value.modification >= 0 ? "bar-value-positive" : "bar-value-negative"}" x="${x(index)}" y="${value.modification >= 0 ? modificationY - 9 : modificationY + 18}" text-anchor="middle">${escapeHtml(formatAxisAmount(value.modification))}</text>` : ""; return `<rect class="chart-point bar-modification ${status}" data-index="${index}" data-series="modification" x="${x(index) - band / 2}" y="${Math.min(zeroY, modificationY)}" width="${band}" height="${Math.max(2, Math.abs(zeroY - modificationY))}" rx="5"/>${valueLabel}`; }).join("");
-    $("#chart-title").textContent = "Evolución de las modificaciones presupuestarias";
-    $("#chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento <span class="legend-negative"></span>Reducción';
+    const cumulativePath = values.map((value, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(value.modification).toFixed(1)}`).join(" ");
+    const cumulativeLine = `<path class="line-cumulative" d="${cumulativePath}"/>`;
+    const bars = values.map((value, index) => { const monthlyY = y(value.monthlyModification), status = value.monthlyModification > 0 ? "positive-bar" : value.monthlyModification < 0 ? "negative-bar" : "zero-bar", valueLabel = showBarValues ? `<text class="bar-value ${value.monthlyModification >= 0 ? "bar-value-positive" : "bar-value-negative"}" x="${x(index)}" y="${value.monthlyModification >= 0 ? monthlyY - 9 : monthlyY + 18}" text-anchor="middle">${escapeHtml(formatAxisAmount(value.monthlyModification))}</text>` : ""; return `<rect class="chart-point bar-modification ${status}" data-index="${index}" data-series="monthly" x="${x(index) - band / 2}" y="${Math.min(zeroY, monthlyY)}" width="${band}" height="${Math.max(2, Math.abs(zeroY - monthlyY))}" rx="5"/>${valueLabel}`; }).join("");
+    const cumulativePoints = values.map((value, index) => `<circle class="chart-point point-cumulative" data-index="${index}" data-series="cumulative" cx="${x(index)}" cy="${y(value.modification)}" r="4"/>`).join("");
+    marks = `${cumulativeLine}${bars}${cumulativePoints}`;
+    $("#chart-title").textContent = "Movimientos mensuales y modificación acumulada";
+    $("#chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento mensual <span class="legend-negative"></span>Reducción mensual <span class="legend-cumulative"></span>Acumulado';
   }
   chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">${axes}${zeroLine}${marks}${labels}</svg><div id="chart-tooltip" class="chart-tooltip" role="status"></div>`;
   chart.dataset.values = JSON.stringify(values);
-  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "Cada barra muestra crédito vigente menos crédito aprobado. Verde indica aumento y rojo indica reducción.";
+  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "Cada barra muestra el cambio frente al mes anterior disponible. La línea azul muestra la modificación acumulada desde el crédito aprobado.";
 }
 function rankingLabel(row, dimension) {
   if (dimension === "program") return `${row.jurisdiccion_nombre} · ${row.programa_codigo} · ${row.programa_nombre}`;
