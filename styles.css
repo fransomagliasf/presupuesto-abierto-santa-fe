@@ -49,7 +49,12 @@ main { width: min(1440px, calc(100% - 2.5rem)); }
 .metric-help:hover .metric-info, .metric-help:focus .metric-info { display: block; }
 .metric small.positive { color: #08796d; font-weight: 700; }.metric small.negative { color: #b23a48; font-weight: 700; }
 .chart-section .chart-panel { margin-bottom: 1.5rem; }
-.legend-modification { background: #438dcc; }.bar-modification { fill: #438dcc; }.bar-modification.negative-bar { fill: #c74c56; }.key-modification { color: #164c7c; background: #d8eafa; }
+.chart svg { display: block; height: auto; aspect-ratio: 900 / 340; }
+.zero-line { stroke: #59687d; stroke-width: 2; }
+.legend-positive, .bar-modification.positive-bar { fill: #26905f; background: #26905f; }
+.legend-negative, .bar-modification.negative-bar { fill: #c74c56; background: #c74c56; }
+.bar-modification.zero-bar { fill: #8c99a9; }
+.key-modification { color: #164c7c; background: #d8eafa; }
 .ranking-panel { margin-bottom: 1.5rem; }
 .ranking-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; margin-top: 1rem; }
 .ranking-card { min-width: 0; padding: 1rem; border: 1px solid var(--line); border-top: 4px solid var(--blue); border-radius: 9px; background: #fbfcfe; }

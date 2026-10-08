@@ -28,6 +28,7 @@ function labelPeriod(value) { return dateFormat.format(date({ fecha_corte: value
 function unique(values) { return [...new Set(values)].sort((a, b) => a.localeCompare(b, "es")); }
 function escapeHtml(value) { return String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]); }
 function formatCents(value) { return currency.format(value / 100); }
+function formatAxisAmount(value) { const pesos = Math.abs(value) / 100, sign = value < 0 ? "−" : ""; if (pesos >= 1e9) return `${sign}$ ${(pesos / 1e9).toLocaleString("es-AR", { maximumFractionDigits: 1 })} mil M`; if (pesos >= 1e6) return `${sign}$ ${(pesos / 1e6).toLocaleString("es-AR", { maximumFractionDigits: 1 })} M`; return `${sign}${currency.format(pesos)}`; }
 function sum(rows, field) { return rows.reduce((total, row) => total + cents(row, field), 0); }
 function executionPercent(accrued, current) { return current > 0 ? accrued / current * 100 : null; }
 function formatPercent(value) { return value === null ? "—" : `${value.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`; }
@@ -112,37 +113,43 @@ function chartTooltip(value, series) {
     const difference = value.execution === null ? null : value.execution - value.expected;
     return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key key-execution">Ejecución real</span><strong>${formatPercent(value.execution)}</strong></div><div class="tooltip-row"><span class="tooltip-key key-expected">Ritmo esperado</span><strong>${formatPercent(value.expected)}</strong></div><div class="tooltip-divider"></div><div class="tooltip-row"><span>Diferencia</span><strong class="${difference >= 0 ? "positive" : "negative"}">${difference === null ? "—" : `${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`}</strong></div><p>El esperado distribuye el 100% en doce meses.</p>`;
   }
-  const label = series === "accrued" ? "Devengado" : "Modificación";
-  const keywordClass = series === "accrued" ? "key-accrued" : "key-modification";
-  return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key ${keywordClass}">${label}</span><strong>${formatCents(value[series])}</strong></div><div class="tooltip-row"><span>Crédito vigente</span><strong>${formatCents(value.current)}</strong></div><div class="tooltip-row"><span>% ejecutado</span><strong>${formatPercent(value.execution)}</strong></div>`;
+  return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key key-modification">Modificación</span><strong class="${value.modification >= 0 ? "positive" : "negative"}">${value.modification >= 0 ? "+" : ""}${formatCents(value.modification)}</strong></div><div class="tooltip-divider"></div><div class="tooltip-row"><span>Crédito aprobado</span><strong>${formatCents(value.approved)}</strong></div><div class="tooltip-row"><span>Crédito vigente</span><strong>${formatCents(value.current)}</strong></div>`;
 }
 function renderChart(rows) {
   const values = aggregatePeriods(rows).map((value) => ({ ...value, modification: value.current - value.approved, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 })), chart = $("#chart");
   if (!values.length) { chart.innerHTML = "<p class='note'>No hay datos para esta combinación de filtros.</p>"; return; }
-  const width = 760, height = 290, pad = { top: 22, right: 24, bottom: 42, left: 74 };
-  const max = activeChart === "line" ? Math.max(100, Math.ceil(Math.max(...values.flatMap((v) => [v.execution || 0, v.expected])) / 25) * 25) : Math.max(...values.flatMap((v) => [v.accrued, v.modification]), 1);
-  const min = activeChart === "line" ? 0 : Math.min(...values.map((v) => v.modification), 0);
+  const width = 900, height = 340, pad = { top: 26, right: 28, bottom: 54, left: 96 };
+  let min = 0, max, ticks;
+  if (activeChart === "line") {
+    max = Math.max(100, Math.ceil(Math.max(...values.flatMap((value) => [value.execution || 0, value.expected])) / 25) * 25);
+    ticks = Array.from({ length: Math.floor(max / 25) + 1 }, (_, index) => index * 25);
+  } else {
+    min = Math.min(0, ...values.map((value) => value.modification)); max = Math.max(0, ...values.map((value) => value.modification));
+    if (min === max) max = 1;
+    if (min < 0) min *= 1.08; if (max > 0) max *= 1.08;
+    ticks = [...new Set([min, min < 0 ? min / 2 : 0, 0, max > 0 ? max / 2 : 0, max])].sort((a, b) => a - b);
+  }
   const x = (i) => values.length === 1 ? width / 2 : pad.left + i * (width - pad.left - pad.right) / (values.length - 1);
   const y = (value) => height - pad.bottom - (value - min) / (max - min || 1) * (height - pad.top - pad.bottom);
-  const ticks = activeChart === "line" ? Array.from({ length: Math.floor(max / 25) + 1 }, (_, index) => index * 25) : [...new Set([min, 0, max])];
-  const axes = ticks.map((tick) => { const yy = y(tick); return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}"/><text class="axis-label" x="${pad.left - 8}" y="${yy + 4}" text-anchor="end">${activeChart === "line" ? `${tick}%` : formatCents(tick)}</text>`; }).join("");
-  const labels = values.map((value, index) => `<text class="axis-label" x="${x(index)}" y="${height - 12}" text-anchor="middle">${escapeHtml(labelPeriod(value.period))}</text>`).join("");
-  let marks = "";
+  const axes = ticks.map((tick) => { const yy = y(tick); return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}"/><text class="axis-label" x="${pad.left - 12}" y="${yy + 4}" text-anchor="end">${activeChart === "line" ? `${tick}%` : formatAxisAmount(tick)}</text>`; }).join("");
+  const labels = values.map((value, index) => `<text class="axis-label" x="${x(index)}" y="${height - 16}" text-anchor="middle">${escapeHtml(labelPeriod(value.period))}</text>`).join("");
+  let marks = "", zeroLine = "";
   if (activeChart === "line") {
     const path = (field) => values.map((value, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(value[field]).toFixed(1)}`).join(" ");
     marks = `<path class="line-execution" d="${path("execution")}"/><path class="line-expected" d="${path("expected")}"/>` + values.map((value, index) => `<circle class="chart-point point-execution" data-index="${index}" data-series="execution" cx="${x(index)}" cy="${y(value.execution || 0)}" r="5"/><circle class="chart-point point-expected" data-index="${index}" data-series="expected" cx="${x(index)}" cy="${y(value.expected)}" r="4"/>`).join("");
     $("#chart-title").textContent = "Ejecución real y ritmo esperado";
     $("#chart-legend").innerHTML = '<span class="legend-execution"></span>% ejecutado <span class="legend-expected"></span>% esperado';
   } else {
-    const band = Math.min(26, (width - pad.left - pad.right) / Math.max(values.length * 3, 3));
+    const band = Math.min(52, (width - pad.left - pad.right) / Math.max(values.length * 1.8, 2));
     const zeroY = y(0);
-    marks = values.map((value, index) => { const modificationY = y(value.modification); return `<rect class="chart-point bar-accrued" data-index="${index}" data-series="accrued" x="${x(index) - band - 2}" y="${y(value.accrued)}" width="${band}" height="${zeroY - y(value.accrued)}" rx="3"/><rect class="chart-point bar-modification ${value.modification < 0 ? "negative-bar" : ""}" data-index="${index}" data-series="modification" x="${x(index) + 2}" y="${Math.min(zeroY, modificationY)}" width="${band}" height="${Math.abs(zeroY - modificationY)}" rx="3"/>`; }).join("");
-    $("#chart-title").textContent = "Devengado y modificaciones acumuladas";
-    $("#chart-legend").innerHTML = '<span class="legend-accrued"></span>Devengado <span class="legend-modification"></span>Modificación';
+    zeroLine = `<line class="zero-line" x1="${pad.left}" x2="${width - pad.right}" y1="${zeroY}" y2="${zeroY}"/>`;
+    marks = values.map((value, index) => { const modificationY = y(value.modification), status = value.modification > 0 ? "positive-bar" : value.modification < 0 ? "negative-bar" : "zero-bar"; return `<rect class="chart-point bar-modification ${status}" data-index="${index}" data-series="modification" x="${x(index) - band / 2}" y="${Math.min(zeroY, modificationY)}" width="${band}" height="${Math.max(2, Math.abs(zeroY - modificationY))}" rx="5"/>`; }).join("");
+    $("#chart-title").textContent = "Evolución de las modificaciones presupuestarias";
+    $("#chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento <span class="legend-negative"></span>Reducción';
   }
-  chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${axes}${marks}${labels}</svg><div id="chart-tooltip" class="chart-tooltip" role="status"></div>`;
+  chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">${axes}${zeroLine}${marks}${labels}</svg><div id="chart-tooltip" class="chart-tooltip" role="status"></div>`;
   chart.dataset.values = JSON.stringify(values);
-  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "La modificación es la diferencia entre crédito vigente y aprobado. Las barras negativas indican reducciones. Posate sobre una barra para ver el detalle.";
+  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "Cada barra muestra crédito vigente menos crédito aprobado. Verde indica aumento y rojo indica reducción.";
 }
 function rankingLabel(row, dimension) {
   if (dimension === "program") return `${row.jurisdiccion_nombre} · ${row.programa_codigo} · ${row.programa_nombre}`;
