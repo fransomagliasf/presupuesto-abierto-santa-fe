@@ -6,7 +6,7 @@ const DATA_FILES = [
 const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
-let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "line", showBarValues = false, tableSort = { key: "accrued", direction: "desc" };
+let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "line", showBarValues = false, budgetChart = null, tableSort = { key: "accrued", direction: "desc" };
 
 function parseCSV(text) {
   const records = []; let record = [], field = "", quoted = false;
@@ -109,56 +109,68 @@ function renderMetrics(rows, latestPeriod, previousPeriod, previousRows) {
   const executionNote = $("#metric-execution-benchmark"); executionNote.classList.remove("positive", "negative"); executionNote.textContent = executionDifference === null ? "Sin período" : `${executionDifference >= 0 ? "+" : "−"}${Math.abs(executionDifference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p. frente al ritmo esperado`; if (executionDifference !== null && executionDifference !== 0) executionNote.classList.add(executionDifference > 0 ? "positive" : "negative");
   $("#summary-context").textContent = selectionDescription(latestPeriod, previousPeriod);
 }
-function chartTooltip(value, series) {
-  if (series === "execution" || series === "expected") {
-    const difference = value.execution === null ? null : value.execution - value.expected;
-    return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key key-execution">Ejecución real</span><strong>${formatPercent(value.execution)}</strong></div><div class="tooltip-row"><span class="tooltip-key key-expected">Ritmo esperado</span><strong>${formatPercent(value.expected)}</strong></div><div class="tooltip-divider"></div><div class="tooltip-row"><span>Diferencia</span><strong class="${difference >= 0 ? "positive" : "negative"}">${difference === null ? "—" : `${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`}</strong></div><p>El esperado distribuye el 100% en doce meses.</p>`;
-  }
-  const mainValue = series === "cumulative" ? value.modification : value.monthlyModification;
-  const mainLabel = series === "cumulative" ? "Modificación acumulada" : "Movimiento del mes";
-  return `<div class="tooltip-period">${escapeHtml(labelPeriod(value.period))}</div><div class="tooltip-row"><span class="tooltip-key key-modification">${mainLabel}</span><strong class="${mainValue >= 0 ? "positive" : "negative"}">${mainValue >= 0 ? "+" : ""}${formatCents(mainValue)}</strong></div><div class="tooltip-divider"></div><div class="tooltip-row"><span>Acumulado</span><strong>${value.modification >= 0 ? "+" : ""}${formatCents(value.modification)}</strong></div><div class="tooltip-row"><span>Crédito aprobado</span><strong>${formatCents(value.approved)}</strong></div><div class="tooltip-row"><span>Crédito vigente</span><strong>${formatCents(value.current)}</strong></div>`;
-}
+const barValueLabelsPlugin = {
+  id: "barValueLabels",
+  afterDatasetsDraw(chart) {
+    if (activeChart !== "bar" || !showBarValues) return;
+    const meta = chart.getDatasetMeta(0), values = chart.data.datasets[0].data, context = chart.ctx;
+    context.save(); context.font = "700 11px system-ui, sans-serif"; context.textAlign = "center";
+    meta.data.forEach((bar, index) => { const value = values[index]; context.fillStyle = value >= 0 ? "#187347" : "#a93642"; context.textBaseline = value >= 0 ? "bottom" : "top"; context.fillText(formatAxisAmount(value), bar.x, bar.y + (value >= 0 ? -7 : 7)); });
+    context.restore();
+  },
+};
 function renderChart(rows) {
   const periodValues = aggregatePeriods(rows), comparisonValues = aggregatePeriods(filteredRows(true)), comparisonIndex = new Map(comparisonValues.map((value, index) => [value.period, index]));
-  const values = periodValues.map((value) => { const modification = value.current - value.approved, index = comparisonIndex.get(value.period), previous = index > 0 ? comparisonValues[index - 1] : null, previousModification = previous ? previous.current - previous.approved : 0; return { ...value, modification, monthlyModification: modification - previousModification, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 }; }), chart = $("#chart"), chartTotal = $("#chart-total");
+  const values = periodValues.map((value) => { const modification = value.current - value.approved, index = comparisonIndex.get(value.period), previous = index > 0 ? comparisonValues[index - 1] : null, previousModification = previous ? previous.current - previous.approved : 0; return { ...value, modification, monthlyModification: modification - previousModification, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 }; }), chartTotal = $("#chart-total"), canvas = $("#budget-chart"), empty = $("#chart-empty");
   $("#bar-value-control").hidden = activeChart !== "bar";
   chartTotal.hidden = activeChart !== "bar" || !values.length;
-  if (!values.length) { chart.innerHTML = "<p class='note'>No hay datos para esta combinación de filtros.</p>"; return; }
+  empty.hidden = Boolean(values.length); canvas.hidden = !values.length;
+  if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
+  if (!values.length) return;
+  if (typeof Chart === "undefined") { canvas.hidden = true; empty.hidden = false; empty.textContent = "No se pudo cargar la biblioteca de gráficos."; return; }
+  empty.textContent = "No hay datos para esta combinación de filtros.";
   if (activeChart === "bar") { const latest = values.at(-1); chartTotal.innerHTML = `Modificación acumulada a ${escapeHtml(labelPeriod(latest.period))}: <strong class="${latest.modification >= 0 ? "positive" : "negative"}">${latest.modification >= 0 ? "+" : ""}${formatCents(latest.modification)}</strong>`; }
-  const width = 900, height = 340, pad = { top: 26, right: 28, bottom: 54, left: 96 };
-  let min = 0, max, ticks;
+  const labels = values.map((value) => labelPeriod(value.period));
+  let datasets, yOptions;
   if (activeChart === "line") {
-    max = Math.max(100, Math.ceil(Math.max(...values.flatMap((value) => [value.execution || 0, value.expected])) / 25) * 25);
-    ticks = Array.from({ length: Math.floor(max / 25) + 1 }, (_, index) => index * 25);
-  } else {
-    const largest = Math.max(...values.flatMap((value) => [Math.abs(value.monthlyModification), Math.abs(value.modification)]), 1), step = niceStep(largest / 3), limit = Math.max(step, Math.ceil(largest / step) * step);
-    min = -limit; max = limit; ticks = []; for (let tick = min; tick <= max + step / 2; tick += step) ticks.push(Math.abs(tick) < step / 1000 ? 0 : tick);
-  }
-  const plotWidth = width - pad.left - pad.right;
-  const x = (i) => activeChart === "bar" ? pad.left + (i + .5) * plotWidth / values.length : values.length === 1 ? width / 2 : pad.left + 18 + i * (plotWidth - 36) / (values.length - 1);
-  const y = (value) => height - pad.bottom - (value - min) / (max - min || 1) * (height - pad.top - pad.bottom);
-  const axes = ticks.map((tick) => { const yy = y(tick); return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}"/><text class="axis-label" x="${pad.left - 12}" y="${yy + 4}" text-anchor="end">${activeChart === "line" ? `${tick}%` : formatAxisAmount(tick)}</text>`; }).join("");
-  const labels = values.map((value, index) => `<text class="axis-label" x="${x(index)}" y="${height - 16}" text-anchor="middle">${escapeHtml(labelPeriod(value.period))}</text>`).join("");
-  let marks = "", zeroLine = "";
-  if (activeChart === "line") {
-    const path = (field) => values.map((value, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(value[field]).toFixed(1)}`).join(" ");
-    marks = `<path class="line-execution" d="${path("execution")}"/><path class="line-expected" d="${path("expected")}"/>` + values.map((value, index) => `<circle class="chart-point point-execution" data-index="${index}" data-series="execution" cx="${x(index)}" cy="${y(value.execution || 0)}" r="5"/><circle class="chart-point point-expected" data-index="${index}" data-series="expected" cx="${x(index)}" cy="${y(value.expected)}" r="4"/>`).join("");
+    const maximum = Math.max(100, Math.ceil(Math.max(...values.flatMap((value) => [value.execution || 0, value.expected])) / 25) * 25);
+    datasets = [
+      { id: "execution", label: "Ejecución real", data: values.map((value) => value.execution), borderColor: "#7b3fc6", backgroundColor: "#7b3fc6", pointBackgroundColor: "#7b3fc6", pointRadius: 4, pointHoverRadius: 6, borderWidth: 3, tension: .28 },
+      { id: "expected", label: "Ritmo esperado", data: values.map((value) => value.expected), borderColor: "#d59a13", backgroundColor: "#d59a13", pointBackgroundColor: "#fff", pointBorderColor: "#d59a13", pointBorderWidth: 2, pointRadius: 4, borderWidth: 2, borderDash: [7, 6], tension: 0 },
+    ];
+    yOptions = { min: 0, max: maximum, ticks: { stepSize: 25, callback: (value) => `${value}%` } };
     $("#chart-title").textContent = "Ejecución real y ritmo esperado";
     $("#chart-legend").innerHTML = '<span class="legend-execution"></span>% ejecutado <span class="legend-expected"></span>% esperado';
   } else {
-    const band = Math.min(52, (width - pad.left - pad.right) / Math.max(values.length * 1.8, 2));
-    const zeroY = y(0);
-    zeroLine = `<line class="zero-line" x1="${pad.left}" x2="${width - pad.right}" y1="${zeroY}" y2="${zeroY}"/>`;
-    const cumulativePath = values.map((value, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(value.modification).toFixed(1)}`).join(" ");
-    const cumulativeLine = `<path class="line-cumulative" d="${cumulativePath}"/>`;
-    const bars = values.map((value, index) => { const monthlyY = y(value.monthlyModification), status = value.monthlyModification > 0 ? "positive-bar" : value.monthlyModification < 0 ? "negative-bar" : "zero-bar", valueLabel = showBarValues ? `<text class="bar-value ${value.monthlyModification >= 0 ? "bar-value-positive" : "bar-value-negative"}" x="${x(index)}" y="${value.monthlyModification >= 0 ? monthlyY - 9 : monthlyY + 18}" text-anchor="middle">${escapeHtml(formatAxisAmount(value.monthlyModification))}</text>` : ""; return `<rect class="chart-point bar-modification ${status}" data-index="${index}" data-series="monthly" x="${x(index) - band / 2}" y="${Math.min(zeroY, monthlyY)}" width="${band}" height="${Math.max(2, Math.abs(zeroY - monthlyY))}" rx="5"/>${valueLabel}`; }).join("");
-    const cumulativePoints = values.map((value, index) => `<circle class="chart-point point-cumulative" data-index="${index}" data-series="cumulative" cx="${x(index)}" cy="${y(value.modification)}" r="4"/>`).join("");
-    marks = `${cumulativeLine}${bars}${cumulativePoints}`;
+    const largest = Math.max(...values.flatMap((value) => [Math.abs(value.monthlyModification), Math.abs(value.modification)]), 1), step = niceStep(largest / 3), limit = Math.max(step, Math.ceil(largest / step) * step);
+    datasets = [
+      { id: "monthly", type: "bar", label: "Movimiento mensual", data: values.map((value) => value.monthlyModification), backgroundColor: values.map((value) => value.monthlyModification > 0 ? "#26905f" : value.monthlyModification < 0 ? "#c74c56" : "#8c99a9"), borderRadius: 5, maxBarThickness: 54, order: 1 },
+      { id: "cumulative", type: "line", label: "Modificación acumulada", data: values.map((value) => value.modification), borderColor: "#1264a3", backgroundColor: "#1264a3", pointBackgroundColor: "#fff", pointBorderColor: "#1264a3", pointBorderWidth: 3, pointRadius: 4, pointHoverRadius: 6, borderWidth: 3, tension: .25, order: 2 },
+    ];
+    yOptions = { min: -limit, max: limit, ticks: { stepSize: step, callback: formatAxisAmount } };
     $("#chart-title").textContent = "Movimientos mensuales y modificación acumulada";
     $("#chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento mensual <span class="legend-negative"></span>Reducción mensual <span class="legend-cumulative"></span>Acumulado';
   }
-  chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">${axes}${zeroLine}${marks}${labels}</svg><div id="chart-tooltip" class="chart-tooltip" role="status"></div>`;
-  chart.dataset.values = JSON.stringify(values);
+  budgetChart = new Chart(canvas, {
+    type: activeChart === "line" ? "line" : "bar",
+    data: { labels, datasets },
+    plugins: [barValueLabelsPlugin],
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 350 }, interaction: { mode: "index", intersect: false },
+      layout: { padding: { top: showBarValues && activeChart === "bar" ? 18 : 4, right: 12, bottom: showBarValues && activeChart === "bar" ? 18 : 0, left: 8 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, displayColors: true, callbacks: {
+          label: (context) => activeChart === "line" ? `${context.dataset.label}: ${formatPercent(context.parsed.y)}` : `${context.dataset.label}: ${context.parsed.y >= 0 ? "+" : ""}${formatCents(context.parsed.y)}`,
+          afterBody: (items) => { if (!items.length) return []; const value = values[items[0].dataIndex]; if (activeChart === "line") { const difference = value.execution === null ? null : value.execution - value.expected; return [difference === null ? "Diferencia: —" : `Diferencia: ${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`]; } return [`Crédito aprobado: ${formatCents(value.approved)}`, `Crédito vigente: ${formatCents(value.current)}`]; },
+        } },
+      },
+      scales: {
+        x: { offset: activeChart === "bar", grid: { display: false }, border: { display: false }, ticks: { color: "#60708a", font: { size: 11 }, maxRotation: 0 } },
+        y: { ...yOptions, border: { display: false }, grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#dce3eb", lineWidth: (context) => context.tick.value === 0 ? 2 : 1 }, ticks: { ...yOptions.ticks, color: "#60708a", font: { size: 11 }, padding: 10 } },
+      },
+    },
+  });
   $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "Cada barra muestra el cambio frente al mes anterior disponible. La línea azul muestra la modificación acumulada desde el crédito aprobado.";
 }
 function rankingLabel(row, dimension) {
@@ -308,8 +320,6 @@ async function init() {
     $("#toggle-filter-sidebar").addEventListener("click", () => { const body = $("#filter-sidebar-body"), collapsed = !body.hidden; body.hidden = collapsed; $("#dashboard-layout").classList.toggle("filters-collapsed", collapsed); $("#toggle-filter-sidebar").textContent = collapsed ? "›" : "‹"; $("#toggle-filter-sidebar").setAttribute("aria-expanded", String(!collapsed)); $("#toggle-filter-sidebar").setAttribute("aria-label", collapsed ? "Desplegar filtros" : "Plegar filtros"); });
     $("#toggle-periods").addEventListener("click", () => { selectedPeriods = selectedPeriods.size === periods().length ? new Set() : new Set(periods()); $("#toggle-periods").textContent = selectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.toggle("active", selectedPeriods.has(chip.dataset.period)); chip.setAttribute("aria-pressed", selectedPeriods.has(chip.dataset.period)); }); render(); });
     ["#source-filter", "#object-filter", "#detail-breakdown-filter", "#ranking-dimension"].forEach((id) => $(id).addEventListener("change", render));
-    $("#chart").addEventListener("pointermove", (event) => { const mark = event.target.closest(".chart-point"), tooltip = $("#chart-tooltip"); if (!mark || !tooltip) { if (tooltip) tooltip.classList.remove("visible"); return; } const value = JSON.parse($("#chart").dataset.values)[Number(mark.dataset.index)]; tooltip.innerHTML = chartTooltip(value, mark.dataset.series); const rect = $("#chart").getBoundingClientRect(); tooltip.style.left = `${Math.max(4, Math.min(event.clientX - rect.left + 12, rect.width - 270))}px`; tooltip.style.top = `${Math.max(event.clientY - rect.top - 130, 4)}px`; tooltip.classList.add("visible"); });
-    $("#chart").addEventListener("pointerleave", () => $("#chart-tooltip")?.classList.remove("visible"));
     document.querySelectorAll(".chart-tab").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll(".chart-tab").forEach((item) => { item.classList.toggle("active", item === tab); item.setAttribute("aria-selected", String(item === tab)); }); renderChart(filteredRows()); }));
     $("#show-bar-values").addEventListener("change", (event) => { showBarValues = event.target.checked; renderChart(filteredRows()); });
     document.querySelectorAll(".header-tabs [data-page]").forEach((button) => button.addEventListener("click", () => { const page = button.dataset.page; document.querySelectorAll(".page-view").forEach((view) => { view.hidden = view.id !== `page-${page}`; }); document.querySelectorAll(".header-tabs [data-page]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); }));

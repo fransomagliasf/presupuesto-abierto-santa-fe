@@ -2,7 +2,11 @@
 
 Sitio estático para explorar la ejecución presupuestaria municipal. Actualmente
 incluye el informe mensual **Estado de Ejecución del Presupuesto de Gastos por
-Objeto** de enero y febrero de 2026.
+Objeto** de enero a septiembre de 2026.
+
+La interfaz usa JavaScript y CSS nativos. Las visualizaciones se renderizan con
+**Chart.js 4.4.7**, cargado desde jsDelivr con una versión fijada en
+`index.html`.
 
 ## Ejecutarlo en una computadora
 

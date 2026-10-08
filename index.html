@@ -150,7 +150,7 @@
             <label id="bar-value-control" class="chart-value-toggle" hidden><input id="show-bar-values" type="checkbox"> Mostrar valores</label>
           </div>
           <p id="chart-total" class="chart-total" hidden></p>
-          <div id="chart" class="chart" role="img" aria-label="Gráfico de evolución presupuestaria"></div>
+          <div id="chart" class="chart" role="img" aria-label="Gráfico de evolución presupuestaria"><canvas id="budget-chart"></canvas><p id="chart-empty" class="note" hidden>No hay datos para esta combinación de filtros.</p></div>
           <p id="chart-note" class="note"></p>
         </article>
       </section>
@@ -204,6 +204,7 @@
       <div class="footer-social"><strong>Redes sociales</strong><p>Instagram · X · Facebook · <a href="https://github.com/fransomagliasf/presupuesto-abierto-santa-fe">GitHub</a></p></div>
       <div><strong>Datos y metodología</strong><p>Fuente: Municipalidad de Santa Fe. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
