@@ -253,6 +253,16 @@
           <div class="table-wrap"><table><thead><tr><th>Rubro</th><th>Detalle</th><th class="number">Estimado</th><th class="number">Vigente</th><th class="number">Devengado</th><th class="number">Percibido</th><th class="number">% recaudado</th></tr></thead><tbody id="resource-detail-table"></tbody></table></div>
           <p id="resource-table-note" class="note"></p>
         </section>
+
+        <section class="resource-insights" aria-labelledby="resource-insights-title">
+          <div class="lab-heading"><p class="eyebrow">Lecturas complementarias</p><h2 id="resource-insights-title">¿Qué explica la recaudación?</h2><p>Paneles exploratorios vinculados a los períodos, rubros y procedencias seleccionados.</p></div>
+          <div class="resource-insight-grid">
+            <article class="panel resource-insight-card"><p class="eyebrow">Variación mensual</p><h3>Rubros que explican los ingresos del mes</h3><p id="resource-growth-note" class="insight-description"></p><div class="resource-mini-chart"><canvas id="resource-growth-chart"></canvas></div></article>
+            <article class="panel resource-insight-card"><p class="eyebrow">Composición</p><h3>Procedencia del recurso percibido</h3><p class="insight-description">Participación sobre el total acumulado del último período seleccionado.</p><div class="resource-origin-layout"><div class="resource-donut-chart"><canvas id="resource-origin-chart"></canvas></div><ul id="resource-origin-legend" class="resource-origin-legend"></ul></div></article>
+            <article class="panel resource-insight-card"><p class="eyebrow">Ritmo anual</p><h3>Recaudación frente a lo esperado</h3><p id="resource-pace-note" class="insight-description"></p><div class="pace-columns"><div><strong>Más atrasados</strong><ol id="resource-pace-behind" class="resource-ranking-list"></ol></div><div><strong>Más adelantados</strong><ol id="resource-pace-ahead" class="resource-ranking-list"></ol></div></div></article>
+            <article class="panel resource-insight-card"><p class="eyebrow">Concentración</p><h3>Principales conceptos recaudadores</h3><p class="insight-description">Conceptos con mayor recurso percibido acumulado.</p><ol id="resource-top-concepts" class="resource-ranking-list resource-top-list"></ol></article>
+          </div>
+        </section>
       </section>
       </section>
 

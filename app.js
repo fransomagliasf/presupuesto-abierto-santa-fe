@@ -13,7 +13,7 @@ const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "
 const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
 let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, budgetChart = null, contributionChart = null, waterfallChart = null, tableSort = { key: "accrued", direction: "desc" };
-let resourceData = [], resourceSelectedPeriods = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceChart = null;
+let resourceData = [], resourceSelectedPeriods = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceChart = null, resourceGrowthChart = null, resourceOriginChart = null;
 
 function parseCSV(text) {
   const records = []; let record = [], field = "", quoted = false;
@@ -447,9 +447,58 @@ function renderResourceTable(rows, latestPeriod) {
   }).join("");
   $("#resource-table-note").textContent = latestPeriod ? `Valores acumulados a ${labelPeriod(latestPeriod)}. Los porcentajes entre paréntesis muestran la participación de cada rubro o concepto sobre el total visible de la columna.` : "No hay datos para mostrar.";
 }
+function resourceMajorLabel(row) { return `${row.rubro_mayor_codigo} · ${row.rubro_mayor_nombre}`; }
+function resourceOriginCategory(row) {
+  const value = row.procedencia_nombre.toLocaleLowerCase("es");
+  if (value.includes("municipal")) return "Origen municipal";
+  if (value.includes("provincial")) return "Origen provincial";
+  if (value.includes("nacional")) return "Origen nacional";
+  if (value.includes("otros")) return "Otros orígenes";
+  return "Sin procedencia consignada";
+}
+function resourceRankingHtml(items, valueRenderer, emptyMessage) {
+  if (!items.length) return `<li class="ranking-empty">${escapeHtml(emptyMessage)}</li>`;
+  return items.map((item, index) => `<li><span class="ranking-position">${index + 1}</span><div><strong title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</strong><small>${valueRenderer(item)}</small></div></li>`).join("");
+}
+function renderResourceGrowth(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph) {
+  if (resourceGrowthChart) { resourceGrowthChart.destroy(); resourceGrowthChart = null; }
+  const note = $("#resource-growth-note"), canvas = $("#resource-growth-chart");
+  if (!latestPeriod || !previousPeriod || !previousRows) { note.textContent = "Seleccioná al menos dos períodos para calcular el ingreso del mes."; canvas.hidden = true; return; }
+  const aggregate = (rows) => { const groups = new Map(); rows.forEach((row) => groups.set(resourceMajorLabel(row), (groups.get(resourceMajorLabel(row)) || 0) + cents(row, "recurso_percibido_centavos"))); return groups; };
+  const current = aggregate(latestRows), previous = aggregate(previousRows), labels = new Set([...current.keys(), ...previous.keys()]);
+  const items = [...labels].map((label) => ({ label, value: (current.get(label) || 0) - (previous.get(label) || 0) })).filter((item) => item.value !== 0).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 8).reverse();
+  note.textContent = `Variación del recurso percibido entre ${labelPeriod(previousPeriod)} y ${labelPeriod(latestPeriod)}.`;
+  canvas.hidden = !items.length;
+  if (!renderGraph || !items.length || typeof Chart === "undefined") return;
+  resourceGrowthChart = new Chart(canvas, { type: "bar", data: { labels: items.map((item) => item.label), datasets: [{ data: items.map((item) => item.value), backgroundColor: items.map((item) => item.value >= 0 ? "#26905f" : "#c74c56"), borderRadius: 4 }] }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.parsed.x >= 0 ? "+" : ""}${formatCents(context.parsed.x)}` } } }, scales: { x: { grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#e3e8ef" }, ticks: { callback: formatAxisAmount } }, y: { grid: { display: false }, ticks: { font: { size: 10 }, callback(value) { const label = this.getLabelForValue(value); return label.length > 30 ? `${label.slice(0, 29)}…` : label; } } } } } });
+}
+function renderResourceOrigins(latestRows, renderGraph) {
+  if (resourceOriginChart) { resourceOriginChart.destroy(); resourceOriginChart = null; }
+  const groups = new Map(); latestRows.forEach((row) => groups.set(resourceOriginCategory(row), (groups.get(resourceOriginCategory(row)) || 0) + cents(row, "recurso_percibido_centavos")));
+  const colors = { "Origen municipal": "#008a81", "Origen provincial": "#438dcc", "Origen nacional": "#7b3fc6", "Otros orígenes": "#e0a71b", "Sin procedencia consignada": "#9aa7b7" };
+  const items = [...groups.entries()].map(([label, value]) => ({ label, value, color: colors[label] })).filter((item) => item.value !== 0).sort((a, b) => b.value - a.value), total = items.reduce((sumValue, item) => sumValue + item.value, 0);
+  $("#resource-origin-legend").innerHTML = items.length ? items.map((item) => `<li><i style="background:${item.color}"></i><span>${escapeHtml(item.label)}</span><strong>${columnShare(item.value, total)}</strong><small>${formatCents(item.value)}</small></li>`).join("") : '<li class="ranking-empty">Sin recursos percibidos para esta selección.</li>';
+  const canvas = $("#resource-origin-chart"); canvas.hidden = !items.length;
+  if (!renderGraph || !items.length || typeof Chart === "undefined") return;
+  resourceOriginChart = new Chart(canvas, { type: "doughnut", data: { labels: items.map((item) => item.label), datasets: [{ data: items.map((item) => item.value), backgroundColor: items.map((item) => item.color), borderColor: "#fff", borderWidth: 3, hoverOffset: 5 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: "66%", plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.label}: ${formatCents(context.parsed)} (${columnShare(context.parsed, total)})` } } } } });
+}
+function renderResourcePace(latestRows, latestPeriod) {
+  const expected = latestPeriod ? Number(latestPeriod.split("/")[1]) * 100 / 12 : null, groups = new Map();
+  latestRows.forEach((row) => { const label = resourceMajorLabel(row), group = groups.get(label) || []; group.push(row); groups.set(label, group); });
+  const items = [...groups.entries()].map(([label, rows]) => { const values = resourceTotals(rows), rate = collectionPercent(values.perceived, values.current); return { label, rate, difference: rate === null || expected === null ? null : rate - expected }; }).filter((item) => item.difference !== null);
+  const behind = items.filter((item) => item.difference < 0).sort((a, b) => a.difference - b.difference).slice(0, 5), ahead = items.filter((item) => item.difference >= 0).sort((a, b) => b.difference - a.difference).slice(0, 5);
+  $("#resource-pace-note").textContent = expected === null ? "Sin período seleccionado." : `Ritmo lineal de referencia a ${labelPeriod(latestPeriod)}: ${formatPercent(expected)} del recurso vigente.`;
+  const renderer = (item) => `${formatPercent(item.rate)} · ${item.difference >= 0 ? "+" : "−"}${Math.abs(item.difference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`;
+  $("#resource-pace-behind").innerHTML = resourceRankingHtml(behind, renderer, "No hay rubros por debajo del ritmo."); $("#resource-pace-ahead").innerHTML = resourceRankingHtml(ahead, renderer, "No hay rubros por encima del ritmo.");
+}
+function renderResourceTopConcepts(latestRows) {
+  const total = sum(latestRows, "recurso_percibido_centavos"), items = latestRows.map((row) => ({ label: `${row.rubro_codigo} · ${row.rubro_nombre}`, value: cents(row, "recurso_percibido_centavos") })).filter((item) => item.value > 0).sort((a, b) => b.value - a.value).slice(0, 5);
+  $("#resource-top-concepts").innerHTML = resourceRankingHtml(items, (item) => `${formatCents(item.value)} · ${columnShare(item.value, total)} del total`, "No hay recursos percibidos para esta selección.");
+}
+function renderResourceInsights(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph) { renderResourceGrowth(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph); renderResourceOrigins(latestRows, renderGraph); renderResourcePace(latestRows, latestPeriod); renderResourceTopConcepts(latestRows); }
 function renderResources(renderGraph = true) {
   const rows = resourceFilteredRows(), selected = [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })), latestPeriod = selected.at(-1), previousPeriod = selected.at(-2), latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
-  renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderResourceQuality(); renderResourceTable(rows, latestPeriod); if (renderGraph) renderResourceChart(rows);
+  renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderResourceQuality(); renderResourceTable(rows, latestPeriod); renderResourceInsights(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph); if (renderGraph) renderResourceChart(rows);
 }
 function resetResourceFilters() {
   resourceSelectedPeriods = new Set(resourcePeriods()); resourceExpandedMajors.clear(); $("#resource-major-filter").value = ""; $("#resource-origin-filter").value = ""; fillResourceGroupFilter();
