@@ -130,10 +130,10 @@ main { width: min(1440px, calc(100% - 2.5rem)); }
 .resource-clear { grid-column: auto; margin-top: .2rem; }
 .resource-primary { min-width: 0; }
 .resource-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; margin-bottom: 1rem; }
-.resource-heading h2 { font-size: 1.55rem; }
+.resource-heading h2 { font-size: 1.25rem; }
 .resource-metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; margin-bottom: 1rem; }
-.resource-metric { min-width: 0; }
-.resource-metric > strong { white-space: nowrap; color: #164c7c; font-size: clamp(1.08rem, 1.55vw, 1.45rem); font-variant-numeric: tabular-nums; }
+.resource-metric { min-width: 0; padding: 1rem; }
+.resource-metric > strong { white-space: nowrap; color: #164c7c; font-size: clamp(1.08rem, 1.6vw, 1.48rem); font-variant-numeric: tabular-nums; }
 .resource-rate { background: linear-gradient(130deg, #fff, #edf9f5); }
 .resource-rate > strong { color: #08796d; }
 .resource-quality { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .7rem; margin-bottom: 1.5rem; padding: .8rem 1rem; border: 1px solid #e8c66f; border-radius: 9px; color: #634b11; background: #fff8df; font-size: .8rem; }
@@ -182,11 +182,11 @@ main { width: min(1440px, calc(100% - 2.5rem)); }
 .fund-clear { grid-column: auto; margin-top: .2rem; }
 .fund-primary { min-width: 0; }
 .fund-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; margin-bottom: 1rem; }
-.fund-heading h2 { font-size: 1.55rem; }
+.fund-heading h2 { font-size: 1.25rem; }
 .fund-status { flex: none; padding: .5rem .7rem; border: 1px solid #d8b351; border-radius: 999px; color: #654600; background: #fff3c9; font-size: .78rem; font-weight: 750; }
 .fund-metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; margin-bottom: 1.5rem; }
-.fund-metric { min-width: 0; }
-.fund-metric > strong { white-space: nowrap; color: #7a4f00; font-size: clamp(1.08rem, 1.55vw, 1.45rem); font-variant-numeric: tabular-nums; }
+.fund-metric { min-width: 0; padding: 1rem; }
+.fund-metric > strong { white-space: nowrap; color: #7a4f00; font-size: clamp(1.08rem, 1.6vw, 1.48rem); font-variant-numeric: tabular-nums; }
 .fund-balance { background: linear-gradient(130deg, #fff, #fff8df); }
 .fund-chart-panel { margin-bottom: 1.5rem; }
 .fund-chart-tabs { margin: 1rem 0 .2rem; }
