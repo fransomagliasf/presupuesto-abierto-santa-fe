@@ -114,6 +114,10 @@ main { width: min(1440px, calc(100% - 2.5rem)); }
 .tracking-tabs button span { font-weight: 750; }
 .tracking-tabs button small { margin: 0; color: inherit; font-size: .7rem; }
 .tracking-tabs button.active { color: white; background: var(--blue); box-shadow: 0 2px 6px rgb(18 100 163 / 22%); }
+.tracking-tabs button[data-tracking="expenses"] { color: #8b3039; background: #f8e5e7; }
+.tracking-tabs button[data-tracking="resources"] { color: #176847; background: #e1f4ec; }
+.tracking-tabs button[data-tracking="expenses"].active { color: #76242d; background: #f3cfd3; box-shadow: inset 0 0 0 1px #d98e96, 0 2px 6px rgb(139 48 57 / 14%); }
+.tracking-tabs button[data-tracking="resources"].active { color: #12583c; background: #ccebdd; box-shadow: inset 0 0 0 1px #79bea2, 0 2px 6px rgb(23 104 71 / 14%); }
 .tracking-view[hidden] { display: none; }
 .resource-status { flex: none; padding: .5rem .7rem; border: 1px solid #86c8b1; border-radius: 999px; color: #176847; background: #e1f4ec; font-size: .78rem; font-weight: 750; }
 .resources-dashboard { min-height: 560px; }
