@@ -112,9 +112,16 @@ def main(input_pdf: Path, output_csv: Path) -> None:
         heading_match = HEADING.match(line)
         if heading_match:
             group_code = f"{heading_match.group(1)}.{heading_match.group(2)}.00.00"
-            group_name = normalize(heading_match.group(3))
+            heading_text = heading_match.group(3)
+            heading_amount = AMOUNT.search(heading_text)
+            if heading_amount:
+                heading_text = heading_text[:heading_amount.start()]
+            heading_procedure = PROCEDENCE.search(heading_text)
+            if heading_procedure:
+                heading_text = heading_text[:heading_procedure.start()]
+            group_name = normalize(heading_text)
             pending = None
-            pending_hierarchy = "group"
+            pending_hierarchy = None if heading_amount else "group"
             continue
 
         amounts = AMOUNT.findall(line)
@@ -191,7 +198,7 @@ def main(input_pdf: Path, output_csv: Path) -> None:
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     with output_csv.open("w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(file, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
