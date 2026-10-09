@@ -28,3 +28,27 @@ regenerar un CSV se necesita `pdftotext` y se ejecuta:
 ```sh
 python3 scripts/extract_gastos_por_objeto.py INFORME.pdf data/processed/gastos_por_objeto_YYYY-MM-DD.csv
 ```
+
+## Recursos por rubro
+
+Los CSV `recursos_por_rubro` contienen las filas de concepto de los informes
+**Estado de Ejecución Presupuestaria de Recursos**. Conservan la jerarquía de
+rubro principal, grupo, concepto y procedencia, además de los importes como
+texto original y centavos enteros.
+
+Cada fila pasa tres controles exactos:
+
+1. Recurso vigente = recurso estimado + modificaciones.
+2. Vigente − devengado = diferencia informada.
+3. Devengado − percibido = diferencia informada.
+
+El extractor también compara la suma de los conceptos con el `TOTAL GENERAL`
+impreso. En los nueve informes de enero a septiembre de 2026 las filas pasan
+los controles, pero el total impreso de devengado y percibido supera el detalle
+en `$ 200.721,46`. Esa diferencia del documento fuente queda registrada en
+`total_general_reconcilia` y `diferencias_total_general_centavos`; no se altera
+ningún valor para forzar la conciliación.
+
+```sh
+python3 scripts/extract_recursos_por_rubro.py INFORME.pdf data/processed/recursos_por_rubro_YYYY-MM-DD.csv
+```

@@ -3,10 +3,17 @@ const DATA_FILES = [
   "data/processed/gastos_por_objeto_2026-04-30.csv", "data/processed/gastos_por_objeto_2026-05-31.csv", "data/processed/gastos_por_objeto_2026-06-30.csv",
   "data/processed/gastos_por_objeto_2026-07-31.csv", "data/processed/gastos_por_objeto_2026-08-31.csv", "data/processed/gastos_por_objeto_2026-09-30.csv",
 ];
+const RESOURCE_DATA_FILES = [
+  "data/processed/recursos_por_rubro_2026-01-31.csv", "data/processed/recursos_por_rubro_2026-02-28.csv", "data/processed/recursos_por_rubro_2026-03-31.csv",
+  "data/processed/recursos_por_rubro_2026-04-30.csv", "data/processed/recursos_por_rubro_2026-05-31.csv", "data/processed/recursos_por_rubro_2026-06-30.csv",
+  "data/processed/recursos_por_rubro_2026-07-31.csv", "data/processed/recursos_por_rubro_2026-08-31.csv", "data/processed/recursos_por_rubro_2026-09-30.csv",
+];
 const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
 let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, budgetChart = null, contributionChart = null, waterfallChart = null, tableSort = { key: "accrued", direction: "desc" };
+let resourceData = [], resourceSelectedPeriods = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceChart = null;
 
 function parseCSV(text) {
   const records = []; let record = [], field = "", quoted = false;
@@ -28,6 +35,7 @@ function labelPeriod(value) { return dateFormat.format(date({ fecha_corte: value
 function unique(values) { return [...new Set(values)].sort((a, b) => a.localeCompare(b, "es")); }
 function escapeHtml(value) { return String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]); }
 function formatCents(value) { return currency.format(value / 100); }
+function formatExactCents(value) { return exactCurrency.format(value / 100); }
 function formatAxisAmount(value) { const pesos = Math.abs(value) / 100, sign = value < 0 ? "−" : ""; if (pesos >= 1e9) return `${sign}$ ${(pesos / 1e9).toLocaleString("es-AR", { maximumFractionDigits: 1 })} mil M`; if (pesos >= 1e6) return `${sign}$ ${(pesos / 1e6).toLocaleString("es-AR", { maximumFractionDigits: 1 })} M`; return `${sign}${currency.format(pesos)}`; }
 function niceStep(value) { if (!value || value <= 0) return 1; const magnitude = 10 ** Math.floor(Math.log10(value)), fraction = value / magnitude, rounded = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10; return rounded * magnitude; }
 function sum(rows, field) { return rows.reduce((total, row) => total + cents(row, field), 0); }
@@ -336,10 +344,123 @@ function downloadSummary() {
     anchor.href = url; anchor.download = `resumen-presupuestario-${filePeriod}.png`; anchor.click(); URL.revokeObjectURL(url);
   }, "image/png");
 }
+
+function resourcePeriods() { return unique(resourceData.map((row) => row.fecha_corte)).sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
+function resourceTotals(rows) {
+  return {
+    estimated: sum(rows, "recurso_estimado_centavos"), current: sum(rows, "recurso_vigente_centavos"), accrued: sum(rows, "recurso_devengado_centavos"),
+    perceived: sum(rows, "recurso_percibido_centavos"), gap: sum(rows, "devengado_menos_percibido_centavos"),
+  };
+}
+function collectionPercent(perceived, current) { return current > 0 ? perceived / current * 100 : null; }
+function fillResourceGroupFilter() {
+  const major = $("#resource-major-filter").value;
+  const previous = $("#resource-group-filter").value;
+  const groups = unique(resourceData.filter((row) => !major || row.rubro_mayor_codigo === major).map((row) => `${row.rubro_grupo_codigo} · ${row.rubro_grupo_nombre}`));
+  populateSelect("#resource-group-filter", groups, "Todos los grupos");
+  if (groups.includes(previous)) $("#resource-group-filter").value = previous;
+}
+function fillResourceFilters() {
+  resourceSelectedPeriods = new Set(resourcePeriods());
+  const byYear = new Map();
+  resourcePeriods().forEach((period) => { const year = period.split("/")[2]; byYear.set(year, [...(byYear.get(year) || []), period]); });
+  $("#resource-period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => `<section class="period-year"><div class="period-year-heading"><strong>${year}</strong><button class="small-action" type="button" data-resource-year="${year}">Todo el año</button></div><div class="month-list">${yearPeriods.map((period) => `<button type="button" class="month-option active" data-resource-period="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period).split(" ")[0])}</button>`).join("")}</div></section>`).join("");
+  populateSelect("#resource-major-filter", unique(resourceData.map((row) => row.rubro_mayor_codigo)).map((code) => { const row = resourceData.find((item) => item.rubro_mayor_codigo === code); return `${code} · ${row.rubro_mayor_nombre}`; }), "Todos los rubros");
+  populateSelect("#resource-origin-filter", unique(resourceData.filter((row) => row.procedencia_codigo).map((row) => `${row.procedencia_codigo} · ${row.procedencia_nombre}`)), "Todas las procedencias");
+  fillResourceGroupFilter();
+}
+function resourceFilteredRows(includeAllPeriods = false) {
+  const majorValue = $("#resource-major-filter").value, groupValue = $("#resource-group-filter").value, originValue = $("#resource-origin-filter").value;
+  const majorCode = majorValue.split(" · ")[0], groupCode = groupValue.split(" · ")[0], originCode = originValue.split(" · ")[0];
+  return resourceData.filter((row) => (includeAllPeriods || resourceSelectedPeriods.has(row.fecha_corte)) && (!majorValue || row.rubro_mayor_codigo === majorCode) && (!groupValue || row.rubro_grupo_codigo === groupCode) && (!originValue || row.procedencia_codigo === originCode));
+}
+function aggregateResourcePeriods(rows) {
+  const grouped = new Map();
+  rows.forEach((row) => { const values = grouped.get(row.fecha_corte) || { period: row.fecha_corte, estimated: 0, current: 0, accrued: 0, perceived: 0 }; values.estimated += cents(row, "recurso_estimado_centavos"); values.current += cents(row, "recurso_vigente_centavos"); values.accrued += cents(row, "recurso_devengado_centavos"); values.perceived += cents(row, "recurso_percibido_centavos"); grouped.set(row.fecha_corte, values); });
+  return [...grouped.values()].sort((a, b) => date({ fecha_corte: a.period }) - date({ fecha_corte: b.period }));
+}
+function resourceContext(period) {
+  const major = $("#resource-major-filter").value || "Todos los rubros", group = $("#resource-group-filter").value || "Todos los grupos", origin = $("#resource-origin-filter").value || "Todas las procedencias";
+  return `Período: ${period ? labelPeriod(period) : "sin selección"} · Rubro: ${major} · Grupo: ${group} · Procedencia: ${origin}`;
+}
+function renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod) {
+  const values = resourceTotals(latestRows), previous = previousRows ? resourceTotals(previousRows) : null, rate = collectionPercent(values.perceived, values.current), expected = latestPeriod ? Number(latestPeriod.split("/")[1]) * 100 / 12 : null;
+  $("#resource-metric-estimated").textContent = formatCents(values.estimated); $("#resource-metric-current").textContent = formatCents(values.current); $("#resource-metric-accrued").textContent = formatCents(values.accrued); $("#resource-metric-perceived").textContent = formatCents(values.perceived); $("#resource-metric-rate").textContent = formatPercent(rate);
+  $("#resource-estimated-note").textContent = "Previsión original del ejercicio";
+  const setNote = (selector, text, value) => { const element = $(selector); element.classList.remove("positive", "negative"); element.textContent = text; if (value !== null && value !== 0) element.classList.add(value > 0 ? "positive" : "negative"); };
+  const modification = values.current - values.estimated;
+  setNote("#resource-current-note", `Modificación acumulada: ${modification >= 0 ? "+" : "−"}${formatCents(Math.abs(modification))}`, modification);
+  const accruedChange = previous ? values.accrued - previous.accrued : null, perceivedChange = previous ? values.perceived - previous.perceived : null;
+  setNote("#resource-accrued-note", previousPeriod ? `Nuevos derechos vs. ${labelPeriod(previousPeriod)}: ${accruedChange >= 0 ? "+" : "−"}${formatCents(Math.abs(accruedChange))}` : "Sin período previo seleccionado", accruedChange);
+  setNote("#resource-perceived-note", previousPeriod ? `Ingresado desde ${labelPeriod(previousPeriod)}: ${perceivedChange >= 0 ? "+" : "−"}${formatCents(Math.abs(perceivedChange))}` : "Sin período previo seleccionado", perceivedChange);
+  const rateDifference = rate === null || expected === null ? null : rate - expected;
+  setNote("#resource-rate-note", rateDifference === null ? "Sin período" : `${rateDifference >= 0 ? "+" : "−"}${Math.abs(rateDifference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p. frente al ritmo esperado`, rateDifference);
+  $("#resource-summary-context").textContent = resourceContext(latestPeriod);
+}
+function renderResourceQuality() {
+  const row = resourceData[0], container = $("#resource-quality-note");
+  if (!row || row.total_general_reconcilia !== "no") { container.hidden = true; return; }
+  const match = row.diferencias_total_general_centavos.match(/recurso_devengado=(-?\d+)/), difference = match ? Math.abs(Number(match[1])) : 0;
+  container.hidden = false;
+  container.innerHTML = `<strong>Control de calidad del documento fuente</strong><span>La suma de los conceptos es ${formatExactCents(difference)} menor que el TOTAL GENERAL impreso en devengado y percibido. La diferencia se repite en los nueve PDF; se muestran los conceptos extraídos sin alterar.</span>`;
+}
+function renderResourceChart(rows) {
+  const selected = aggregateResourcePeriods(rows), all = aggregateResourcePeriods(resourceFilteredRows(true)), allIndex = new Map(all.map((value, index) => [value.period, index])), canvas = $("#resource-chart"), empty = $("#resource-chart-empty");
+  if (resourceChart) { resourceChart.destroy(); resourceChart = null; }
+  empty.hidden = Boolean(selected.length); canvas.hidden = !selected.length;
+  if (!selected.length) { empty.textContent = "No hay datos para esta selección."; return; }
+  if (typeof Chart === "undefined") { canvas.hidden = true; empty.hidden = false; empty.textContent = "No se pudo cargar la biblioteca de gráficos."; return; }
+  const values = selected.map((value) => { const index = allIndex.get(value.period), previous = index > 0 ? all[index - 1] : null; return { ...value, rate: collectionPercent(value.perceived, value.current), accruedRate: collectionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12, monthlyPerceived: value.perceived - (previous?.perceived || 0), monthlyAccrued: value.accrued - (previous?.accrued || 0), modification: value.current - value.estimated, monthlyModification: (value.current - value.estimated) - (previous ? previous.current - previous.estimated : 0) }; });
+  let type = "line", datasets, y, tooltipFormatter;
+  if (resourceActiveChart === "collection") {
+    datasets = [
+      { label: "% percibido", data: values.map((value) => value.rate), borderColor: "#008a81", backgroundColor: "#008a81", borderWidth: 3, pointRadius: 4, tension: .25 },
+      { label: "% devengado", data: values.map((value) => value.accruedRate), borderColor: "#1264a3", backgroundColor: "#1264a3", borderWidth: 2, pointRadius: 3, tension: .25 },
+      { label: "Ritmo esperado", data: values.map((value) => value.expected), borderColor: "#d59a13", backgroundColor: "#d59a13", borderWidth: 2, borderDash: [7, 6], pointRadius: 3 },
+    ];
+    const maximum = Math.max(100, Math.ceil(Math.max(...values.flatMap((value) => [value.rate || 0, value.accruedRate || 0, value.expected])) / 25) * 25); y = { min: 0, max: maximum, ticks: { stepSize: 25, callback: (value) => `${value}%` } }; tooltipFormatter = (context) => `${context.dataset.label}: ${formatPercent(context.parsed.y)}`;
+    $("#resource-chart-title").textContent = "Recaudación y ritmo esperado"; $("#resource-chart-legend").innerHTML = '<span class="legend-resource-perceived"></span>Percibido <span class="legend-resource-accrued"></span>Devengado <span class="legend-expected"></span>Esperado'; $("#resource-chart-note").textContent = "El percibido mide dinero ingresado; el devengado, derechos de cobro reconocidos. La distancia entre ambas líneas ayuda a leer demoras o anticipos de cobranza.";
+  } else if (resourceActiveChart === "income") {
+    type = "bar"; datasets = [
+      { label: "Percibido del mes", data: values.map((value) => value.monthlyPerceived), backgroundColor: "rgba(0, 138, 129, .82)", borderRadius: 5 },
+      { label: "Devengado del mes", data: values.map((value) => value.monthlyAccrued), backgroundColor: "rgba(18, 100, 163, .55)", borderRadius: 5 },
+    ]; y = { beginAtZero: true, ticks: { callback: formatAxisAmount } }; tooltipFormatter = (context) => `${context.dataset.label}: ${context.parsed.y >= 0 ? "+" : ""}${formatCents(context.parsed.y)}`;
+    $("#resource-chart-title").textContent = "Ingresos y derechos generados en cada mes"; $("#resource-chart-legend").innerHTML = '<span class="legend-resource-perceived"></span>Percibido mensual <span class="legend-resource-accrued"></span>Devengado mensual'; $("#resource-chart-note").textContent = "Las barras muestran el incremento frente al cierre anterior, no el importe acumulado del informe.";
+  } else {
+    type = "bar"; const largest = Math.max(...values.flatMap((value) => [Math.abs(value.monthlyModification), Math.abs(value.modification)]), 1), step = niceStep(largest / 3), limit = Math.ceil(largest / step) * step;
+    datasets = [
+      { type: "bar", label: "Cambio mensual", data: values.map((value) => value.monthlyModification), backgroundColor: values.map((value) => value.monthlyModification >= 0 ? "#26905f" : "#c74c56"), borderRadius: 5, order: 1 },
+      { type: "line", label: "Modificación acumulada", data: values.map((value) => value.modification), borderColor: "rgba(18, 100, 163, .55)", backgroundColor: "rgba(18, 100, 163, .55)", borderWidth: 2, pointRadius: 3, tension: .25, order: 2 },
+    ]; y = { min: -limit, max: limit, ticks: { stepSize: step, callback: formatAxisAmount } }; tooltipFormatter = (context) => `${context.dataset.label}: ${context.parsed.y >= 0 ? "+" : ""}${formatCents(context.parsed.y)}`;
+    $("#resource-chart-title").textContent = "Cambios en la estimación de recursos"; $("#resource-chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento mensual <span class="legend-negative"></span>Reducción mensual <span class="legend-cumulative"></span>Acumulado'; $("#resource-chart-note").textContent = "Cada barra compara la modificación acumulada con el mes anterior; la línea muestra la diferencia total entre vigente y estimado.";
+  }
+  resourceChart = new Chart(canvas, { type, data: { labels: values.map((value) => labelPeriod(value.period)), datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, callbacks: { label: tooltipFormatter } } }, scales: { x: { grid: { display: false }, border: { display: false } }, y: { ...y, border: { display: false }, grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#dce3eb", lineWidth: (context) => context.tick.value === 0 ? 2 : 1 }, ticks: { ...y.ticks, color: "#60708a", padding: 10 } } } } });
+}
+function resourceAmountCell(value, total) { return `<td class="number">${formatCents(value)}<small class="cell-share">(${columnShare(value, total)} del total)</small></td>`; }
+function renderResourceTable(rows, latestPeriod) {
+  const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), overall = resourceTotals(latestRows), groups = new Map();
+  latestRows.forEach((row) => { const key = `${row.rubro_mayor_codigo} · ${row.rubro_mayor_nombre}`, group = groups.get(key) || []; group.push(row); groups.set(key, group); });
+  const ordered = [...groups.entries()].sort((a, b) => resourceTotals(b[1]).perceived - resourceTotals(a[1]).perceived);
+  $("#resource-detail-table").innerHTML = ordered.map(([label, group]) => {
+    const open = resourceExpandedMajors.has(label), values = resourceTotals(group), rate = collectionPercent(values.perceived, values.current);
+    const children = open ? [...group].sort((a, b) => cents(b, "recurso_percibido_centavos") - cents(a, "recurso_percibido_centavos")).map((row) => { const child = resourceTotals([row]), childRate = collectionPercent(child.perceived, child.current), origin = row.procedencia_codigo ? `${row.procedencia_codigo} · ${row.procedencia_nombre}` : "Sin procedencia informada"; return `<tr class="breakdown-row"><td></td><td><strong>${escapeHtml(`${row.rubro_codigo} · ${row.rubro_nombre}`)}</strong><small>${escapeHtml(origin)}</small></td>${resourceAmountCell(child.estimated, overall.estimated)}${resourceAmountCell(child.current, overall.current)}${resourceAmountCell(child.accrued, overall.accrued)}${resourceAmountCell(child.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: child.perceived, current: child.current }, latestPeriod).status}">${formatPercent(childRate)}</span></td><td class="number ${child.gap < 0 ? "negative" : ""}">${formatCents(child.gap)}</td></tr>`; }).join("") : "";
+    return `<tr class="secretary-total"><td><button class="expand-row resource-expand-row" type="button" data-resource-major="${escapeHtml(label)}" aria-expanded="${open}"><span>${open ? "▾" : "▸"}</span>${escapeHtml(label)}</button></td><td>Total del rubro</td>${resourceAmountCell(values.estimated, overall.estimated)}${resourceAmountCell(values.current, overall.current)}${resourceAmountCell(values.accrued, overall.accrued)}${resourceAmountCell(values.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: values.perceived, current: values.current }, latestPeriod).status}">${formatPercent(rate)}</span></td><td class="number ${values.gap < 0 ? "negative" : ""}">${formatCents(values.gap)}</td></tr>${children}`;
+  }).join("");
+  $("#resource-table-note").textContent = latestPeriod ? `Valores acumulados a ${labelPeriod(latestPeriod)}. La brecha es devengado menos percibido: si es positiva, existen derechos reconocidos aún no cobrados; si es negativa, hubo ingresos vinculados a derechos de períodos anteriores u otras diferencias de registro.` : "No hay datos para mostrar.";
+}
+function renderResources(renderGraph = true) {
+  const rows = resourceFilteredRows(), selected = [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })), latestPeriod = selected.at(-1), previousPeriod = selected.at(-2), latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
+  renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderResourceQuality(); renderResourceTable(rows, latestPeriod); if (renderGraph) renderResourceChart(rows);
+}
+function resetResourceFilters() {
+  resourceSelectedPeriods = new Set(resourcePeriods()); resourceExpandedMajors.clear(); $("#resource-major-filter").value = ""; $("#resource-origin-filter").value = ""; fillResourceGroupFilter();
+  document.querySelectorAll("[data-resource-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#resource-toggle-periods").textContent = "Quitar todos"; renderResources();
+}
 async function init() {
   try {
     data = (await Promise.all(DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
-    fillFilters(); render();
+    resourceData = (await Promise.all(RESOURCE_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
+    fillFilters(); fillResourceFilters(); render(); renderResources(false);
     $("#updated-at").textContent = `${data.length.toLocaleString("es-AR")} partidas cargadas · último cierre: ${labelPeriod(periods().at(-1))}`;
     $("#period-filter").addEventListener("click", (event) => {
       const yearButton = event.target.closest("[data-year]");
@@ -367,11 +488,23 @@ async function init() {
     document.querySelectorAll(".chart-tab").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll(".chart-tab").forEach((item) => { item.classList.toggle("active", item === tab); item.setAttribute("aria-selected", String(item === tab)); }); renderChart(filteredRows()); }));
     $("#show-bar-values").addEventListener("change", (event) => { showBarValues = event.target.checked; renderChart(filteredRows()); });
     document.querySelectorAll(".header-tabs [data-page]").forEach((button) => button.addEventListener("click", () => { const page = button.dataset.page; document.querySelectorAll(".page-view").forEach((view) => { view.hidden = view.id !== `page-${page}`; }); document.querySelectorAll(".header-tabs [data-page]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); }));
-    document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((button) => button.addEventListener("click", () => { const tracking = button.dataset.tracking; document.querySelectorAll(".tracking-view").forEach((view) => { view.hidden = view.id !== `tracking-${tracking}`; }); document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); }));
+    document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((button) => button.addEventListener("click", () => { const tracking = button.dataset.tracking; document.querySelectorAll(".tracking-view").forEach((view) => { view.hidden = view.id !== `tracking-${tracking}`; }); document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); $("#updated-at").textContent = tracking === "resources" ? `${resourceData.length.toLocaleString("es-AR")} conceptos cargados · último cierre: ${labelPeriod(resourcePeriods().at(-1))}` : `${data.length.toLocaleString("es-AR")} partidas cargadas · último cierre: ${labelPeriod(periods().at(-1))}`; if (tracking === "resources") requestAnimationFrame(() => renderResources()); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });
     document.querySelectorAll(".sort-header").forEach((button) => button.addEventListener("click", () => { const key = button.dataset.sort; if (tableSort.key === key) tableSort.direction = tableSort.direction === "asc" ? "desc" : "asc"; else { tableSort.key = key; tableSort.direction = key === "name" || key === "breakdown" ? "asc" : "desc"; } renderTable(filteredRows()); }));
     $("#clear-filters").addEventListener("click", resetFilters);
     $("#download-summary").addEventListener("click", downloadSummary);
+    $("#resource-period-filter").addEventListener("click", (event) => {
+      const yearButton = event.target.closest("[data-resource-year]");
+      if (yearButton) { const year = yearButton.dataset.resourceYear, yearPeriods = resourcePeriods().filter((period) => period.endsWith(`/${year}`)), allSelected = yearPeriods.every((period) => resourceSelectedPeriods.has(period)); yearPeriods.forEach((period) => allSelected ? resourceSelectedPeriods.delete(period) : resourceSelectedPeriods.add(period)); }
+      else { const button = event.target.closest("[data-resource-period]"); if (!button) return; resourceSelectedPeriods.has(button.dataset.resourcePeriod) ? resourceSelectedPeriods.delete(button.dataset.resourcePeriod) : resourceSelectedPeriods.add(button.dataset.resourcePeriod); }
+      document.querySelectorAll("[data-resource-period]").forEach((button) => { const active = resourceSelectedPeriods.has(button.dataset.resourcePeriod); button.classList.toggle("active", active); button.setAttribute("aria-pressed", String(active)); }); $("#resource-toggle-periods").textContent = resourceSelectedPeriods.size === resourcePeriods().length ? "Quitar todos" : "Seleccionar todos"; renderResources();
+    });
+    $("#resource-toggle-periods").addEventListener("click", () => { resourceSelectedPeriods = resourceSelectedPeriods.size === resourcePeriods().length ? new Set() : new Set(resourcePeriods()); document.querySelectorAll("[data-resource-period]").forEach((button) => { const active = resourceSelectedPeriods.has(button.dataset.resourcePeriod); button.classList.toggle("active", active); button.setAttribute("aria-pressed", String(active)); }); $("#resource-toggle-periods").textContent = resourceSelectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; renderResources(); });
+    $("#resource-major-filter").addEventListener("change", () => { resourceExpandedMajors.clear(); fillResourceGroupFilter(); renderResources(); });
+    ["#resource-group-filter", "#resource-origin-filter"].forEach((id) => $(id).addEventListener("change", () => { resourceExpandedMajors.clear(); renderResources(); }));
+    $("#resource-clear-filters").addEventListener("click", resetResourceFilters);
+    $("#resource-detail-table").addEventListener("click", (event) => { const button = event.target.closest("[data-resource-major]"); if (!button) return; const key = button.dataset.resourceMajor; resourceExpandedMajors.has(key) ? resourceExpandedMajors.delete(key) : resourceExpandedMajors.add(key); renderResourceTable(resourceFilteredRows(), [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1)); });
+    document.querySelectorAll("[data-resource-chart]").forEach((button) => button.addEventListener("click", () => { resourceActiveChart = button.dataset.resourceChart; document.querySelectorAll("[data-resource-chart]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); renderResourceChart(resourceFilteredRows()); }));
   } catch (error) { $("#updated-at").textContent = "No se pudieron cargar los datos."; console.error(error); }
 }
 init();

@@ -208,21 +208,50 @@
       </section>
       </section>
 
-      <section id="tracking-resources" class="tracking-view resources-preview" role="tabpanel" hidden>
-        <section class="panel resource-intro">
-          <div><p class="eyebrow">Próxima incorporación</p><h2>Seguimiento mensual de recursos</h2><p>Esta sección permitirá analizar cómo evoluciona la previsión de ingresos municipales y cuánto fue efectivamente recaudado.</p></div>
-          <span class="resource-status">Esperando archivos mensuales</span>
-        </section>
-        <section class="resource-metric-grid" aria-label="Indicadores previstos para recursos">
-          <article class="metric resource-metric"><div class="metric-heading"><p>Recurso estimado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso estimado</strong>Previsión de recaudación incluida en el presupuesto aprobado.</span></span></div><strong>—</strong><small>Base presupuestaria original</small></article>
-          <article class="metric resource-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Estimación actualizada luego de ampliaciones o reducciones durante el año.</span></span></div><strong>—</strong><small>Permitirá medir cambios de expectativa</small></article>
-          <article class="metric resource-metric"><div class="metric-heading"><p>Recurso devengado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso devengado</strong>Derecho de cobro ya generado, aunque el dinero todavía no haya sido percibido.</span></span></div><strong>—</strong><small>Mostrará derechos pendientes de cobro</small></article>
-          <article class="metric resource-metric"><div class="metric-heading"><p>Recurso percibido</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso percibido</strong>Dinero efectivamente ingresado a las cuentas municipales.</span></span></div><strong>—</strong><small>Recaudación efectiva acumulada</small></article>
-        </section>
-        <section class="resources-roadmap">
-          <article class="panel"><p class="eyebrow">Evolución</p><h3>Estimado, vigente y percibido</h3><p>Gráfico Chart.js para comparar la actualización de la previsión con la recaudación efectiva mes a mes.</p></article>
-          <article class="panel"><p class="eyebrow">Cobranza</p><h3>Devengado frente a percibido</h3><p>Permitirá detectar derechos de cobro reconocidos que todavía no se transformaron en ingresos.</p></article>
-          <article class="panel"><p class="eyebrow">Composición</p><h3>Rubros y procedencia</h3><p>Tabla y rankings para identificar qué tipos de recursos explican la recaudación y sus cambios.</p></article>
+      <section id="tracking-resources" class="tracking-view resources-dashboard" role="tabpanel" hidden>
+        <div class="resource-layout">
+          <aside class="panel resource-filters" aria-labelledby="resource-filters-title">
+            <p class="eyebrow">Explorar</p><h2 id="resource-filters-title">Filtros de recursos</h2>
+            <div class="resource-filter-stack">
+              <div><div class="filter-heading"><p class="filter-label">Períodos incluidos</p><button id="resource-toggle-periods" class="small-action" type="button">Quitar todos</button></div><div id="resource-period-filter" class="period-picker"></div></div>
+              <label>Rubro principal<select id="resource-major-filter"></select></label>
+              <label>Grupo de recursos<select id="resource-group-filter"></select></label>
+              <label>Procedencia<select id="resource-origin-filter"></select></label>
+              <button id="resource-clear-filters" class="text-button resource-clear" type="button">Restablecer filtros</button>
+            </div>
+          </aside>
+
+          <div class="resource-primary">
+            <section class="resource-heading">
+              <div><p class="eyebrow">Ingresos municipales</p><h2>Resumen de recursos</h2><p id="resource-summary-context" class="note"></p></div>
+              <span id="resource-loaded-status" class="resource-status">Enero–septiembre 2026</span>
+            </section>
+            <section class="resource-metric-grid" aria-label="Indicadores de recursos">
+              <article class="metric resource-metric"><div class="metric-heading"><p>Recurso estimado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso estimado</strong>Previsión original de ingresos incluida en el presupuesto aprobado.</span></span></div><strong id="resource-metric-estimated">—</strong><small id="resource-estimated-note">Base presupuestaria original</small></article>
+              <article class="metric resource-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Estimación actualizada luego de ampliaciones o reducciones durante el año.</span></span></div><strong id="resource-metric-current">—</strong><small id="resource-current-note">—</small></article>
+              <article class="metric resource-metric"><div class="metric-heading"><p>Recurso devengado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso devengado</strong>Derecho de cobro reconocido, aunque el dinero todavía no haya ingresado.</span></span></div><strong id="resource-metric-accrued">—</strong><small id="resource-accrued-note">—</small></article>
+              <article class="metric resource-metric"><div class="metric-heading"><p>Recurso percibido</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso percibido</strong>Dinero efectivamente ingresado a las cuentas municipales.</span></span></div><strong id="resource-metric-perceived">—</strong><small id="resource-perceived-note">—</small></article>
+              <article class="metric resource-metric resource-rate"><div class="metric-heading"><p>% recaudado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Porcentaje recaudado</strong>Recurso percibido dividido por recurso vigente. Se compara con el avance lineal esperado del año.</span></span></div><strong id="resource-metric-rate">—</strong><small id="resource-rate-note">—</small></article>
+            </section>
+            <aside id="resource-quality-note" class="resource-quality" role="note"></aside>
+
+            <section class="panel resource-chart-panel">
+              <div class="section-heading"><div><p class="eyebrow">Evolución</p><h2 id="resource-chart-title">Recaudación y ritmo esperado</h2></div><div id="resource-chart-legend" class="legend"></div></div>
+              <div class="chart-tabs resource-chart-tabs" role="tablist" aria-label="Tipo de gráfico de recursos">
+                <button class="chart-tab active" type="button" data-resource-chart="collection" aria-selected="true">% recaudado</button>
+                <button class="chart-tab" type="button" data-resource-chart="income" aria-selected="false">Ingresos mensuales</button>
+                <button class="chart-tab" type="button" data-resource-chart="modification" aria-selected="false">Modificaciones</button>
+              </div>
+              <div class="chart"><canvas id="resource-chart"></canvas><p id="resource-chart-empty" class="note" hidden>No hay datos para esta selección.</p></div>
+              <p id="resource-chart-note" class="note"></p>
+            </section>
+          </div>
+        </div>
+
+        <section class="panel resource-composition">
+          <div class="section-heading"><div><p class="eyebrow">Composición</p><h2>Recursos por rubro</h2></div><p class="legend">Seleccioná la flecha para ver los conceptos</p></div>
+          <div class="table-wrap"><table><thead><tr><th>Rubro</th><th>Detalle</th><th class="number">Estimado</th><th class="number">Vigente</th><th class="number">Devengado</th><th class="number">Percibido</th><th class="number">% recaudado</th><th class="number">Devengado − percibido</th></tr></thead><tbody id="resource-detail-table"></tbody></table></div>
+          <p id="resource-table-note" class="note"></p>
         </section>
       </section>
       </section>
