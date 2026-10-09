@@ -36,6 +36,7 @@
       <nav class="tracking-tabs" role="tablist" aria-label="Tipo de seguimiento mensual">
         <button class="active" type="button" role="tab" data-tracking="expenses" aria-controls="tracking-expenses" aria-selected="true"><span>Gastos</span><small>Ejecución por objeto</small></button>
         <button type="button" role="tab" data-tracking="resources" aria-controls="tracking-resources" aria-selected="false"><span>Recursos</span><small>Estimación y recaudación</small></button>
+        <button type="button" role="tab" data-tracking="funds" aria-controls="tracking-funds" aria-selected="false"><span>Fondos Especiales</span><small>Recursos afectados y gastos</small></button>
       </nav>
 
       <section id="tracking-expenses" class="tracking-view" role="tabpanel">
@@ -261,6 +262,56 @@
             <article class="panel resource-insight-card"><p class="eyebrow">Composición</p><h3>Procedencia del recurso percibido</h3><p class="insight-description">Participación sobre el total acumulado del último período seleccionado.</p><div class="resource-origin-layout"><div class="resource-donut-chart"><canvas id="resource-origin-chart"></canvas></div><ul id="resource-origin-legend" class="resource-origin-legend"></ul></div></article>
             <article class="panel resource-insight-card"><p class="eyebrow">Ritmo anual</p><h3>Recaudación frente a lo esperado</h3><p id="resource-pace-note" class="insight-description"></p><div class="pace-columns"><div><strong>Más atrasados</strong><ol id="resource-pace-behind" class="resource-ranking-list"></ol></div><div><strong>Más adelantados</strong><ol id="resource-pace-ahead" class="resource-ranking-list"></ol></div></div></article>
             <article class="panel resource-insight-card"><p class="eyebrow">Concentración</p><h3>Principales conceptos recaudadores</h3><p class="insight-description">Conceptos con mayor recurso percibido acumulado.</p><ol id="resource-top-concepts" class="resource-ranking-list resource-top-list"></ol></article>
+          </div>
+        </section>
+      </section>
+
+      <section id="tracking-funds" class="tracking-view funds-dashboard" role="tabpanel" hidden>
+        <div class="fund-layout">
+          <aside class="panel fund-filters" aria-labelledby="fund-filters-title">
+            <p class="eyebrow">Explorar</p><h2 id="fund-filters-title">Filtros de fondos</h2>
+            <div class="fund-filter-stack">
+              <div><div class="filter-heading"><p class="filter-label">Períodos incluidos</p><button id="fund-toggle-periods" class="small-action" type="button">Quitar todos</button></div><div id="fund-period-filter" class="period-picker"></div></div>
+              <label>Nivel / origen<select id="fund-origin-filter"></select></label>
+              <label>Fondo especial<select id="fund-name-filter"></select></label>
+              <button id="fund-clear-filters" class="text-button fund-clear" type="button">Restablecer filtros</button>
+            </div>
+          </aside>
+
+          <div class="fund-primary">
+            <section class="fund-heading"><div><p class="eyebrow">Recursos afectados</p><h2>Resumen de Fondos Especiales</h2><p id="fund-summary-context" class="note"></p></div><span class="fund-status">Enero–septiembre 2026</span></section>
+            <section class="fund-metric-grid" aria-label="Indicadores de fondos especiales">
+              <article class="metric fund-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Monto disponible o previsto para los recursos afectados del fondo.</span></span></div><strong id="fund-metric-current">—</strong><small id="fund-current-note">—</small></article>
+              <article class="metric fund-metric"><div class="metric-heading"><p>Recurso percibido</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso percibido</strong>Ingresos afectados que efectivamente se cobraron.</span></span></div><strong id="fund-metric-perceived">—</strong><small id="fund-perceived-note">—</small></article>
+              <article class="metric fund-metric"><div class="metric-heading"><p>Gasto comprometido</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Gasto comprometido</strong>Obligaciones asumidas que reservaron parte del fondo, aunque todavía no se hayan pagado.</span></span></div><strong id="fund-metric-committed">—</strong><small id="fund-committed-note">—</small></article>
+              <article class="metric fund-metric"><div class="metric-heading"><p>Gasto pagado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Gasto pagado</strong>Salidas de dinero efectivamente realizadas con cargo a los fondos.</span></span></div><strong id="fund-metric-paid">—</strong><small id="fund-paid-note">—</small></article>
+              <article class="metric fund-metric fund-balance"><div class="metric-heading"><p>Percibido menos pagado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Balance de caja</strong>Diferencia simple entre lo percibido y lo pagado. Puede ser negativa cuando se utilizan saldos acumulados de ejercicios anteriores.</span></span></div><strong id="fund-metric-balance">—</strong><small id="fund-balance-note">—</small></article>
+            </section>
+
+            <section class="panel fund-chart-panel">
+              <div class="section-heading"><div><p class="eyebrow">Evolución</p><h2 id="fund-chart-title">Ingresos y pagos de cada mes</h2></div><div id="fund-chart-legend" class="legend"></div></div>
+              <div class="chart-tabs fund-chart-tabs" role="tablist" aria-label="Tipo de gráfico de fondos especiales">
+                <button class="chart-tab active" type="button" data-fund-chart="flow" aria-selected="true">Flujo mensual</button>
+                <button class="chart-tab" type="button" data-fund-chart="cumulative" aria-selected="false">Acumulado</button>
+                <button class="chart-tab" type="button" data-fund-chart="origin" aria-selected="false">Por origen</button>
+              </div>
+              <div class="chart"><canvas id="fund-chart"></canvas><p id="fund-chart-empty" class="note" hidden>No hay datos para esta selección.</p></div>
+              <p id="fund-chart-note" class="note"></p>
+            </section>
+          </div>
+        </div>
+
+        <section class="panel fund-table-panel">
+          <div class="section-heading"><div><p class="eyebrow">Detalle</p><h2>Fondos por nivel de origen</h2></div><p class="legend">Seleccioná la flecha para ver cada fondo</p></div>
+          <div class="table-wrap"><table><thead><tr><th>Nivel / origen</th><th>Fondo</th><th class="number">Recurso vigente</th><th class="number">Percibido</th><th class="number">Comprometido</th><th class="number">Devengado</th><th class="number">Pagado</th><th class="number">Percibido − pagado</th></tr></thead><tbody id="fund-detail-table"></tbody></table></div>
+          <p id="fund-table-note" class="note"></p>
+        </section>
+
+        <section class="fund-insights" aria-labelledby="fund-insights-title">
+          <div class="lab-heading"><p class="eyebrow">Lecturas complementarias</p><h2 id="fund-insights-title">Composición y movimientos destacados</h2><p>Estas lecturas también responden a los filtros seleccionados.</p></div>
+          <div class="fund-insight-grid">
+            <article class="panel fund-insight-card"><p class="eyebrow">Composición</p><h3>Participación por origen</h3><p class="insight-description">Distribución del recurso percibido acumulado.</p><div class="fund-origin-layout"><div class="fund-donut-chart"><canvas id="fund-origin-chart"></canvas></div><ul id="fund-origin-legend" class="resource-origin-legend"></ul></div></article>
+            <article class="panel fund-insight-card"><p class="eyebrow">Principales fondos</p><h3>Mayor recurso percibido</h3><p class="insight-description">Fondos con mayor ingreso efectivo en el último cierre.</p><ol id="fund-top-list" class="resource-ranking-list resource-top-list"></ol></article>
           </div>
         </section>
       </section>

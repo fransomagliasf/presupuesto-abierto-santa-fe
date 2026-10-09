@@ -52,3 +52,27 @@ ningún valor para forzar la conciliación.
 ```sh
 python3 scripts/extract_recursos_por_rubro.py INFORME.pdf data/processed/recursos_por_rubro_YYYY-MM-DD.csv
 ```
+
+## Fondos Especiales
+
+Los CSV `fondos_especiales` provienen del informe **Estado de Ejecución de
+Recursos Afectados vs. Gastos**. Cada fila representa un fondo y queda
+clasificada según el total de origen que cierra su sección: municipal (12),
+provincial (22), nacional (32) u otros (42).
+
+El extractor controla exactamente que:
+
+1. Gasto devengado no pagado = gasto devengado − gasto pagado.
+2. El saldo informado = recurso percibido − gasto pagado.
+3. Para los rubros 35, conforme a la nota del informe, el saldo informado =
+   recurso vigente − gasto pagado.
+4. La suma de los fondos coincide con cada total de origen y con el total
+   general impreso.
+
+Los nueve cierres de enero a septiembre de 2026 pasan todos los controles. El
+fondo `35.1.01.51` cambia a una denominación abreviada desde junio; se conserva
+el texto publicado y la aplicación lo unifica por código.
+
+```sh
+python3 scripts/extract_fondos_especiales.py INFORME.pdf data/processed/fondos_especiales_YYYY-MM-DD.csv
+```
