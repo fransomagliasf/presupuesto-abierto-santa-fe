@@ -33,6 +33,12 @@
       </section>
 
       <section id="page-tracking" class="page-view">
+      <nav class="tracking-tabs" role="tablist" aria-label="Tipo de seguimiento mensual">
+        <button class="active" type="button" role="tab" data-tracking="expenses" aria-controls="tracking-expenses" aria-selected="true"><span>Gastos</span><small>Ejecución por objeto</small></button>
+        <button type="button" role="tab" data-tracking="resources" aria-controls="tracking-resources" aria-selected="false"><span>Recursos</span><small>Estimación y recaudación</small></button>
+      </nav>
+
+      <section id="tracking-expenses" class="tracking-view" role="tabpanel">
       <div id="dashboard-layout" class="dashboard-layout">
       <aside id="filter-sidebar" class="panel filter-sidebar" aria-labelledby="filters-title">
         <div class="filter-sidebar-heading">
@@ -199,6 +205,25 @@
           <article class="panel insight-card insight-wide"><p class="eyebrow">Puente presupuestario</p><h3>Del crédito aprobado al vigente</h3><p class="insight-description">Cada paso muestra cómo las modificaciones mensuales construyen el cambio acumulado.</p><div class="waterfall-summary"><span id="waterfall-approved"></span><span id="waterfall-current"></span></div><div class="mini-chart waterfall-chart"><canvas id="waterfall-chart"></canvas></div></article>
           <article class="panel insight-card insight-wide year-comparison"><div><p class="eyebrow">Próxima etapa</p><h3>Comparación entre años</h3><p class="insight-description">El panel está preparado para comparar el mismo mes entre ejercicios cuando incorporemos datos de 2025 o 2027.</p></div><div class="year-placeholder"><strong>2026</strong><span>Primer año disponible</span></div></article>
         </div>
+      </section>
+      </section>
+
+      <section id="tracking-resources" class="tracking-view resources-preview" role="tabpanel" hidden>
+        <section class="panel resource-intro">
+          <div><p class="eyebrow">Próxima incorporación</p><h2>Seguimiento mensual de recursos</h2><p>Esta sección permitirá analizar cómo evoluciona la previsión de ingresos municipales y cuánto fue efectivamente recaudado.</p></div>
+          <span class="resource-status">Esperando archivos mensuales</span>
+        </section>
+        <section class="resource-metric-grid" aria-label="Indicadores previstos para recursos">
+          <article class="metric resource-metric"><div class="metric-heading"><p>Recurso estimado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso estimado</strong>Previsión de recaudación incluida en el presupuesto aprobado.</span></span></div><strong>—</strong><small>Base presupuestaria original</small></article>
+          <article class="metric resource-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Estimación actualizada luego de ampliaciones o reducciones durante el año.</span></span></div><strong>—</strong><small>Permitirá medir cambios de expectativa</small></article>
+          <article class="metric resource-metric"><div class="metric-heading"><p>Recurso devengado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso devengado</strong>Derecho de cobro ya generado, aunque el dinero todavía no haya sido percibido.</span></span></div><strong>—</strong><small>Mostrará derechos pendientes de cobro</small></article>
+          <article class="metric resource-metric"><div class="metric-heading"><p>Recurso percibido</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso percibido</strong>Dinero efectivamente ingresado a las cuentas municipales.</span></span></div><strong>—</strong><small>Recaudación efectiva acumulada</small></article>
+        </section>
+        <section class="resources-roadmap">
+          <article class="panel"><p class="eyebrow">Evolución</p><h3>Estimado, vigente y percibido</h3><p>Gráfico Chart.js para comparar la actualización de la previsión con la recaudación efectiva mes a mes.</p></article>
+          <article class="panel"><p class="eyebrow">Cobranza</p><h3>Devengado frente a percibido</h3><p>Permitirá detectar derechos de cobro reconocidos que todavía no se transformaron en ingresos.</p></article>
+          <article class="panel"><p class="eyebrow">Composición</p><h3>Rubros y procedencia</h3><p>Tabla y rankings para identificar qué tipos de recursos explican la recaudación y sus cambios.</p></article>
+        </section>
       </section>
       </section>
 
