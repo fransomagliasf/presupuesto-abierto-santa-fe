@@ -56,10 +56,27 @@ function fillFilters() {
   periods().forEach((period) => { const year = period.split("/")[2]; byYear.set(year, [...(byYear.get(year) || []), period]); });
   $("#period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => `<section class="period-year"><div class="period-year-heading"><strong>${year}</strong><button class="small-action" type="button" data-year="${year}">Todo el año</button></div><div class="month-list">${yearPeriods.map((period) => `<button type="button" class="month-option active" data-period="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period).split(" ")[0])}</button>`).join("")}</div></section>`).join("");
   populateSelect("#jurisdiction-filter", unique(data.map((r) => r.jurisdiccion_nombre)), "Todas las secretarías");
-  populateSelect("#source-filter", unique(data.map((r) => r.fuente_financiamiento_nombre)), "Todas las fuentes");
-  populateSelect("#object-filter", unique(data.map((r) => `${r.objeto_gasto_codigo} · ${r.objeto_gasto_nombre}`)), "Todos los objetos");
+  fillExpenseDependentFilters();
 }
 function programsForSelectedJurisdiction() { const jurisdiction = $("#jurisdiction-filter").value; return unique(data.filter((row) => row.jurisdiccion_nombre === jurisdiction).map((row) => row.programa_nombre)); }
+function expenseRowsForDependentFilters() {
+  const jurisdiction = $("#jurisdiction-filter").value;
+  if (!jurisdiction) return data;
+  return data.filter((row) => row.jurisdiccion_nombre === jurisdiction && selectedPrograms.has(row.programa_nombre));
+}
+function fillExpenseObjectFilter() {
+  const previous = $("#object-filter").value, source = $("#source-filter").value;
+  const options = unique(expenseRowsForDependentFilters().filter((row) => !source || row.fuente_financiamiento_nombre === source).map((row) => `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`));
+  populateSelect("#object-filter", options, "Todos los objetos");
+  if (options.includes(previous)) $("#object-filter").value = previous;
+}
+function fillExpenseDependentFilters() {
+  const previous = $("#source-filter").value;
+  const options = unique(expenseRowsForDependentFilters().map((row) => row.fuente_financiamiento_nombre));
+  populateSelect("#source-filter", options, "Todas las fuentes");
+  if (options.includes(previous)) $("#source-filter").value = previous;
+  fillExpenseObjectFilter();
+}
 function renderProgramChips() {
   const panel = $("#program-panel"), programs = programsForSelectedJurisdiction();
   panel.hidden = !programs.length;
@@ -317,7 +334,7 @@ function render() {
 function resetFilters() {
   selectedPeriods = new Set(periods()); selectedPrograms.clear(); expandedSecretaries.clear(); $("#jurisdiction-filter").value = ""; $("#source-filter").value = ""; $("#object-filter").value = "";
   document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.add("active"); chip.setAttribute("aria-pressed", "true"); });
-  $("#toggle-periods").textContent = "Quitar todos"; renderProgramChips(); render();
+  $("#toggle-periods").textContent = "Quitar todos"; renderProgramChips(); fillExpenseDependentFilters(); render();
 }
 function downloadSummary() {
   const canvas = document.createElement("canvas"), context = canvas.getContext("2d");
@@ -360,11 +377,18 @@ function resourceTotals(rows) {
 }
 function collectionPercent(perceived, current) { return current > 0 ? perceived / current * 100 : null; }
 function fillResourceGroupFilter() {
-  const major = $("#resource-major-filter").value;
+  const major = $("#resource-major-filter").value, majorCode = major.split(" · ")[0];
   const previous = $("#resource-group-filter").value;
-  const groups = unique(resourceData.filter((row) => !major || row.rubro_mayor_codigo === major).map((row) => `${row.rubro_grupo_codigo} · ${row.rubro_grupo_nombre}`));
+  const groups = unique(resourceData.filter((row) => !major || row.rubro_mayor_codigo === majorCode).map((row) => `${row.rubro_grupo_codigo} · ${row.rubro_grupo_nombre}`));
   populateSelect("#resource-group-filter", groups, "Todos los grupos");
   if (groups.includes(previous)) $("#resource-group-filter").value = previous;
+}
+function fillResourceOriginFilter() {
+  const majorValue = $("#resource-major-filter").value, groupValue = $("#resource-group-filter").value, previous = $("#resource-origin-filter").value;
+  const majorCode = majorValue.split(" · ")[0], groupCode = groupValue.split(" · ")[0];
+  const options = unique(resourceData.filter((row) => (!majorValue || row.rubro_mayor_codigo === majorCode) && (!groupValue || row.rubro_grupo_codigo === groupCode) && row.procedencia_codigo).map((row) => `${row.procedencia_codigo} · ${row.procedencia_nombre}`));
+  populateSelect("#resource-origin-filter", options, "Todas las procedencias");
+  if (options.includes(previous)) $("#resource-origin-filter").value = previous;
 }
 function fillResourceFilters() {
   resourceSelectedPeriods = new Set(resourcePeriods());
@@ -372,8 +396,8 @@ function fillResourceFilters() {
   resourcePeriods().forEach((period) => { const year = period.split("/")[2]; byYear.set(year, [...(byYear.get(year) || []), period]); });
   $("#resource-period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => `<section class="period-year"><div class="period-year-heading"><strong>${year}</strong><button class="small-action" type="button" data-resource-year="${year}">Todo el año</button></div><div class="month-list">${yearPeriods.map((period) => `<button type="button" class="month-option active" data-resource-period="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period).split(" ")[0])}</button>`).join("")}</div></section>`).join("");
   populateSelect("#resource-major-filter", unique(resourceData.map((row) => row.rubro_mayor_codigo)).map((code) => { const row = resourceData.find((item) => item.rubro_mayor_codigo === code); return `${code} · ${row.rubro_mayor_nombre}`; }), "Todos los rubros");
-  populateSelect("#resource-origin-filter", unique(resourceData.filter((row) => row.procedencia_codigo).map((row) => `${row.procedencia_codigo} · ${row.procedencia_nombre}`)), "Todas las procedencias");
   fillResourceGroupFilter();
+  fillResourceOriginFilter();
 }
 function resourceFilteredRows(includeAllPeriods = false) {
   const majorValue = $("#resource-major-filter").value, groupValue = $("#resource-group-filter").value, originValue = $("#resource-origin-filter").value;
@@ -507,7 +531,7 @@ function renderResources(renderGraph = true) {
   renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderResourceQuality(); renderResourceTable(rows, latestPeriod); renderResourceInsights(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph); if (renderGraph) renderResourceChart(rows);
 }
 function resetResourceFilters() {
-  resourceSelectedPeriods = new Set(resourcePeriods()); resourceExpandedMajors.clear(); $("#resource-major-filter").value = ""; $("#resource-origin-filter").value = ""; fillResourceGroupFilter();
+  resourceSelectedPeriods = new Set(resourcePeriods()); resourceExpandedMajors.clear(); $("#resource-major-filter").value = ""; $("#resource-group-filter").value = ""; $("#resource-origin-filter").value = ""; fillResourceGroupFilter(); fillResourceOriginFilter();
   document.querySelectorAll("[data-resource-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#resource-toggle-periods").textContent = "Quitar todos"; renderResources();
 }
 function fundPeriods() { return unique(fundData.map((row) => row.fecha_corte)).sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
@@ -586,7 +610,7 @@ function renderFunds(renderGraph = true) {
   const rows = fundFilteredRows(), selected = [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })), latestPeriod = selected.at(-1), previousPeriod = selected.at(-2), latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
   renderFundMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderFundTable(rows, latestPeriod); renderFundInsights(latestRows, renderGraph); if (renderGraph) renderFundChart(rows);
 }
-function resetFundFilters() { fundSelectedPeriods = new Set(fundPeriods()); fundExpandedOrigins.clear(); $("#fund-origin-filter").value = ""; fillFundNameFilter(); document.querySelectorAll("[data-fund-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#fund-toggle-periods").textContent = "Quitar todos"; renderFunds(); }
+function resetFundFilters() { fundSelectedPeriods = new Set(fundPeriods()); fundExpandedOrigins.clear(); $("#fund-origin-filter").value = ""; $("#fund-name-filter").value = ""; fillFundNameFilter(); document.querySelectorAll("[data-fund-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#fund-toggle-periods").textContent = "Quitar todos"; renderFunds(); }
 async function init() {
   try {
     data = (await Promise.all(DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
@@ -608,15 +632,16 @@ async function init() {
       $("#toggle-periods").textContent = isAllSelected ? "Quitar todos" : "Seleccionar todos";
       render();
     });
-    $("#jurisdiction-filter").addEventListener("change", () => { selectedPrograms = new Set(programsForSelectedJurisdiction()); expandedSecretaries.clear(); renderProgramChips(); render(); });
-    $("#program-filter").addEventListener("change", (event) => { const checkbox = event.target.closest("[data-program]"); if (!checkbox) return; checkbox.checked ? selectedPrograms.add(checkbox.dataset.program) : selectedPrograms.delete(checkbox.dataset.program); renderProgramChips(); render(); });
-    $("#program-filter").addEventListener("click", (event) => { const onlyButton = event.target.closest("[data-only-program]"); if (!onlyButton) return; selectedPrograms = new Set([onlyButton.dataset.onlyProgram]); renderProgramChips(); render(); });
-    $("#select-all-programs").addEventListener("click", () => { selectedPrograms = new Set(programsForSelectedJurisdiction()); renderProgramChips(); render(); });
-    $("#clear-programs").addEventListener("click", () => { selectedPrograms.clear(); renderProgramChips(); render(); });
+    $("#jurisdiction-filter").addEventListener("change", () => { selectedPrograms = new Set(programsForSelectedJurisdiction()); expandedSecretaries.clear(); renderProgramChips(); fillExpenseDependentFilters(); render(); });
+    $("#program-filter").addEventListener("change", (event) => { const checkbox = event.target.closest("[data-program]"); if (!checkbox) return; checkbox.checked ? selectedPrograms.add(checkbox.dataset.program) : selectedPrograms.delete(checkbox.dataset.program); renderProgramChips(); fillExpenseDependentFilters(); render(); });
+    $("#program-filter").addEventListener("click", (event) => { const onlyButton = event.target.closest("[data-only-program]"); if (!onlyButton) return; selectedPrograms = new Set([onlyButton.dataset.onlyProgram]); renderProgramChips(); fillExpenseDependentFilters(); render(); });
+    $("#select-all-programs").addEventListener("click", () => { selectedPrograms = new Set(programsForSelectedJurisdiction()); renderProgramChips(); fillExpenseDependentFilters(); render(); });
+    $("#clear-programs").addEventListener("click", () => { selectedPrograms.clear(); renderProgramChips(); fillExpenseDependentFilters(); render(); });
     $("#toggle-program-panel").addEventListener("click", () => { const body = $("#program-panel-body"), collapsed = !body.hidden; body.hidden = collapsed; $("#toggle-program-panel").textContent = collapsed ? "Mostrar" : "Reducir"; $("#toggle-program-panel").setAttribute("aria-expanded", String(!collapsed)); });
     $("#toggle-filter-sidebar").addEventListener("click", () => { const body = $("#filter-sidebar-body"), collapsed = !body.hidden; body.hidden = collapsed; $("#dashboard-layout").classList.toggle("filters-collapsed", collapsed); $("#toggle-filter-sidebar").textContent = collapsed ? "›" : "‹"; $("#toggle-filter-sidebar").setAttribute("aria-expanded", String(!collapsed)); $("#toggle-filter-sidebar").setAttribute("aria-label", collapsed ? "Desplegar filtros" : "Plegar filtros"); });
     $("#toggle-periods").addEventListener("click", () => { selectedPeriods = selectedPeriods.size === periods().length ? new Set() : new Set(periods()); $("#toggle-periods").textContent = selectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.toggle("active", selectedPeriods.has(chip.dataset.period)); chip.setAttribute("aria-pressed", selectedPeriods.has(chip.dataset.period)); }); render(); });
-    ["#source-filter", "#object-filter", "#detail-breakdown-filter", "#ranking-dimension"].forEach((id) => $(id).addEventListener("change", render));
+    $("#source-filter").addEventListener("change", () => { fillExpenseObjectFilter(); render(); });
+    ["#object-filter", "#detail-breakdown-filter", "#ranking-dimension"].forEach((id) => $(id).addEventListener("change", render));
     document.querySelectorAll(".chart-tab").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll(".chart-tab").forEach((item) => { item.classList.toggle("active", item === tab); item.setAttribute("aria-selected", String(item === tab)); }); renderChart(filteredRows()); }));
     $("#show-bar-values").addEventListener("change", (event) => { showBarValues = event.target.checked; renderChart(filteredRows()); });
     document.querySelectorAll(".header-tabs [data-page]").forEach((button) => button.addEventListener("click", () => { const page = button.dataset.page; document.querySelectorAll(".page-view").forEach((view) => { view.hidden = view.id !== `page-${page}`; }); document.querySelectorAll(".header-tabs [data-page]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); }));
@@ -632,8 +657,9 @@ async function init() {
       document.querySelectorAll("[data-resource-period]").forEach((button) => { const active = resourceSelectedPeriods.has(button.dataset.resourcePeriod); button.classList.toggle("active", active); button.setAttribute("aria-pressed", String(active)); }); $("#resource-toggle-periods").textContent = resourceSelectedPeriods.size === resourcePeriods().length ? "Quitar todos" : "Seleccionar todos"; renderResources();
     });
     $("#resource-toggle-periods").addEventListener("click", () => { resourceSelectedPeriods = resourceSelectedPeriods.size === resourcePeriods().length ? new Set() : new Set(resourcePeriods()); document.querySelectorAll("[data-resource-period]").forEach((button) => { const active = resourceSelectedPeriods.has(button.dataset.resourcePeriod); button.classList.toggle("active", active); button.setAttribute("aria-pressed", String(active)); }); $("#resource-toggle-periods").textContent = resourceSelectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; renderResources(); });
-    $("#resource-major-filter").addEventListener("change", () => { resourceExpandedMajors.clear(); fillResourceGroupFilter(); renderResources(); });
-    ["#resource-group-filter", "#resource-origin-filter"].forEach((id) => $(id).addEventListener("change", () => { resourceExpandedMajors.clear(); renderResources(); }));
+    $("#resource-major-filter").addEventListener("change", () => { resourceExpandedMajors.clear(); fillResourceGroupFilter(); fillResourceOriginFilter(); renderResources(); });
+    $("#resource-group-filter").addEventListener("change", () => { resourceExpandedMajors.clear(); fillResourceOriginFilter(); renderResources(); });
+    $("#resource-origin-filter").addEventListener("change", () => { resourceExpandedMajors.clear(); renderResources(); });
     $("#resource-clear-filters").addEventListener("click", resetResourceFilters);
     $("#resource-detail-table").addEventListener("click", (event) => { const button = event.target.closest("[data-resource-major]"); if (!button) return; const key = button.dataset.resourceMajor; resourceExpandedMajors.has(key) ? resourceExpandedMajors.delete(key) : resourceExpandedMajors.add(key); renderResourceTable(resourceFilteredRows(), [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1)); });
     document.querySelectorAll("[data-resource-chart]").forEach((button) => button.addEventListener("click", () => { resourceActiveChart = button.dataset.resourceChart; document.querySelectorAll("[data-resource-chart]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); renderResourceChart(resourceFilteredRows()); }));
