@@ -21,6 +21,8 @@ const updateDateFormat = new Intl.DateTimeFormat("es-AR", { month: "long", year:
 let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, budgetChart = null, contributionChart = null, waterfallChart = null, tableSort = { key: "accrued", direction: "desc" };
 let resourceData = [], resourceSelectedPeriods = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceChart = null, resourceGrowthChart = null, resourceOriginChart = null;
 let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Set(), fundActiveChart = "flow", fundChart = null, fundOriginChart = null;
+const TABLE_PAGE_SIZE = 5;
+let expenseTablePage = 1, resourceTablePage = 1, fundTablePage = 1, activeDownloadView = "expenses";
 
 function parseCSV(text) {
   const records = []; let record = [], field = "", quoted = false;
@@ -51,6 +53,12 @@ function formatPercent(value) { return value === null ? "—" : `${value.toLocal
 function populateSelect(id, values, label) { $(id).innerHTML = `<option value="">${label}</option>${values.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}`; }
 function setFilterEnabled(id, enabled) { const select = $(id); select.disabled = !enabled; select.closest(".filter-step")?.classList.toggle("is-disabled", !enabled); }
 function updatedLabel(period) { return period ? `Actualizado a ${updateDateFormat.format(date({ fecha_corte: period }))}` : "Sin datos disponibles"; }
+function paginate(items, requestedPage) { const pages = Math.max(1, Math.ceil(items.length / TABLE_PAGE_SIZE)), page = Math.min(Math.max(1, requestedPage), pages), start = (page - 1) * TABLE_PAGE_SIZE; return { items: items.slice(start, start + TABLE_PAGE_SIZE), page, pages, start }; }
+function renderPagination(selector, state, type, total) {
+  if (!total) { $(selector).innerHTML = ""; return; }
+  const pageButtons = state.pages > 1 ? Array.from({ length: state.pages }, (_, index) => `<button type="button" class="${index + 1 === state.page ? "active" : ""}" data-pagination="${type}" data-page="${index + 1}" aria-label="Página ${index + 1}" aria-current="${index + 1 === state.page ? "page" : "false"}">${index + 1}</button>`).join("") : "";
+  $(selector).innerHTML = `<span>${state.start + 1}–${Math.min(state.start + TABLE_PAGE_SIZE, total)} de ${total}</span>${state.pages > 1 ? `<button type="button" data-pagination="${type}" data-page="${state.page - 1}" ${state.page === 1 ? "disabled" : ""} aria-label="Página anterior">‹</button>${pageButtons}<button type="button" data-pagination="${type}" data-page="${state.page + 1}" ${state.page === state.pages ? "disabled" : ""} aria-label="Página siguiente">›</button>` : ""}`;
+}
 function periods() { return unique(data.map((row) => row.fecha_corte)).sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
 
 function fillFilters() {
@@ -325,12 +333,14 @@ function renderTable(rows) {
   const columnTotals = totals(visibleRows);
   const bySecretary = new Map(); visibleRows.forEach((row) => { const group = bySecretary.get(row.jurisdiccion_nombre) || []; group.push(row); bySecretary.set(row.jurisdiccion_nombre, group); });
   const entries = sortedGroups([...bySecretary.entries()]);
-  $("#detail-table").innerHTML = entries.map(([name, secretaryRows]) => {
+  const pageState = paginate(entries, expenseTablePage); expenseTablePage = pageState.page;
+  $("#detail-table").innerHTML = pageState.items.map(([name, secretaryRows]) => {
     const open = expandedSecretaries.has(name), subdivisions = new Map();
     secretaryRows.forEach((row) => { const label = breakdown === "program" ? `${row.programa_codigo} · ${row.programa_nombre}` : breakdown === "source" ? row.fuente_financiamiento_nombre : `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`; const group = subdivisions.get(label) || []; group.push(row); subdivisions.set(label, group); });
     const children = open ? sortedGroups([...subdivisions.entries()]).map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod, columnTotals)}</tr>`).join("") : "";
     return `<tr class="secretary-total"><td><button class="expand-row" type="button" data-secretary="${escapeHtml(name)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(name)}</button></td><td>Total de secretaría</td>${totalCells(totals(secretaryRows), latestPeriod, columnTotals)}</tr>${children}`;
   }).join("");
+  renderPagination("#expense-pagination", pageState, "expenses", entries.length);
   const breakdownName = { program: "programa", source: "fuente de financiamiento", object: "objeto del gasto" }[breakdown];
   $("#table-note").textContent = latestPeriod ? `Totales de ${labelPeriod(latestPeriod)}. Los porcentajes entre paréntesis muestran la participación sobre el total visible de cada columna. Usá la flecha para ver el detalle por ${breakdownName}.` : "No hay partidas para mostrar.";
   updateSortHeaders();
@@ -342,40 +352,43 @@ function render() {
   renderMetrics(latestRows, latestPeriod, previousPeriod, previousRows); renderRankings(latestRows, latestPeriod); renderChart(rows); renderTable(rows); renderInsights(rows, latestRows, latestPeriod);
 }
 function resetFilters() {
-  selectedPeriods = new Set(periods()); selectedPrograms.clear(); expandedSecretaries.clear(); $("#jurisdiction-filter").value = ""; $("#source-filter").value = ""; $("#object-filter").value = "";
+  selectedPeriods = new Set(periods()); selectedPrograms.clear(); expandedSecretaries.clear(); expenseTablePage = 1; $("#jurisdiction-filter").value = ""; $("#source-filter").value = ""; $("#object-filter").value = "";
   document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.add("active"); chip.setAttribute("aria-pressed", "true"); });
   $("#toggle-periods").textContent = "Quitar todos"; renderProgramChips(); fillExpenseDependentFilters(); render();
 }
-function downloadSummary() {
-  const canvas = document.createElement("canvas"), context = canvas.getContext("2d");
-  const selected = selectedPeriodSequence(), latestPeriod = selected.at(-1), previousPeriod = selected.at(-2), details = selectionDetails(latestPeriod, previousPeriod);
-  canvas.width = 1200; canvas.height = 760;
-  context.fillStyle = "#f3f6fa"; context.fillRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = "#0b365b"; context.fillRect(0, 0, canvas.width, 235);
-  context.fillStyle = "#bfdef5"; context.font = "700 20px system-ui, sans-serif"; context.fillText("MUNICIPALIDAD DE SANTA FE", 64, 45);
-  context.fillStyle = "#ffffff"; context.font = "700 42px system-ui, sans-serif"; context.fillText("Resumen de ejecución presupuestaria", 64, 98);
-  context.font = "600 18px system-ui, sans-serif"; context.fillStyle = "#ffffff"; context.fillText(`Secretaría: ${details.jurisdiction}`, 64, 138, 1070);
-  context.font = "400 17px system-ui, sans-serif"; context.fillStyle = "#d8e9f7"; context.fillText(`Programa(s): ${details.programs}`, 64, 171, 1070);
-  context.fillText(`Período analizado: ${details.period}${details.previous ? ` · Comparación: ${details.previous}` : ""}`, 64, 202, 1070);
-  const items = [
-    ["Crédito aprobado", "#metric-approved", "#metric-approved-change"], ["Crédito vigente", "#metric-current", "#metric-current-change"], ["Devengado", "#metric-accrued", "#metric-accrued-change"],
-    ["Disponible", "#metric-available", "#metric-available-change"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"],
-  ];
-  const gap = 18, margin = 64, cardWidth = (canvas.width - margin * 2 - gap * 2) / 3, cardHeight = 150, startY = 275;
-  items.forEach(([label, selector, detailSelector], index) => {
-    const col = index % 3, row = Math.floor(index / 3), x = margin + col * (cardWidth + gap), y = startY + row * (cardHeight + gap);
-    context.fillStyle = "#ffffff"; context.beginPath(); context.roundRect(x, y, cardWidth, cardHeight, 14); context.fill();
-    context.fillStyle = "#60708a"; context.font = "600 18px system-ui, sans-serif"; context.fillText(label, x + 22, y + 39);
-    context.fillStyle = "#15233b"; context.font = "700 28px system-ui, sans-serif"; context.fillText($(selector).textContent, x + 22, y + 88, cardWidth - 44);
-    context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText($(detailSelector).textContent, x + 22, y + 121, cardWidth - 44);
-  });
-  context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText("Fuente: Estado de Ejecución del Presupuesto de Gastos por Objeto · Municipalidad de Santa Fe", 64, 725);
-  canvas.toBlob((blob) => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob), anchor = document.createElement("a");
-    const filePeriod = (selectedPeriodSequence().at(-1) || "santa-fe").replaceAll("/", "-");
-    anchor.href = url; anchor.download = `resumen-presupuestario-${filePeriod}.png`; anchor.click(); URL.revokeObjectURL(url);
-  }, "image/png");
+function downloadConfig(view) {
+  const configs = {
+    expenses: { title: "Ejecución de gastos", context: "#summary-context", period: selectedPeriodSequence().at(-1), metrics: [["Crédito aprobado", "#metric-approved", "#metric-approved-change"], ["Crédito vigente", "#metric-current", "#metric-current-change"], ["Devengado", "#metric-accrued", "#metric-accrued-change"], ["Disponible", "#metric-available", "#metric-available-change"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de modificaciones o porcentaje ejecutado.", canvas: "#budget-chart", title: () => $("#chart-title").textContent }, { id: "contribution", label: "Contribución a las modificaciones", description: "Rubros que explican los cambios del crédito.", canvas: "#contribution-chart", title: () => "Contribución a las modificaciones" }, { id: "waterfall", label: "Puente presupuestario", description: "Recorrido desde el crédito aprobado hasta el vigente.", canvas: "#waterfall-chart", title: () => "Del crédito aprobado al vigente" }] },
+    resources: { title: "Ejecución de recursos", context: "#resource-summary-context", period: [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), metrics: [["Recurso estimado", "#resource-metric-estimated", "#resource-estimated-note"], ["Recurso vigente", "#resource-metric-current", "#resource-current-note"], ["Recurso devengado", "#resource-metric-accrued", "#resource-accrued-note"], ["Recurso percibido", "#resource-metric-perceived", "#resource-perceived-note"], ["% recaudado", "#resource-metric-rate", "#resource-rate-note"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de recaudación, ingresos o modificaciones.", canvas: "#resource-chart", title: () => $("#resource-chart-title").textContent }, { id: "growth", label: "Ingresos del mes", description: "Rubros que explican la variación mensual.", canvas: "#resource-growth-chart", title: () => "Rubros que explican los ingresos del mes" }, { id: "origin", label: "Procedencia de los recursos", description: "Composición del recurso percibido.", canvas: "#resource-origin-chart", title: () => "Procedencia del recurso percibido" }] },
+    funds: { title: "Fondos Especiales", context: "#fund-summary-context", period: [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), metrics: [["Recurso vigente", "#fund-metric-current", "#fund-current-note"], ["Recurso percibido", "#fund-metric-perceived", "#fund-perceived-note"], ["Gasto comprometido", "#fund-metric-committed", "#fund-committed-note"], ["Gasto pagado", "#fund-metric-paid", "#fund-paid-note"], ["Percibido menos pagado", "#fund-metric-balance", "#fund-balance-note"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de flujo, acumulado u origen.", canvas: "#fund-chart", title: () => $("#fund-chart-title").textContent }, { id: "origin", label: "Participación por origen", description: "Composición de los recursos percibidos.", canvas: "#fund-origin-chart", title: () => "Participación por origen" }] },
+  };
+  return configs[view];
+}
+function canvasAvailable(selector) { const canvas = $(selector); return Boolean(canvas && !canvas.hidden && canvas.width && canvas.height); }
+function openDownloadDialog(view) {
+  activeDownloadView = view; const config = downloadConfig(view), dialog = $("#download-dialog");
+  $("#download-dialog-title").textContent = `Crear imagen · ${config.title}`; $("#download-error").hidden = true;
+  const chartOptions = config.charts.map((chart) => { const available = canvasAvailable(chart.canvas); return `<label><input type="checkbox" value="${chart.id}" ${available ? "" : "disabled"}><span>${escapeHtml(chart.label)}</span><small>${escapeHtml(available ? chart.description : "No disponible para la selección actual.")}</small></label>`; }).join("");
+  $("#download-options").innerHTML = `<label><input type="checkbox" value="summary" checked><span>Tarjetas del resumen</span><small>Indicadores, período y filtros aplicados.</small></label>${chartOptions}`;
+  dialog.showModal();
+}
+function wrapCanvasText(context, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+  const words = String(text || "").split(/\s+/); let line = "", lines = 0;
+  for (const word of words) { const next = line ? `${line} ${word}` : word; if (context.measureText(next).width > maxWidth && line) { context.fillText(line, x, y + lines * lineHeight); lines += 1; line = word; if (lines === maxLines - 1) break; } else line = next; }
+  if (line && lines < maxLines) context.fillText(line, x, y + lines * lineHeight, maxWidth);
+}
+function exportDashboardImage(view, selectedItems) {
+  const config = downloadConfig(view), includeSummary = selectedItems.includes("summary"), charts = config.charts.filter((chart) => selectedItems.includes(chart.id) && canvasAvailable(chart.canvas));
+  const margin = 64, gap = 18, cardHeight = 150, summaryHeight = includeSummary ? 52 + Math.ceil(config.metrics.length / 3) * (cardHeight + gap) : 0, chartHeight = 455;
+  const canvas = document.createElement("canvas"), context = canvas.getContext("2d"); canvas.width = 1200; canvas.height = 230 + summaryHeight + charts.length * chartHeight + 76;
+  context.fillStyle = "#f3f6fa"; context.fillRect(0, 0, canvas.width, canvas.height); const gradient = context.createLinearGradient(0, 0, canvas.width, 0); gradient.addColorStop(0, "#0b365b"); gradient.addColorStop(1, "#1264a3"); context.fillStyle = gradient; context.fillRect(0, 0, canvas.width, 210);
+  context.fillStyle = "#bfdef5"; context.font = "700 18px system-ui, sans-serif"; context.fillText("MUNICIPALIDAD DE SANTA FE", margin, 42); context.fillStyle = "#fff"; context.font = "700 40px system-ui, sans-serif"; context.fillText(config.title, margin, 92);
+  context.fillStyle = "#d8e9f7"; context.font = "400 16px system-ui, sans-serif"; wrapCanvasText(context, $(config.context).textContent, margin, 128, canvas.width - margin * 2, 24, 3); context.font = "600 15px system-ui, sans-serif"; context.fillText(updatedLabel(config.period), margin, 188);
+  let y = 238;
+  if (includeSummary) { context.fillStyle = "#15233b"; context.font = "700 24px system-ui, sans-serif"; context.fillText("Indicadores principales", margin, y + 24); y += 52; const cardWidth = (canvas.width - margin * 2 - gap * 2) / 3; config.metrics.forEach(([label, valueSelector, noteSelector], index) => { const col = index % 3, row = Math.floor(index / 3), x = margin + col * (cardWidth + gap), cardY = y + row * (cardHeight + gap); context.fillStyle = "#fff"; context.beginPath(); context.roundRect(x, cardY, cardWidth, cardHeight, 14); context.fill(); context.fillStyle = "#60708a"; context.font = "600 17px system-ui, sans-serif"; context.fillText(label, x + 20, cardY + 36); context.fillStyle = "#15233b"; context.font = "700 27px system-ui, sans-serif"; context.fillText($(valueSelector).textContent, x + 20, cardY + 82, cardWidth - 40); context.fillStyle = "#60708a"; context.font = "400 13px system-ui, sans-serif"; context.fillText($(noteSelector).textContent, x + 20, cardY + 116, cardWidth - 40); }); y += Math.ceil(config.metrics.length / 3) * (cardHeight + gap); }
+  charts.forEach((chart) => { const source = $(chart.canvas); context.fillStyle = "#fff"; context.beginPath(); context.roundRect(margin, y, canvas.width - margin * 2, chartHeight - gap, 14); context.fill(); context.fillStyle = "#15233b"; context.font = "700 22px system-ui, sans-serif"; context.fillText(chart.title(), margin + 24, y + 38); const targetWidth = canvas.width - margin * 2 - 48, targetHeight = chartHeight - 88; context.drawImage(source, margin + 24, y + 58, targetWidth, targetHeight); y += chartHeight; });
+  context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText("Fuente: Portal de Transparencia de la Municipalidad de Santa Fe", margin, canvas.height - 32);
+  canvas.toBlob((blob) => { if (!blob) return; const url = URL.createObjectURL(blob), anchor = document.createElement("a"), filePeriod = (config.period || "santa-fe").replaceAll("/", "-"); anchor.href = url; anchor.download = `presupuesto-${view}-${filePeriod}.png`; anchor.click(); URL.revokeObjectURL(url); }, "image/png");
 }
 
 function resourcePeriods() { return unique(resourceData.map((row) => row.fecha_corte)).sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
@@ -482,11 +495,13 @@ function renderResourceTable(rows, latestPeriod) {
   const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), overall = resourceTotals(latestRows), groups = new Map();
   latestRows.forEach((row) => { const key = `${row.rubro_mayor_codigo} · ${row.rubro_mayor_nombre}`, group = groups.get(key) || []; group.push(row); groups.set(key, group); });
   const ordered = [...groups.entries()].sort((a, b) => resourceTotals(b[1]).perceived - resourceTotals(a[1]).perceived);
-  $("#resource-detail-table").innerHTML = ordered.map(([label, group]) => {
+  const pageState = paginate(ordered, resourceTablePage); resourceTablePage = pageState.page;
+  $("#resource-detail-table").innerHTML = pageState.items.map(([label, group]) => {
     const open = resourceExpandedMajors.has(label), values = resourceTotals(group), rate = collectionPercent(values.perceived, values.current);
     const children = open ? [...group].sort((a, b) => cents(b, "recurso_percibido_centavos") - cents(a, "recurso_percibido_centavos")).map((row) => { const child = resourceTotals([row]), childRate = collectionPercent(child.perceived, child.current), origin = row.procedencia_codigo ? `${row.procedencia_codigo} · ${row.procedencia_nombre}` : "Sin procedencia informada"; return `<tr class="breakdown-row"><td></td><td><strong>${escapeHtml(`${row.rubro_codigo} · ${row.rubro_nombre}`)}</strong><small>${escapeHtml(origin)}</small></td>${resourceAmountCell(child.estimated, overall.estimated)}${resourceAmountCell(child.current, overall.current)}${resourceAmountCell(child.accrued, overall.accrued)}${resourceAmountCell(child.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: child.perceived, current: child.current }, latestPeriod).status}">${formatPercent(childRate)}</span></td></tr>`; }).join("") : "";
     return `<tr class="secretary-total"><td><button class="expand-row resource-expand-row" type="button" data-resource-major="${escapeHtml(label)}" aria-expanded="${open}"><span>${open ? "▾" : "▸"}</span>${escapeHtml(label)}</button></td><td>Total del rubro</td>${resourceAmountCell(values.estimated, overall.estimated)}${resourceAmountCell(values.current, overall.current)}${resourceAmountCell(values.accrued, overall.accrued)}${resourceAmountCell(values.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: values.perceived, current: values.current }, latestPeriod).status}">${formatPercent(rate)}</span></td></tr>${children}`;
   }).join("");
+  renderPagination("#resource-pagination", pageState, "resources", ordered.length);
   $("#resource-table-note").textContent = latestPeriod ? `Valores acumulados a ${labelPeriod(latestPeriod)}. Los porcentajes entre paréntesis muestran la participación de cada rubro o concepto sobre el total visible de la columna.` : "No hay datos para mostrar.";
 }
 function resourceMajorLabel(row) { return `${row.rubro_mayor_codigo} · ${row.rubro_mayor_nombre}`; }
@@ -543,7 +558,7 @@ function renderResources(renderGraph = true) {
   renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderResourceQuality(); renderResourceTable(rows, latestPeriod); renderResourceInsights(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph); if (renderGraph) renderResourceChart(rows);
 }
 function resetResourceFilters() {
-  resourceSelectedPeriods = new Set(resourcePeriods()); resourceExpandedMajors.clear(); $("#resource-major-filter").value = ""; $("#resource-group-filter").value = ""; $("#resource-origin-filter").value = ""; fillResourceGroupFilter(); fillResourceOriginFilter();
+  resourceSelectedPeriods = new Set(resourcePeriods()); resourceExpandedMajors.clear(); resourceTablePage = 1; $("#resource-major-filter").value = ""; $("#resource-group-filter").value = ""; $("#resource-origin-filter").value = ""; fillResourceGroupFilter(); fillResourceOriginFilter();
   document.querySelectorAll("[data-resource-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#resource-toggle-periods").textContent = "Quitar todos"; renderResources();
 }
 function fundPeriods() { return unique(fundData.map((row) => row.fecha_corte)).sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
@@ -608,7 +623,9 @@ function renderFundChart(rows) {
 function fundAmountCell(value, total) { return `<td class="number">${formatCents(value)}<small class="cell-share">(${columnShare(value, total)} del total)</small></td>`; }
 function renderFundTable(rows, latestPeriod) {
   const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), overall = fundTotals(latestRows), groups = new Map(); latestRows.forEach((row) => { const label = `${row.origen_codigo} · ${row.origen_nombre}`, group = groups.get(label) || []; group.push(row); groups.set(label, group); });
-  $("#fund-detail-table").innerHTML = [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0], "es")).map(([label, group]) => { const open = fundExpandedOrigins.has(label), values = fundTotals(group), balance = values.perceived - values.paid; const children = open ? [...group].sort((a, b) => cents(b, "recurso_percibido_centavos") - cents(a, "recurso_percibido_centavos")).map((row) => { const child = fundTotals([row]), childBalance = child.perceived - child.paid; return `<tr class="breakdown-row"><td></td><td><strong>${escapeHtml(`${row.fondo_codigo} · ${canonicalFundName(row.fondo_codigo)}`)}</strong></td>${fundAmountCell(child.current, overall.current)}${fundAmountCell(child.perceived, overall.perceived)}${fundAmountCell(child.committed, overall.committed)}${fundAmountCell(child.expenseAccrued, overall.expenseAccrued)}${fundAmountCell(child.paid, overall.paid)}<td class="number ${childBalance < 0 ? "negative" : "positive"}">${formatCents(childBalance)}</td></tr>`; }).join("") : ""; return `<tr class="secretary-total"><td><button class="expand-row fund-expand-row" type="button" data-fund-origin="${escapeHtml(label)}" aria-expanded="${open}"><span>${open ? "▾" : "▸"}</span>${escapeHtml(label)}</button></td><td>Total del nivel</td>${fundAmountCell(values.current, overall.current)}${fundAmountCell(values.perceived, overall.perceived)}${fundAmountCell(values.committed, overall.committed)}${fundAmountCell(values.expenseAccrued, overall.expenseAccrued)}${fundAmountCell(values.paid, overall.paid)}<td class="number ${balance < 0 ? "negative" : "positive"}">${formatCents(balance)}</td></tr>${children}`; }).join("");
+  const ordered = [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0], "es")), pageState = paginate(ordered, fundTablePage); fundTablePage = pageState.page;
+  $("#fund-detail-table").innerHTML = pageState.items.map(([label, group]) => { const open = fundExpandedOrigins.has(label), values = fundTotals(group), balance = values.perceived - values.paid; const children = open ? [...group].sort((a, b) => cents(b, "recurso_percibido_centavos") - cents(a, "recurso_percibido_centavos")).map((row) => { const child = fundTotals([row]), childBalance = child.perceived - child.paid; return `<tr class="breakdown-row"><td></td><td><strong>${escapeHtml(`${row.fondo_codigo} · ${canonicalFundName(row.fondo_codigo)}`)}</strong></td>${fundAmountCell(child.current, overall.current)}${fundAmountCell(child.perceived, overall.perceived)}${fundAmountCell(child.committed, overall.committed)}${fundAmountCell(child.expenseAccrued, overall.expenseAccrued)}${fundAmountCell(child.paid, overall.paid)}<td class="number ${childBalance < 0 ? "negative" : "positive"}">${formatCents(childBalance)}</td></tr>`; }).join("") : ""; return `<tr class="secretary-total"><td><button class="expand-row fund-expand-row" type="button" data-fund-origin="${escapeHtml(label)}" aria-expanded="${open}"><span>${open ? "▾" : "▸"}</span>${escapeHtml(label)}</button></td><td>Total del nivel</td>${fundAmountCell(values.current, overall.current)}${fundAmountCell(values.perceived, overall.perceived)}${fundAmountCell(values.committed, overall.committed)}${fundAmountCell(values.expenseAccrued, overall.expenseAccrued)}${fundAmountCell(values.paid, overall.paid)}<td class="number ${balance < 0 ? "negative" : "positive"}">${formatCents(balance)}</td></tr>${children}`; }).join("");
+  renderPagination("#fund-pagination", pageState, "funds", ordered.length);
   $("#fund-table-note").textContent = latestPeriod ? `Valores acumulados a ${labelPeriod(latestPeriod)}. El balance mostrado es recurso percibido menos gasto pagado y puede ser negativo si se utilizaron saldos de ejercicios anteriores.` : "No hay datos para mostrar.";
 }
 function renderFundInsights(latestRows, renderGraph) {
@@ -622,7 +639,7 @@ function renderFunds(renderGraph = true) {
   const rows = fundFilteredRows(), selected = [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })), latestPeriod = selected.at(-1), previousPeriod = selected.at(-2), latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
   renderFundMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderFundTable(rows, latestPeriod); renderFundInsights(latestRows, renderGraph); if (renderGraph) renderFundChart(rows);
 }
-function resetFundFilters() { fundSelectedPeriods = new Set(fundPeriods()); fundExpandedOrigins.clear(); $("#fund-origin-filter").value = ""; $("#fund-name-filter").value = ""; fillFundNameFilter(); document.querySelectorAll("[data-fund-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#fund-toggle-periods").textContent = "Quitar todos"; renderFunds(); }
+function resetFundFilters() { fundSelectedPeriods = new Set(fundPeriods()); fundExpandedOrigins.clear(); fundTablePage = 1; $("#fund-origin-filter").value = ""; $("#fund-name-filter").value = ""; fillFundNameFilter(); document.querySelectorAll("[data-fund-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#fund-toggle-periods").textContent = "Quitar todos"; renderFunds(); }
 function setupFilterPanelToggle(buttonSelector, bodySelector, layoutSelector, name) {
   $(buttonSelector).addEventListener("click", () => { const body = $(bodySelector), button = $(buttonSelector), collapsed = !body.hidden; body.hidden = collapsed; $(layoutSelector).classList.toggle("filters-collapsed", collapsed); button.textContent = collapsed ? "›" : "‹"; button.setAttribute("aria-expanded", String(!collapsed)); button.setAttribute("aria-label", collapsed ? `Desplegar ${name}` : `Plegar ${name}`); });
 }
@@ -665,9 +682,11 @@ async function init() {
     document.querySelectorAll(".header-tabs [data-page]").forEach((button) => button.addEventListener("click", () => { const page = button.dataset.page; document.querySelectorAll(".page-view").forEach((view) => { view.hidden = view.id !== `page-${page}`; }); document.querySelectorAll(".header-tabs [data-page]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); }));
     document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((button) => button.addEventListener("click", () => { const tracking = button.dataset.tracking; document.querySelectorAll(".tracking-view").forEach((view) => { view.hidden = view.id !== `tracking-${tracking}`; }); document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); const latestPeriod = tracking === "resources" ? resourcePeriods().at(-1) : tracking === "funds" ? fundPeriods().at(-1) : periods().at(-1); $("#updated-at").textContent = updatedLabel(latestPeriod); if (tracking === "resources") requestAnimationFrame(() => renderResources()); if (tracking === "funds") requestAnimationFrame(() => renderFunds()); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });
-    document.querySelectorAll(".sort-header").forEach((button) => button.addEventListener("click", () => { const key = button.dataset.sort; if (tableSort.key === key) tableSort.direction = tableSort.direction === "asc" ? "desc" : "asc"; else { tableSort.key = key; tableSort.direction = key === "name" || key === "breakdown" ? "asc" : "desc"; } renderTable(filteredRows()); }));
+    document.querySelectorAll(".sort-header").forEach((button) => button.addEventListener("click", () => { const key = button.dataset.sort; expenseTablePage = 1; if (tableSort.key === key) tableSort.direction = tableSort.direction === "asc" ? "desc" : "asc"; else { tableSort.key = key; tableSort.direction = key === "name" || key === "breakdown" ? "asc" : "desc"; } renderTable(filteredRows()); }));
     $("#clear-filters").addEventListener("click", resetFilters);
-    $("#download-summary").addEventListener("click", downloadSummary);
+    document.querySelectorAll("[data-download-view]").forEach((button) => button.addEventListener("click", () => openDownloadDialog(button.dataset.downloadView)));
+    $("#generate-download").addEventListener("click", () => { const selected = [...$("#download-options").querySelectorAll("input:checked:not(:disabled)")].map((input) => input.value); if (!selected.length) { $("#download-error").hidden = false; return; } $("#download-error").hidden = true; exportDashboardImage(activeDownloadView, selected); $("#download-dialog").close(); });
+    document.querySelectorAll(".table-pagination").forEach((pagination) => pagination.addEventListener("click", (event) => { const button = event.target.closest("[data-pagination]"); if (!button || button.disabled) return; const page = Number(button.dataset.page); if (button.dataset.pagination === "expenses") { expenseTablePage = page; renderTable(filteredRows()); } else if (button.dataset.pagination === "resources") { resourceTablePage = page; renderResourceTable(resourceFilteredRows(), [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1)); } else { fundTablePage = page; renderFundTable(fundFilteredRows(), [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1)); } }));
     $("#resource-period-filter").addEventListener("click", (event) => {
       const yearButton = event.target.closest("[data-resource-year]");
       if (yearButton) { const year = yearButton.dataset.resourceYear, yearPeriods = resourcePeriods().filter((period) => period.endsWith(`/${year}`)), allSelected = yearPeriods.every((period) => resourceSelectedPeriods.has(period)); yearPeriods.forEach((period) => allSelected ? resourceSelectedPeriods.delete(period) : resourceSelectedPeriods.add(period)); }

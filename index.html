@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto Abierto · Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261009-2" />
+    <link rel="stylesheet" href="styles.css?v=20261009-3" />
   </head>
   <body>
     <header class="site-header">
@@ -103,7 +103,7 @@
             <h2 id="summary-title">Resumen</h2>
             <p id="summary-context" class="note"></p>
           </div>
-          <button id="download-summary" class="download-button" type="button">Descargar resumen PNG</button>
+          <button class="download-button" type="button" data-download-view="expenses">Crear imagen</button>
         </div>
         <div class="summary-grid" aria-label="Resumen del período más reciente seleccionado">
           <article class="metric"><div class="metric-heading"><p>Crédito aprobado</p><span class="metric-help" tabindex="0" aria-label="Qué es el crédito aprobado">i<span class="metric-info"><strong>Crédito aprobado</strong>Es el presupuesto autorizado originalmente. Sirve como base para medir aumentos o reducciones posteriores.</span></span></div><strong id="metric-approved">—</strong><small id="metric-approved-change">—</small></article>
@@ -192,6 +192,7 @@
             <tbody id="detail-table"></tbody>
           </table>
         </div>
+        <nav id="expense-pagination" class="table-pagination" aria-label="Páginas de la tabla de gastos"></nav>
         <p id="table-note" class="note"></p>
       </section>
 
@@ -223,7 +224,7 @@
           <div class="resource-primary">
             <section class="resource-heading">
               <div><p class="eyebrow">Ingresos municipales</p><h2>Resumen de recursos</h2><p id="resource-summary-context" class="note"></p></div>
-              <span id="resource-loaded-status" class="resource-status">Actualizando…</span>
+              <div class="view-heading-actions"><span id="resource-loaded-status" class="resource-status">Actualizando…</span><button class="download-button" type="button" data-download-view="resources">Crear imagen</button></div>
             </section>
             <section class="resource-metric-grid" aria-label="Indicadores de recursos">
               <article class="metric resource-metric"><div class="metric-heading"><p>Recurso estimado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso estimado</strong>Previsión original de ingresos incluida en el presupuesto aprobado.</span></span></div><strong id="resource-metric-estimated">—</strong><small id="resource-estimated-note">Base presupuestaria original</small></article>
@@ -250,6 +251,7 @@
         <section class="panel resource-composition">
           <div class="section-heading"><div><p class="eyebrow">Composición</p><h2>Recursos por rubro</h2></div><p class="legend">Seleccioná la flecha para ver los conceptos</p></div>
           <div class="table-wrap"><table><thead><tr><th>Rubro</th><th>Detalle</th><th class="number">Estimado</th><th class="number">Vigente</th><th class="number">Devengado</th><th class="number">Percibido</th><th class="number">% recaudado</th></tr></thead><tbody id="resource-detail-table"></tbody></table></div>
+          <nav id="resource-pagination" class="table-pagination" aria-label="Páginas de la tabla de recursos"></nav>
           <p id="resource-table-note" class="note"></p>
         </section>
 
@@ -277,7 +279,7 @@
           </aside>
 
           <div class="fund-primary">
-            <section class="fund-heading"><div><p class="eyebrow">Recursos afectados</p><h2>Resumen de Fondos Especiales</h2><p id="fund-summary-context" class="note"></p></div><span id="fund-loaded-status" class="fund-status">Actualizando…</span></section>
+            <section class="fund-heading"><div><p class="eyebrow">Recursos afectados</p><h2>Resumen de Fondos Especiales</h2><p id="fund-summary-context" class="note"></p></div><div class="view-heading-actions"><span id="fund-loaded-status" class="fund-status">Actualizando…</span><button class="download-button" type="button" data-download-view="funds">Crear imagen</button></div></section>
             <section class="fund-metric-grid" aria-label="Indicadores de fondos especiales">
               <article class="metric fund-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Monto disponible o previsto para los recursos afectados del fondo.</span></span></div><strong id="fund-metric-current">—</strong><small id="fund-current-note">—</small></article>
               <article class="metric fund-metric"><div class="metric-heading"><p>Recurso percibido</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso percibido</strong>Ingresos afectados que efectivamente se cobraron.</span></span></div><strong id="fund-metric-perceived">—</strong><small id="fund-perceived-note">—</small></article>
@@ -302,6 +304,7 @@
         <section class="panel fund-table-panel">
           <div class="section-heading"><div><p class="eyebrow">Detalle</p><h2>Fondos por nivel de origen</h2></div><p class="legend">Seleccioná la flecha para ver cada fondo</p></div>
           <div class="table-wrap"><table><thead><tr><th>Nivel / origen</th><th>Fondo</th><th class="number">Recurso vigente</th><th class="number">Percibido</th><th class="number">Comprometido</th><th class="number">Devengado</th><th class="number">Pagado</th><th class="number">Percibido − pagado</th></tr></thead><tbody id="fund-detail-table"></tbody></table></div>
+          <nav id="fund-pagination" class="table-pagination" aria-label="Páginas de la tabla de fondos especiales"></nav>
           <p id="fund-table-note" class="note"></p>
         </section>
 
@@ -323,12 +326,22 @@
       </section>
     </main>
 
+    <dialog id="download-dialog" class="download-dialog">
+      <form method="dialog">
+        <div class="download-dialog-heading"><div><p class="eyebrow">Exportar</p><h2 id="download-dialog-title">Crear imagen</h2></div><button class="dialog-close" type="submit" value="cancel" aria-label="Cerrar">×</button></div>
+        <p class="download-dialog-intro">Elegí qué elementos querés incluir en el PNG. La imagen incorporará el período y los filtros aplicados.</p>
+        <div id="download-options" class="download-options"></div>
+        <p id="download-error" class="download-error" hidden>Seleccioná al menos un elemento disponible.</p>
+        <div class="download-dialog-actions"><button class="dialog-cancel" type="submit" value="cancel">Cancelar</button><button id="generate-download" class="download-button" type="button">Descargar PNG</button></div>
+      </form>
+    </dialog>
+
     <footer class="site-footer">
       <div><strong>Presupuesto Abierto Santa Fe</strong><p>Una herramienta ciudadana para explorar la evolución del presupuesto municipal.</p></div>
       <div class="footer-social"><strong>Redes sociales</strong><p>Instagram · X · Facebook · <a href="https://github.com/fransomagliasf/presupuesto-abierto-santa-fe">GitHub</a></p></div>
       <div><strong>Datos y metodología</strong><p>Fuente: Municipalidad de Santa Fe. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261009-3"></script>
+    <script src="app.js?v=20261009-4"></script>
   </body>
 </html>
