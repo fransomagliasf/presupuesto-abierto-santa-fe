@@ -17,6 +17,7 @@ const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
+const updateDateFormat = new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", timeZone: "UTC" });
 let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, budgetChart = null, contributionChart = null, waterfallChart = null, tableSort = { key: "accrued", direction: "desc" };
 let resourceData = [], resourceSelectedPeriods = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceChart = null, resourceGrowthChart = null, resourceOriginChart = null;
 let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Set(), fundActiveChart = "flow", fundChart = null, fundOriginChart = null;
@@ -48,6 +49,8 @@ function sum(rows, field) { return rows.reduce((total, row) => total + cents(row
 function executionPercent(accrued, current) { return current > 0 ? accrued / current * 100 : null; }
 function formatPercent(value) { return value === null ? "—" : `${value.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`; }
 function populateSelect(id, values, label) { $(id).innerHTML = `<option value="">${label}</option>${values.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}`; }
+function setFilterEnabled(id, enabled) { const select = $(id); select.disabled = !enabled; select.closest(".filter-step")?.classList.toggle("is-disabled", !enabled); }
+function updatedLabel(period) { return period ? `Actualizado a ${updateDateFormat.format(date({ fecha_corte: period }))}` : "Sin datos disponibles"; }
 function periods() { return unique(data.map((row) => row.fecha_corte)).sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
 
 function fillFilters() {
@@ -66,16 +69,23 @@ function expenseRowsForDependentFilters() {
 }
 function fillExpenseObjectFilter() {
   const previous = $("#object-filter").value, source = $("#source-filter").value;
-  const options = unique(expenseRowsForDependentFilters().filter((row) => !source || row.fuente_financiamiento_nombre === source).map((row) => `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`));
-  populateSelect("#object-filter", options, "Todos los objetos");
+  const options = source ? unique(expenseRowsForDependentFilters().filter((row) => row.fuente_financiamiento_nombre === source).map((row) => `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`)) : [];
+  populateSelect("#object-filter", options, source ? "Todos los objetos" : "Seleccioná una fuente primero");
   if (options.includes(previous)) $("#object-filter").value = previous;
+  syncExpenseFilterState();
 }
 function fillExpenseDependentFilters() {
   const previous = $("#source-filter").value;
-  const options = unique(expenseRowsForDependentFilters().map((row) => row.fuente_financiamiento_nombre));
-  populateSelect("#source-filter", options, "Todas las fuentes");
+  const ready = Boolean($("#jurisdiction-filter").value) && selectedPrograms.size > 0;
+  const options = ready ? unique(expenseRowsForDependentFilters().map((row) => row.fuente_financiamiento_nombre)) : [];
+  populateSelect("#source-filter", options, ready ? "Todas las fuentes" : "Seleccioná una secretaría primero");
   if (options.includes(previous)) $("#source-filter").value = previous;
   fillExpenseObjectFilter();
+}
+function syncExpenseFilterState() {
+  const hasJurisdiction = Boolean($("#jurisdiction-filter").value), hasPrograms = hasJurisdiction && selectedPrograms.size > 0;
+  setFilterEnabled("#source-filter", hasPrograms);
+  setFilterEnabled("#object-filter", hasPrograms && Boolean($("#source-filter").value));
 }
 function renderProgramChips() {
   const panel = $("#program-panel"), programs = programsForSelectedJurisdiction();
@@ -379,17 +389,19 @@ function collectionPercent(perceived, current) { return current > 0 ? perceived 
 function fillResourceGroupFilter() {
   const major = $("#resource-major-filter").value, majorCode = major.split(" · ")[0];
   const previous = $("#resource-group-filter").value;
-  const groups = unique(resourceData.filter((row) => !major || row.rubro_mayor_codigo === majorCode).map((row) => `${row.rubro_grupo_codigo} · ${row.rubro_grupo_nombre}`));
-  populateSelect("#resource-group-filter", groups, "Todos los grupos");
-  if (groups.includes(previous)) $("#resource-group-filter").value = previous;
+  const groups = major ? unique(resourceData.filter((row) => row.rubro_mayor_codigo === majorCode).map((row) => `${row.rubro_grupo_codigo} · ${row.rubro_grupo_nombre}`)) : [];
+  populateSelect("#resource-group-filter", groups, major ? "Todos los grupos" : "Seleccioná un rubro primero");
+  if (major && groups.includes(previous)) $("#resource-group-filter").value = previous;
 }
 function fillResourceOriginFilter() {
   const majorValue = $("#resource-major-filter").value, groupValue = $("#resource-group-filter").value, previous = $("#resource-origin-filter").value;
   const majorCode = majorValue.split(" · ")[0], groupCode = groupValue.split(" · ")[0];
-  const options = unique(resourceData.filter((row) => (!majorValue || row.rubro_mayor_codigo === majorCode) && (!groupValue || row.rubro_grupo_codigo === groupCode) && row.procedencia_codigo).map((row) => `${row.procedencia_codigo} · ${row.procedencia_nombre}`));
-  populateSelect("#resource-origin-filter", options, "Todas las procedencias");
-  if (options.includes(previous)) $("#resource-origin-filter").value = previous;
+  const options = groupValue ? unique(resourceData.filter((row) => row.rubro_mayor_codigo === majorCode && row.rubro_grupo_codigo === groupCode && row.procedencia_codigo).map((row) => `${row.procedencia_codigo} · ${row.procedencia_nombre}`)) : [];
+  populateSelect("#resource-origin-filter", options, groupValue ? "Todas las procedencias" : "Seleccioná un grupo primero");
+  if (groupValue && options.includes(previous)) $("#resource-origin-filter").value = previous;
+  syncResourceFilterState();
 }
+function syncResourceFilterState() { setFilterEnabled("#resource-group-filter", Boolean($("#resource-major-filter").value)); setFilterEnabled("#resource-origin-filter", Boolean($("#resource-group-filter").value)); }
 function fillResourceFilters() {
   resourceSelectedPeriods = new Set(resourcePeriods());
   const byYear = new Map();
@@ -544,8 +556,8 @@ function fundTotals(rows) {
 }
 function fillFundNameFilter() {
   const originValue = $("#fund-origin-filter").value, originCode = originValue.split(" · ")[0], previous = $("#fund-name-filter").value;
-  const codes = unique(fundData.filter((row) => !originValue || row.origen_codigo === originCode).map((row) => row.fondo_codigo));
-  const options = codes.map((code) => `${code} · ${canonicalFundName(code)}`); populateSelect("#fund-name-filter", options, "Todos los fondos"); if (options.includes(previous)) $("#fund-name-filter").value = previous;
+  const codes = originValue ? unique(fundData.filter((row) => row.origen_codigo === originCode).map((row) => row.fondo_codigo)) : [];
+  const options = codes.map((code) => `${code} · ${canonicalFundName(code)}`); populateSelect("#fund-name-filter", options, originValue ? "Todos los fondos" : "Seleccioná un nivel primero"); if (originValue && options.includes(previous)) $("#fund-name-filter").value = previous; setFilterEnabled("#fund-name-filter", Boolean(originValue));
 }
 function fillFundFilters() {
   fundSelectedPeriods = new Set(fundPeriods()); const byYear = new Map();
@@ -611,13 +623,17 @@ function renderFunds(renderGraph = true) {
   renderFundMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderFundTable(rows, latestPeriod); renderFundInsights(latestRows, renderGraph); if (renderGraph) renderFundChart(rows);
 }
 function resetFundFilters() { fundSelectedPeriods = new Set(fundPeriods()); fundExpandedOrigins.clear(); $("#fund-origin-filter").value = ""; $("#fund-name-filter").value = ""; fillFundNameFilter(); document.querySelectorAll("[data-fund-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#fund-toggle-periods").textContent = "Quitar todos"; renderFunds(); }
+function setupFilterPanelToggle(buttonSelector, bodySelector, layoutSelector, name) {
+  $(buttonSelector).addEventListener("click", () => { const body = $(bodySelector), button = $(buttonSelector), collapsed = !body.hidden; body.hidden = collapsed; $(layoutSelector).classList.toggle("filters-collapsed", collapsed); button.textContent = collapsed ? "›" : "‹"; button.setAttribute("aria-expanded", String(!collapsed)); button.setAttribute("aria-label", collapsed ? `Desplegar ${name}` : `Plegar ${name}`); });
+}
 async function init() {
   try {
     data = (await Promise.all(DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     resourceData = (await Promise.all(RESOURCE_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     fundData = (await Promise.all(FUND_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     fillFilters(); fillResourceFilters(); fillFundFilters(); render(); renderResources(false); renderFunds(false);
-    $("#updated-at").textContent = `${data.length.toLocaleString("es-AR")} partidas cargadas · último cierre: ${labelPeriod(periods().at(-1))}`;
+    const latestLoadedPeriod = [...periods(), ...resourcePeriods(), ...fundPeriods()].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), updateText = updatedLabel(latestLoadedPeriod);
+    $("#updated-at").textContent = updateText; $("#resource-loaded-status").textContent = updatedLabel(resourcePeriods().at(-1)); $("#fund-loaded-status").textContent = updatedLabel(fundPeriods().at(-1));
     $("#period-filter").addEventListener("click", (event) => {
       const yearButton = event.target.closest("[data-year]");
       if (yearButton) {
@@ -638,14 +654,16 @@ async function init() {
     $("#select-all-programs").addEventListener("click", () => { selectedPrograms = new Set(programsForSelectedJurisdiction()); renderProgramChips(); fillExpenseDependentFilters(); render(); });
     $("#clear-programs").addEventListener("click", () => { selectedPrograms.clear(); renderProgramChips(); fillExpenseDependentFilters(); render(); });
     $("#toggle-program-panel").addEventListener("click", () => { const body = $("#program-panel-body"), collapsed = !body.hidden; body.hidden = collapsed; $("#toggle-program-panel").textContent = collapsed ? "Mostrar" : "Reducir"; $("#toggle-program-panel").setAttribute("aria-expanded", String(!collapsed)); });
-    $("#toggle-filter-sidebar").addEventListener("click", () => { const body = $("#filter-sidebar-body"), collapsed = !body.hidden; body.hidden = collapsed; $("#dashboard-layout").classList.toggle("filters-collapsed", collapsed); $("#toggle-filter-sidebar").textContent = collapsed ? "›" : "‹"; $("#toggle-filter-sidebar").setAttribute("aria-expanded", String(!collapsed)); $("#toggle-filter-sidebar").setAttribute("aria-label", collapsed ? "Desplegar filtros" : "Plegar filtros"); });
+    setupFilterPanelToggle("#toggle-filter-sidebar", "#filter-sidebar-body", "#dashboard-layout", "filtros de gastos");
+    setupFilterPanelToggle("#toggle-resource-filters", "#resource-filter-body", "#resource-layout", "filtros de recursos");
+    setupFilterPanelToggle("#toggle-fund-filters", "#fund-filter-body", "#fund-layout", "filtros de fondos");
     $("#toggle-periods").addEventListener("click", () => { selectedPeriods = selectedPeriods.size === periods().length ? new Set() : new Set(periods()); $("#toggle-periods").textContent = selectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.toggle("active", selectedPeriods.has(chip.dataset.period)); chip.setAttribute("aria-pressed", selectedPeriods.has(chip.dataset.period)); }); render(); });
     $("#source-filter").addEventListener("change", () => { fillExpenseObjectFilter(); render(); });
     ["#object-filter", "#detail-breakdown-filter", "#ranking-dimension"].forEach((id) => $(id).addEventListener("change", render));
     document.querySelectorAll(".chart-tab").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll(".chart-tab").forEach((item) => { item.classList.toggle("active", item === tab); item.setAttribute("aria-selected", String(item === tab)); }); renderChart(filteredRows()); }));
     $("#show-bar-values").addEventListener("change", (event) => { showBarValues = event.target.checked; renderChart(filteredRows()); });
     document.querySelectorAll(".header-tabs [data-page]").forEach((button) => button.addEventListener("click", () => { const page = button.dataset.page; document.querySelectorAll(".page-view").forEach((view) => { view.hidden = view.id !== `page-${page}`; }); document.querySelectorAll(".header-tabs [data-page]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); }));
-    document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((button) => button.addEventListener("click", () => { const tracking = button.dataset.tracking; document.querySelectorAll(".tracking-view").forEach((view) => { view.hidden = view.id !== `tracking-${tracking}`; }); document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); const status = tracking === "resources" ? `${resourceData.length.toLocaleString("es-AR")} conceptos cargados · último cierre: ${labelPeriod(resourcePeriods().at(-1))}` : tracking === "funds" ? `${fundData.length.toLocaleString("es-AR")} fondos cargados · último cierre: ${labelPeriod(fundPeriods().at(-1))}` : `${data.length.toLocaleString("es-AR")} partidas cargadas · último cierre: ${labelPeriod(periods().at(-1))}`; $("#updated-at").textContent = status; if (tracking === "resources") requestAnimationFrame(() => renderResources()); if (tracking === "funds") requestAnimationFrame(() => renderFunds()); }));
+    document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((button) => button.addEventListener("click", () => { const tracking = button.dataset.tracking; document.querySelectorAll(".tracking-view").forEach((view) => { view.hidden = view.id !== `tracking-${tracking}`; }); document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); const latestPeriod = tracking === "resources" ? resourcePeriods().at(-1) : tracking === "funds" ? fundPeriods().at(-1) : periods().at(-1); $("#updated-at").textContent = updatedLabel(latestPeriod); if (tracking === "resources") requestAnimationFrame(() => renderResources()); if (tracking === "funds") requestAnimationFrame(() => renderFunds()); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });
     document.querySelectorAll(".sort-header").forEach((button) => button.addEventListener("click", () => { const key = button.dataset.sort; if (tableSort.key === key) tableSort.direction = tableSort.direction === "asc" ? "desc" : "asc"; else { tableSort.key = key; tableSort.direction = key === "name" || key === "breakdown" ? "asc" : "desc"; } renderTable(filteredRows()); }));
     $("#clear-filters").addEventListener("click", resetFilters);
