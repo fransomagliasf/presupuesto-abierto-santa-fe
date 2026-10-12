@@ -56,6 +56,11 @@ function niceStep(value) { if (!value || value <= 0) return 1; const magnitude =
 function sum(rows, field) { return rows.reduce((total, row) => total + cents(row, field), 0); }
 function executionPercent(accrued, current) { return current > 0 ? accrued / current * 100 : null; }
 function formatPercent(value) { return value === null ? "—" : `${value.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`; }
+function signedVariation(value, base) {
+  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
+  const percentage = base ? Math.abs(value / base * 100) : null;
+  return `${sign}${formatCents(Math.abs(value))}${percentage === null ? "" : ` (${sign}${formatPercent(percentage)})`}`;
+}
 function populateSelect(id, values, label) { $(id).innerHTML = `<option value="">${label}</option>${values.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}`; }
 function setFilterEnabled(id, enabled) { const select = $(id); select.disabled = !enabled; select.closest(".filter-step")?.classList.toggle("is-disabled", !enabled); }
 function updatedLabel(period) { return period ? `Actualizado a ${updateDateFormat.format(date({ fecha_corte: period }))}` : "Sin datos disponibles"; }
@@ -146,17 +151,14 @@ function selectionDescription(latestPeriod, previousPeriod) {
   if (details.object) pieces.push(`Objeto: ${details.object}`);
   return pieces.join(" · ");
 }
-function renderMetrics(rows, latestPeriod, previousPeriod, previousRows) {
+function renderMetrics(rows, latestPeriod, previousPeriod) {
   const values = totals(rows), approved = values.approved, current = values.current, accrued = values.accrued, available = values.available;
   const execution = executionPercent(accrued, current);
-  $("#metric-approved").textContent = formatCents(approved); $("#metric-current").textContent = formatCents(current); $("#metric-accrued").textContent = formatCents(accrued); $("#metric-available").textContent = formatCents(available);
-  const setTrend = (selector, label, change) => { const element = $(selector); element.classList.remove("positive", "negative"); element.textContent = change === null ? "Sin período previo seleccionado" : `${label}: ${change >= 0 ? "+" : "−"}${formatCents(Math.abs(change))}`; if (change !== null && change !== 0) element.classList.add(change > 0 ? "positive" : "negative"); };
+  $("#metric-current").textContent = formatCents(current); $("#metric-available").textContent = formatCents(available);
   const modification = current - approved;
-  setTrend("#metric-approved-change", "Modificación acumulada", modification);
-  const previousValues = previousRows ? totals(previousRows) : null;
-  setTrend("#metric-current-change", previousPeriod ? `Variación vs. ${labelPeriod(previousPeriod)}` : "Variación", previousValues ? current - previousValues.current : null);
-  setTrend("#metric-accrued-change", previousPeriod ? `Variación vs. ${labelPeriod(previousPeriod)}` : "Variación", previousValues ? accrued - previousValues.accrued : null);
-  setTrend("#metric-available-change", previousPeriod ? `Variación vs. ${labelPeriod(previousPeriod)}` : "Variación", previousValues ? available - previousValues.available : null);
+  const currentNote = $("#metric-current-change"); currentNote.classList.remove("positive", "negative"); currentNote.textContent = `Vs. crédito aprobado: ${signedVariation(modification, approved)}`; if (modification !== 0) currentNote.classList.add(modification > 0 ? "positive" : "negative");
+  const availableShare = current ? available / current * 100 : null;
+  const availableNote = $("#metric-available-change"); availableNote.classList.remove("positive", "negative"); availableNote.textContent = availableShare === null ? "Sin crédito vigente para comparar" : `${formatPercent(availableShare)} del crédito vigente aún sin devengar`;
   $("#metric-execution").textContent = formatPercent(execution);
   const monthNumber = latestPeriod ? Number(latestPeriod.split("/")[1]) : 0;
   const expected = monthNumber ? monthNumber * 100 / 12 : null;
@@ -347,8 +349,7 @@ function renderTable(rows) {
 function render() {
   const rows = filteredRows(), periodsSelected = selectedPeriodSequence(), latestPeriod = periodsSelected.at(-1), previousPeriod = periodsSelected.at(-2);
   const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod);
-  const previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
-  renderMetrics(latestRows, latestPeriod, previousPeriod, previousRows); renderRankings(latestRows, latestPeriod); renderChart(rows); renderTable(rows); renderInsights(rows, latestRows, latestPeriod); renderFinancingAnalysis();
+  renderMetrics(latestRows, latestPeriod, previousPeriod); renderRankings(latestRows, latestPeriod); renderChart(rows); renderTable(rows); renderInsights(rows, latestRows, latestPeriod); renderFinancingAnalysis();
 }
 function financingLabel(code) { return ({ "110": "Tesoro Municipal", "131": "Origen municipal", "132": "Origen provincial", "133": "Origen nacional", "150": "Crédito interno" })[code] || code; }
 function renderFinancingAnalysis() {
@@ -377,8 +378,8 @@ function resetFilters() {
 }
 function downloadConfig(view) {
   const configs = {
-    expenses: { title: "Ejecución de gastos", context: "#summary-context", period: selectedPeriodSequence().at(-1), metrics: [["Crédito aprobado", "#metric-approved", "#metric-approved-change"], ["Crédito vigente", "#metric-current", "#metric-current-change"], ["Devengado", "#metric-accrued", "#metric-accrued-change"], ["Disponible", "#metric-available", "#metric-available-change"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"]], charts: [{ id: "main", label: "Gráfico principal", description: "Puente presupuestario o evolución del porcentaje ejecutado.", canvas: "#budget-chart", title: () => $("#chart-title").textContent }, { id: "financing-composition", label: "Composición por fuente", description: "Participación de cada fuente en el crédito vigente.", canvas: "#financing-composition-chart", title: () => "Participación en el crédito vigente" }, { id: "financing-execution", label: "Ejecución por fuente", description: "Porcentaje ejecutado de cada origen de fondos.", canvas: "#financing-execution-chart", title: () => "Porcentaje ejecutado por fuente" }, { id: "contribution", label: "Contribución a las modificaciones", description: "Rubros que explican los cambios del crédito.", canvas: "#contribution-chart", title: () => "Contribución a las modificaciones" }] },
-    resources: { title: "Ejecución de recursos", context: "#resource-summary-context", period: [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), metrics: [["Recurso estimado", "#resource-metric-estimated", "#resource-estimated-note"], ["Recurso vigente", "#resource-metric-current", "#resource-current-note"], ["Recurso devengado", "#resource-metric-accrued", "#resource-accrued-note"], ["Recurso percibido", "#resource-metric-perceived", "#resource-perceived-note"], ["% recaudado", "#resource-metric-rate", "#resource-rate-note"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de recaudación, ingresos o modificaciones.", canvas: "#resource-chart", title: () => $("#resource-chart-title").textContent }, { id: "growth", label: "Ingresos del mes", description: "Rubros que explican la variación mensual.", canvas: "#resource-growth-chart", title: () => "Rubros que explican los ingresos del mes" }, { id: "origin", label: "Procedencia de los recursos", description: "Composición del recurso percibido.", canvas: "#resource-origin-chart", title: () => "Procedencia del recurso percibido" }] },
+    expenses: { title: "Ejecución de gastos", context: "#summary-context", period: selectedPeriodSequence().at(-1), metrics: [["Crédito vigente", "#metric-current", "#metric-current-change"], ["Disponible", "#metric-available", "#metric-available-change"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"]], charts: [{ id: "main", label: "Gráfico principal", description: "Puente presupuestario o evolución del porcentaje ejecutado.", canvas: "#budget-chart", title: () => $("#chart-title").textContent }, { id: "financing-composition", label: "Composición por fuente", description: "Participación de cada fuente en el crédito vigente.", canvas: "#financing-composition-chart", title: () => "Participación en el crédito vigente" }, { id: "financing-execution", label: "Ejecución por fuente", description: "Porcentaje ejecutado de cada origen de fondos.", canvas: "#financing-execution-chart", title: () => "Porcentaje ejecutado por fuente" }, { id: "contribution", label: "Contribución a las modificaciones", description: "Rubros que explican los cambios del crédito.", canvas: "#contribution-chart", title: () => "Contribución a las modificaciones" }] },
+    resources: { title: "Ejecución de recursos", context: "#resource-summary-context", period: [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), metrics: [["Recurso vigente", "#resource-metric-current", "#resource-current-note"], ["Recurso percibido", "#resource-metric-perceived", "#resource-perceived-note"], ["% recaudado", "#resource-metric-rate", "#resource-rate-note"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de recaudación, ingresos o modificaciones.", canvas: "#resource-chart", title: () => $("#resource-chart-title").textContent }, { id: "growth", label: "Ingresos del mes", description: "Rubros que explican la variación mensual.", canvas: "#resource-growth-chart", title: () => "Rubros que explican los ingresos del mes" }, { id: "origin", label: "Procedencia de los recursos", description: "Composición del recurso percibido.", canvas: "#resource-origin-chart", title: () => "Procedencia del recurso percibido" }] },
     funds: { title: "Fondos Especiales", context: "#fund-summary-context", period: [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), metrics: [["Recurso vigente", "#fund-metric-current", "#fund-current-note"], ["Recurso percibido", "#fund-metric-perceived", "#fund-perceived-note"], ["Gasto comprometido", "#fund-metric-committed", "#fund-committed-note"], ["Gasto pagado", "#fund-metric-paid", "#fund-paid-note"], ["Percibido menos pagado", "#fund-metric-balance", "#fund-balance-note"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de flujo, acumulado u origen.", canvas: "#fund-chart", title: () => $("#fund-chart-title").textContent }, { id: "origin", label: "Participación por origen", description: "Composición de los recursos percibidos.", canvas: "#fund-origin-chart", title: () => "Participación por origen" }] },
   };
   return configs[view];
@@ -459,14 +460,12 @@ function resourceContext(period) {
 }
 function renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod) {
   const values = resourceTotals(latestRows), previous = previousRows ? resourceTotals(previousRows) : null, rate = collectionPercent(values.perceived, values.current), expected = latestPeriod ? Number(latestPeriod.split("/")[1]) * 100 / 12 : null;
-  $("#resource-metric-estimated").textContent = formatCents(values.estimated); $("#resource-metric-current").textContent = formatCents(values.current); $("#resource-metric-accrued").textContent = formatCents(values.accrued); $("#resource-metric-perceived").textContent = formatCents(values.perceived); $("#resource-metric-rate").textContent = formatPercent(rate);
-  $("#resource-estimated-note").textContent = "Previsión original del ejercicio";
+  $("#resource-metric-current").textContent = formatCents(values.current); $("#resource-metric-perceived").textContent = formatCents(values.perceived); $("#resource-metric-rate").textContent = formatPercent(rate);
   const setNote = (selector, text, value) => { const element = $(selector); element.classList.remove("positive", "negative"); element.textContent = text; if (value !== null && value !== 0) element.classList.add(value > 0 ? "positive" : "negative"); };
   const modification = values.current - values.estimated;
-  setNote("#resource-current-note", `Modificación acumulada: ${modification >= 0 ? "+" : "−"}${formatCents(Math.abs(modification))}`, modification);
-  const accruedChange = previous ? values.accrued - previous.accrued : null, perceivedChange = previous ? values.perceived - previous.perceived : null;
-  setNote("#resource-accrued-note", previousPeriod ? `Nuevos derechos vs. ${labelPeriod(previousPeriod)}: ${accruedChange >= 0 ? "+" : "−"}${formatCents(Math.abs(accruedChange))}` : "Sin período previo seleccionado", accruedChange);
-  setNote("#resource-perceived-note", previousPeriod ? `Ingresado desde ${labelPeriod(previousPeriod)}: ${perceivedChange >= 0 ? "+" : "−"}${formatCents(Math.abs(perceivedChange))}` : "Sin período previo seleccionado", perceivedChange);
+  setNote("#resource-current-note", `Vs. recurso estimado: ${signedVariation(modification, values.estimated)}`, modification);
+  const perceivedChange = previous ? values.perceived - previous.perceived : null;
+  setNote("#resource-perceived-note", previousPeriod && perceivedChange !== null ? `Ingresado desde ${labelPeriod(previousPeriod)}: ${signedVariation(perceivedChange, previous.perceived)}` : "Sin período previo seleccionado", perceivedChange);
   const rateDifference = rate === null || expected === null ? null : rate - expected;
   setNote("#resource-rate-note", rateDifference === null ? "Sin período" : `${rateDifference >= 0 ? "+" : "−"}${Math.abs(rateDifference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p. frente al ritmo esperado`, rateDifference);
   $("#resource-summary-context").textContent = resourceContext(latestPeriod);

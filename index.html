@@ -106,9 +106,7 @@
           <button class="download-button" type="button" data-download-view="expenses">Crear imagen</button>
         </div>
         <div class="summary-grid" aria-label="Resumen del período más reciente seleccionado">
-          <article class="metric"><div class="metric-heading"><p>Crédito aprobado</p><span class="metric-help" tabindex="0" aria-label="Qué es el crédito aprobado">i<span class="metric-info"><strong>Crédito aprobado</strong>Es el presupuesto autorizado originalmente. Sirve como base para medir aumentos o reducciones posteriores.</span></span></div><strong id="metric-approved">—</strong><small id="metric-approved-change">—</small></article>
           <article class="metric"><div class="metric-heading"><p>Crédito vigente</p><span class="metric-help" tabindex="0" aria-label="Qué es el crédito vigente">i<span class="metric-info"><strong>Crédito vigente</strong>Es el crédito aprobado luego de incorporar todas las modificaciones presupuestarias acumuladas.</span></span></div><strong id="metric-current">—</strong><small id="metric-current-change">—</small></article>
-          <article class="metric"><div class="metric-heading"><p>Devengado</p><span class="metric-help" tabindex="0" aria-label="Qué es el devengado">i<span class="metric-info"><strong>Devengado</strong>Representa gastos ya reconocidos porque la prestación, obra o compra fue realizada.</span></span></div><strong id="metric-accrued">—</strong><small id="metric-accrued-change">—</small></article>
           <article class="metric"><div class="metric-heading"><p>Disponible</p><span class="metric-help" tabindex="0" aria-label="Qué es el crédito disponible">i<span class="metric-info"><strong>Crédito disponible</strong>Es el saldo del crédito vigente que todavía no fue devengado.</span></span></div><strong id="metric-available">—</strong><small id="metric-available-change">—</small></article>
           <article class="metric metric-execution"><div class="metric-heading"><p>% ejecutado</p><span class="metric-help" tabindex="0" aria-label="Cómo se calcula el porcentaje ejecutado">i<span class="metric-info"><strong>Porcentaje ejecutado</strong>Se calcula dividiendo el devengado por el crédito vigente y multiplicando el resultado por 100.</span></span></div><strong id="metric-execution">—</strong><small id="metric-execution-benchmark">—</small></article>
         </div>
@@ -235,9 +233,7 @@
               <div class="view-heading-actions"><span id="resource-loaded-status" class="resource-status">Actualizando…</span><button class="download-button" type="button" data-download-view="resources">Crear imagen</button></div>
             </section>
             <section class="resource-metric-grid" aria-label="Indicadores de recursos">
-              <article class="metric resource-metric"><div class="metric-heading"><p>Recurso estimado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso estimado</strong>Previsión original de ingresos incluida en el presupuesto aprobado.</span></span></div><strong id="resource-metric-estimated">—</strong><small id="resource-estimated-note">Base presupuestaria original</small></article>
               <article class="metric resource-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Estimación actualizada luego de ampliaciones o reducciones durante el año.</span></span></div><strong id="resource-metric-current">—</strong><small id="resource-current-note">—</small></article>
-              <article class="metric resource-metric"><div class="metric-heading"><p>Recurso devengado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso devengado</strong>Derecho de cobro reconocido, aunque el dinero todavía no haya ingresado.</span></span></div><strong id="resource-metric-accrued">—</strong><small id="resource-accrued-note">—</small></article>
               <article class="metric resource-metric"><div class="metric-heading"><p>Recurso percibido</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso percibido</strong>Dinero efectivamente ingresado a las cuentas municipales.</span></span></div><strong id="resource-metric-perceived">—</strong><small id="resource-perceived-note">—</small></article>
               <article class="metric resource-metric resource-rate"><div class="metric-heading"><p>% recaudado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Porcentaje recaudado</strong>Recurso percibido dividido por recurso vigente. Se compara con el avance lineal esperado del año.</span></span></div><strong id="resource-metric-rate">—</strong><small id="resource-rate-note">—</small></article>
             </section>
@@ -350,6 +346,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: Municipalidad de Santa Fe. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261012-2"></script>
+    <script src="app.js?v=20261012-3"></script>
   </body>
 </html>
