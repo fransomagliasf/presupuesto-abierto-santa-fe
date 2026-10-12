@@ -23,7 +23,7 @@ const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "
 const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
 const updateDateFormat = new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", timeZone: "UTC" });
-let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, budgetChart = null, contributionChart = null, waterfallChart = null, tableSort = { key: "accrued", direction: "desc" };
+let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, budgetChart = null, contributionChart = null, tableSort = { key: "accrued", direction: "desc" };
 let resourceData = [], resourceSelectedPeriods = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceChart = null, resourceGrowthChart = null, resourceOriginChart = null;
 let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Set(), fundActiveChart = "flow", fundChart = null, fundOriginChart = null;
 let financingData = [], financingCompositionChart = null, financingExecutionChart = null;
@@ -168,15 +168,20 @@ const barValueLabelsPlugin = {
   id: "barValueLabels",
   afterDatasetsDraw(chart) {
     if (activeChart !== "bar" || !showBarValues) return;
-    const meta = chart.getDatasetMeta(0), values = chart.data.datasets[0].data, context = chart.ctx;
+    const meta = chart.getDatasetMeta(0), dataset = chart.data.datasets[0], values = dataset.displayValues || dataset.data, context = chart.ctx;
     context.save(); context.font = "700 11px system-ui, sans-serif"; context.textAlign = "center";
     meta.data.forEach((bar, index) => { const value = values[index]; context.fillStyle = value >= 0 ? "#187347" : "#a93642"; context.textBaseline = value >= 0 ? "bottom" : "top"; context.fillText(formatAxisAmount(value), bar.x, bar.y + (value >= 0 ? -7 : 7)); });
     context.restore();
   },
 };
+function monthlyModificationLeaders(period, previousPeriod, rows, totalChange) {
+  const aggregate = (targetPeriod) => { const groups = new Map(); if (!targetPeriod) return groups; rows.filter((row) => row.fecha_corte === targetPeriod).forEach((row) => { const values = groups.get(row.jurisdiccion_nombre) || { approved: 0, current: 0 }; values.approved += cents(row, "credito_aprobado_centavos"); values.current += cents(row, "credito_vigente_centavos"); groups.set(row.jurisdiccion_nombre, values); }); return new Map([...groups].map(([label, values]) => [label, values.current - values.approved])); };
+  const current = aggregate(period), previous = aggregate(previousPeriod), labels = new Set([...current.keys(), ...previous.keys()]);
+  return [...labels].map((label) => { const value = (current.get(label) || 0) - (previous.get(label) || 0); return { label, value, share: totalChange ? value / totalChange * 100 : null }; }).filter((item) => item.value !== 0).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 3);
+}
 function renderChart(rows) {
-  const periodValues = aggregatePeriods(rows), comparisonValues = aggregatePeriods(filteredRows(true)), comparisonIndex = new Map(comparisonValues.map((value, index) => [value.period, index]));
-  const values = periodValues.map((value) => { const modification = value.current - value.approved, index = comparisonIndex.get(value.period), previous = index > 0 ? comparisonValues[index - 1] : null, previousModification = previous ? previous.current - previous.approved : 0; return { ...value, modification, monthlyModification: modification - previousModification, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 }; }), chartTotal = $("#chart-total"), canvas = $("#budget-chart"), empty = $("#chart-empty");
+  const periodValues = aggregatePeriods(rows), allRows = filteredRows(true), comparisonValues = aggregatePeriods(allRows), latestSelectedPeriod = periodValues.at(-1)?.period;
+  const values = periodValues.map((value) => ({ ...value, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 })), chartTotal = $("#chart-total"), canvas = $("#budget-chart"), empty = $("#chart-empty");
   $("#bar-value-control").hidden = activeChart !== "bar";
   chartTotal.hidden = activeChart !== "bar" || !values.length;
   empty.hidden = Boolean(values.length); canvas.hidden = !values.length;
@@ -184,9 +189,7 @@ function renderChart(rows) {
   if (!values.length) return;
   if (typeof Chart === "undefined") { canvas.hidden = true; empty.hidden = false; empty.textContent = "No se pudo cargar la biblioteca de gráficos."; return; }
   empty.textContent = "No hay datos para esta combinación de filtros.";
-  if (activeChart === "bar") { const latest = values.at(-1); chartTotal.innerHTML = `Modificación acumulada a ${escapeHtml(labelPeriod(latest.period))}: <strong class="${latest.modification >= 0 ? "positive" : "negative"}">${latest.modification >= 0 ? "+" : ""}${formatCents(latest.modification)}</strong>`; }
-  const labels = values.map((value) => labelPeriod(value.period));
-  let datasets, yOptions;
+  let labels = values.map((value) => labelPeriod(value.period)), datasets, yOptions, bridgeItems = [];
   if (activeChart === "line") {
     const maximum = Math.max(100, Math.ceil(Math.max(...values.flatMap((value) => [value.execution || 0, value.expected])) / 25) * 25);
     datasets = [
@@ -197,14 +200,15 @@ function renderChart(rows) {
     $("#chart-title").textContent = "Ejecución real y ritmo esperado";
     $("#chart-legend").innerHTML = '<span class="legend-execution"></span>% ejecutado <span class="legend-expected"></span>% esperado';
   } else {
-    const largest = Math.max(...values.flatMap((value) => [Math.abs(value.monthlyModification), Math.abs(value.modification)]), 1), step = niceStep(largest / 3), limit = Math.max(step, Math.ceil(largest / step) * step);
-    datasets = [
-      { id: "monthly", type: "bar", label: "Movimiento mensual", data: values.map((value) => value.monthlyModification), backgroundColor: values.map((value) => value.monthlyModification > 0 ? "#26905f" : value.monthlyModification < 0 ? "#c74c56" : "#8c99a9"), borderRadius: 5, maxBarThickness: 54, order: 1 },
-      { id: "cumulative", type: "line", label: "Modificación acumulada", data: values.map((value) => value.modification), borderColor: "rgba(18, 100, 163, .48)", backgroundColor: "rgba(18, 100, 163, .48)", pointBackgroundColor: "rgba(255, 255, 255, .82)", pointBorderColor: "rgba(18, 100, 163, .62)", pointBorderWidth: 2, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2, tension: .25, order: 2 },
-    ];
+    const periodsAvailable = comparisonValues.filter((value) => date({ fecha_corte: value.period }) <= date({ fecha_corte: latestSelectedPeriod })); let running = 0;
+    bridgeItems = periodsAvailable.map((value, index) => { const next = value.current - value.approved, change = next - running, previousPeriod = index ? periodsAvailable[index - 1].period : null, item = { ...value, start: running, end: next, change, leaders: monthlyModificationLeaders(value.period, previousPeriod, allRows, change) }; running = next; return item; });
+    const latest = bridgeItems.at(-1), points = bridgeItems.map((value) => [value.start, value.end]), changes = bridgeItems.map((value) => value.change); labels = bridgeItems.map((value) => labelPeriod(value.period)); labels.push("Acumulado"); points.push([0, running]); changes.push(running);
+    const largest = Math.max(...points.flat().map(Math.abs), 1), step = niceStep(largest / 3), limit = Math.max(step, Math.ceil(largest / step) * step);
+    datasets = [{ id: "waterfall", label: "Modificación", data: points, displayValues: changes, backgroundColor: [...bridgeItems.map((value) => value.change > 0 ? "#26905f" : value.change < 0 ? "#c74c56" : "#8c99a9"), "#1264a3"], borderRadius: 5, maxBarThickness: 56 }];
     yOptions = { min: -limit, max: limit, ticks: { stepSize: step, callback: formatAxisAmount } };
-    $("#chart-title").textContent = "Movimientos mensuales y modificación acumulada";
-    $("#chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento mensual <span class="legend-negative"></span>Reducción mensual <span class="legend-cumulative"></span>Acumulado';
+    chartTotal.innerHTML = `Aprobado: <strong>${formatCents(latest.approved)}</strong> · Vigente: <strong>${formatCents(latest.current)}</strong> · Modificación acumulada: <strong class="${running >= 0 ? "positive" : "negative"}">${running >= 0 ? "+" : ""}${formatCents(running)}</strong>`;
+    $("#chart-title").textContent = "Puente presupuestario: del aprobado al vigente";
+    $("#chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento mensual <span class="legend-negative"></span>Reducción mensual <span class="legend-cumulative"></span>Modificación acumulada';
   }
   budgetChart = new Chart(canvas, {
     type: activeChart === "line" ? "line" : "bar",
@@ -216,8 +220,8 @@ function renderChart(rows) {
       plugins: {
         legend: { display: false },
         tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, displayColors: true, callbacks: {
-          label: (context) => activeChart === "line" ? `${context.dataset.label}: ${formatPercent(context.parsed.y)}` : `${context.dataset.label}: ${context.parsed.y >= 0 ? "+" : ""}${formatCents(context.parsed.y)}`,
-          afterBody: (items) => { if (!items.length) return []; const value = values[items[0].dataIndex]; if (activeChart === "line") { const difference = value.execution === null ? null : value.execution - value.expected; return [difference === null ? "Diferencia: —" : `Diferencia: ${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`]; } return [`Crédito aprobado: ${formatCents(value.approved)}`, `Crédito vigente: ${formatCents(value.current)}`]; },
+          label: (context) => { if (activeChart === "line") return `${context.dataset.label}: ${formatPercent(context.parsed.y)}`; const change = context.dataset.displayValues[context.dataIndex]; return context.dataIndex === bridgeItems.length ? `Modificación acumulada: ${change >= 0 ? "+" : ""}${formatCents(change)}` : `Movimiento del mes: ${change >= 0 ? "+" : ""}${formatCents(change)}`; },
+          afterBody: (items) => { if (!items.length) return []; const index = items[0].dataIndex; if (activeChart === "line") { const value = values[index], difference = value.execution === null ? null : value.execution - value.expected; return [difference === null ? "Diferencia: —" : `Diferencia: ${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`]; } if (index === bridgeItems.length) { const latest = bridgeItems.at(-1); return [`Crédito aprobado: ${formatCents(latest.approved)}`, `Crédito vigente: ${formatCents(latest.current)}`]; } const leaders = bridgeItems[index].leaders; return leaders.length ? ["", "Secretarías con mayor modificación:", ...leaders.map((item) => `${item.label}: ${item.value >= 0 ? "+" : "−"}${formatCents(Math.abs(item.value))} (${item.share === null ? "—" : `${item.share.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`})`)] : ["Sin modificaciones por secretaría."]; },
         } },
       },
       scales: {
@@ -226,7 +230,7 @@ function renderChart(rows) {
       },
     },
   });
-  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "Cada barra muestra el cambio frente al mes anterior disponible. La línea azul muestra la modificación acumulada desde el crédito aprobado.";
+  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "Cada barra enlaza la modificación acumulada de un cierre con el siguiente. Posate sobre un mes para ver las tres secretarías que más explican ese movimiento.";
 }
 function rankingLabel(row, dimension) {
   if (dimension === "program") return `${row.jurisdiccion_nombre} · ${row.programa_codigo} · ${row.programa_nombre}`;
@@ -245,7 +249,7 @@ function rankingGroups(rows, dimension, period) {
 }
 function rankingList(items, valueRenderer, emptyMessage) {
   if (!items.length) return `<li class="ranking-empty">${escapeHtml(emptyMessage)}</li>`;
-  return items.slice(0, 5).map((item, index) => `<li><span class="ranking-position">${index + 1}</span><div><strong title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</strong><small>${valueRenderer(item)}</small></div></li>`).join("");
+  return items.slice(0, 3).map((item, index) => `<li><span class="ranking-position">${index + 1}</span><div><strong title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</strong><small>${valueRenderer(item)}</small></div></li>`).join("");
 }
 function renderRankings(rows, latestPeriod) {
   const dimension = $("#ranking-dimension").value, groups = rankingGroups(rows, dimension, latestPeriod);
@@ -258,7 +262,7 @@ function renderRankings(rows, latestPeriod) {
   $("#ranking-funded").innerHTML = rankingList(funded, (item) => `+${formatCents(item.modification)} sobre el aprobado`, "Sin aumentos de crédito");
   $("#ranking-over").innerHTML = rankingList(over, (item) => `${formatPercent(item.execution)} del crédito vigente`, "Sin grupos con crédito vigente");
   const dimensionName = { jurisdiction: "secretaría", program: "programa", source: "fuente", object: "objeto del gasto" }[dimension];
-  $("#ranking-context").textContent = latestPeriod ? `Ranking por ${dimensionName} para ${labelPeriod(latestPeriod)}, dentro de los filtros seleccionados.` : "Seleccioná al menos un período para calcular los rankings.";
+  $("#ranking-context").textContent = latestPeriod ? `Top 3 por ${dimensionName} para ${labelPeriod(latestPeriod)}, dentro de los filtros seleccionados.` : "Seleccioná al menos un período para calcular los rankings.";
 }
 function groupedRows(rows, labelForRow) {
   const groups = new Map(); rows.forEach((row) => { const label = labelForRow(row), group = groups.get(label) || []; group.push(row); groups.set(label, group); }); return groups;
@@ -292,18 +296,7 @@ function renderAlerts(rows, latestPeriod) {
   const alerts = [...groups.entries()].map(([label, group]) => { const values = totals(group), execution = executionPercent(values.accrued, values.current), shortfall = execution === null ? 0 : expected - execution; return { label, values, execution, shortfall, score: Math.max(shortfall, 0) * values.current }; }).filter((item) => item.values.current > 0 && item.shortfall > 5).sort((a, b) => b.score - a.score).slice(0, 5);
   container.innerHTML = alerts.length ? alerts.map((item, index) => `<li><span>${index + 1}</span><div><strong>${escapeHtml(item.label)}</strong><small>${formatPercent(item.execution)} ejecutado · ${item.shortfall.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p. bajo el ritmo · ${formatCents(item.values.current)} vigentes</small></div></li>`).join("") : `<li class="insight-empty">No hay ${byProgram ? "programas" : "secretarías"} con alertas relevantes.</li>`;
 }
-function renderWaterfall(latestPeriod) {
-  if (waterfallChart) { waterfallChart.destroy(); waterfallChart = null; }
-  $("#waterfall-approved").textContent = ""; $("#waterfall-current").textContent = "";
-  if (!latestPeriod || typeof Chart === "undefined") return;
-  const periodsAvailable = aggregatePeriods(filteredRows(true)).filter((value) => date({ fecha_corte: value.period }) <= date({ fecha_corte: latestPeriod })); if (!periodsAvailable.length) return;
-  let running = 0; const labels = [], points = [], colors = [], changes = [];
-  periodsAvailable.forEach((value) => { const next = value.current - value.approved, change = next - running; labels.push(labelPeriod(value.period)); points.push([running, next]); changes.push(change); colors.push(change >= 0 ? "#26905f" : "#c74c56"); running = next; });
-  labels.push("Acumulado"); points.push([0, running]); changes.push(running); colors.push("#1264a3");
-  const latest = periodsAvailable.at(-1); $("#waterfall-approved").textContent = `Aprobado: ${formatCents(latest.approved)}`; $("#waterfall-current").textContent = `Vigente: ${formatCents(latest.current)}`;
-  waterfallChart = new Chart($("#waterfall-chart"), { type: "bar", data: { labels, datasets: [{ data: points, backgroundColor: colors, borderRadius: 4, maxBarThickness: 56 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => { const change = changes[context.dataIndex]; return context.dataIndex === changes.length - 1 ? `Modificación acumulada: ${change >= 0 ? "+" : ""}${formatCents(change)}` : `Movimiento del mes: ${change >= 0 ? "+" : ""}${formatCents(change)}`; } } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#e3e8ef" }, ticks: { callback: formatAxisAmount } } } } });
-}
-function renderInsights(rows, latestRows, latestPeriod) { renderHeatmap(rows, latestPeriod); renderContribution(latestRows, latestPeriod); renderAlerts(latestRows, latestPeriod); renderWaterfall(latestPeriod); }
+function renderInsights(rows, latestRows, latestPeriod) { renderHeatmap(rows, latestPeriod); renderContribution(latestRows, latestPeriod); renderAlerts(latestRows, latestPeriod); }
 function totals(rows) { return { approved: sum(rows, "credito_aprobado_centavos"), current: sum(rows, "credito_vigente_centavos"), accrued: sum(rows, "devengado_centavos"), available: sum(rows, "credito_disponible_centavos") }; }
 function executionAssessment(values, period) {
   const actual = executionPercent(values.accrued, values.current);
@@ -384,7 +377,7 @@ function resetFilters() {
 }
 function downloadConfig(view) {
   const configs = {
-    expenses: { title: "Ejecución de gastos", context: "#summary-context", period: selectedPeriodSequence().at(-1), metrics: [["Crédito aprobado", "#metric-approved", "#metric-approved-change"], ["Crédito vigente", "#metric-current", "#metric-current-change"], ["Devengado", "#metric-accrued", "#metric-accrued-change"], ["Disponible", "#metric-available", "#metric-available-change"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de modificaciones o porcentaje ejecutado.", canvas: "#budget-chart", title: () => $("#chart-title").textContent }, { id: "financing-composition", label: "Composición por fuente", description: "Participación de cada fuente en el crédito vigente.", canvas: "#financing-composition-chart", title: () => "Participación en el crédito vigente" }, { id: "financing-execution", label: "Ejecución por fuente", description: "Porcentaje ejecutado de cada origen de fondos.", canvas: "#financing-execution-chart", title: () => "Porcentaje ejecutado por fuente" }, { id: "contribution", label: "Contribución a las modificaciones", description: "Rubros que explican los cambios del crédito.", canvas: "#contribution-chart", title: () => "Contribución a las modificaciones" }, { id: "waterfall", label: "Puente presupuestario", description: "Recorrido desde el crédito aprobado hasta el vigente.", canvas: "#waterfall-chart", title: () => "Del crédito aprobado al vigente" }] },
+    expenses: { title: "Ejecución de gastos", context: "#summary-context", period: selectedPeriodSequence().at(-1), metrics: [["Crédito aprobado", "#metric-approved", "#metric-approved-change"], ["Crédito vigente", "#metric-current", "#metric-current-change"], ["Devengado", "#metric-accrued", "#metric-accrued-change"], ["Disponible", "#metric-available", "#metric-available-change"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"]], charts: [{ id: "main", label: "Gráfico principal", description: "Puente presupuestario o evolución del porcentaje ejecutado.", canvas: "#budget-chart", title: () => $("#chart-title").textContent }, { id: "financing-composition", label: "Composición por fuente", description: "Participación de cada fuente en el crédito vigente.", canvas: "#financing-composition-chart", title: () => "Participación en el crédito vigente" }, { id: "financing-execution", label: "Ejecución por fuente", description: "Porcentaje ejecutado de cada origen de fondos.", canvas: "#financing-execution-chart", title: () => "Porcentaje ejecutado por fuente" }, { id: "contribution", label: "Contribución a las modificaciones", description: "Rubros que explican los cambios del crédito.", canvas: "#contribution-chart", title: () => "Contribución a las modificaciones" }] },
     resources: { title: "Ejecución de recursos", context: "#resource-summary-context", period: [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), metrics: [["Recurso estimado", "#resource-metric-estimated", "#resource-estimated-note"], ["Recurso vigente", "#resource-metric-current", "#resource-current-note"], ["Recurso devengado", "#resource-metric-accrued", "#resource-accrued-note"], ["Recurso percibido", "#resource-metric-perceived", "#resource-perceived-note"], ["% recaudado", "#resource-metric-rate", "#resource-rate-note"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de recaudación, ingresos o modificaciones.", canvas: "#resource-chart", title: () => $("#resource-chart-title").textContent }, { id: "growth", label: "Ingresos del mes", description: "Rubros que explican la variación mensual.", canvas: "#resource-growth-chart", title: () => "Rubros que explican los ingresos del mes" }, { id: "origin", label: "Procedencia de los recursos", description: "Composición del recurso percibido.", canvas: "#resource-origin-chart", title: () => "Procedencia del recurso percibido" }] },
     funds: { title: "Fondos Especiales", context: "#fund-summary-context", period: [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), metrics: [["Recurso vigente", "#fund-metric-current", "#fund-current-note"], ["Recurso percibido", "#fund-metric-perceived", "#fund-perceived-note"], ["Gasto comprometido", "#fund-metric-committed", "#fund-committed-note"], ["Gasto pagado", "#fund-metric-paid", "#fund-paid-note"], ["Percibido menos pagado", "#fund-metric-balance", "#fund-balance-note"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de flujo, acumulado u origen.", canvas: "#fund-chart", title: () => $("#fund-chart-title").textContent }, { id: "origin", label: "Participación por origen", description: "Composición de los recursos percibidos.", canvas: "#fund-origin-chart", title: () => "Participación por origen" }] },
   };

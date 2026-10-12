@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto Abierto · Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261012-1" />
+    <link rel="stylesheet" href="styles.css?v=20261012-2" />
   </head>
   <body>
     <header class="site-header">
@@ -143,13 +143,13 @@
           <div class="section-heading">
             <div>
               <p class="eyebrow">Evolución</p>
-              <h2 id="chart-title">Movimientos mensuales y modificación acumulada</h2>
+              <h2 id="chart-title">Puente presupuestario: del aprobado al vigente</h2>
             </div>
             <div id="chart-legend" class="legend"><span class="legend-positive"></span>Aumento mensual <span class="legend-negative"></span>Reducción mensual <span class="legend-cumulative"></span>Acumulado</div>
           </div>
           <div class="chart-controls">
             <div class="chart-tabs" role="tablist" aria-label="Tipo de gráfico">
-              <button class="chart-tab active" type="button" role="tab" data-chart="bar" aria-selected="true">Modificaciones</button>
+              <button class="chart-tab active" type="button" role="tab" data-chart="bar" aria-selected="true">Puente presupuestario</button>
               <button class="chart-tab" type="button" role="tab" data-chart="line" aria-selected="false">% ejecutado</button>
             </div>
             <label id="bar-value-control" class="chart-value-toggle"><input id="show-bar-values" type="checkbox"> Mostrar valores</label>
@@ -211,7 +211,6 @@
           <article class="panel insight-card insight-wide"><p class="eyebrow">Ritmo de ejecución</p><h3>Mapa de calor por programa y mes</h3><p class="insight-description">Compara cada programa con el ritmo esperado para el mes.</p><div id="execution-heatmap" class="heatmap-wrap"></div></article>
           <article class="panel insight-card"><p class="eyebrow">Origen del cambio</p><h3>Contribución a las modificaciones</h3><p id="contribution-note" class="insight-description"></p><div class="mini-chart"><canvas id="contribution-chart"></canvas></div></article>
           <article class="panel insight-card"><p class="eyebrow">Priorización</p><h3>Alertas relevantes</h3><p class="insight-description">Combina atraso de ejecución y tamaño del crédito vigente.</p><ol id="budget-alerts" class="alert-list"></ol></article>
-          <article class="panel insight-card insight-wide"><p class="eyebrow">Puente presupuestario</p><h3>Del crédito aprobado al vigente</h3><p class="insight-description">Cada paso muestra cómo las modificaciones mensuales construyen el cambio acumulado.</p><div class="waterfall-summary"><span id="waterfall-approved"></span><span id="waterfall-current"></span></div><div class="mini-chart waterfall-chart"><canvas id="waterfall-chart"></canvas></div></article>
           <article class="panel insight-card insight-wide year-comparison"><div><p class="eyebrow">Próxima etapa</p><h3>Comparación entre años</h3><p class="insight-description">El panel está preparado para comparar el mismo mes entre ejercicios cuando incorporemos datos de 2025 o 2027.</p></div><div class="year-placeholder"><strong>2026</strong><span>Primer año disponible</span></div></article>
         </div>
       </section>
@@ -351,6 +350,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: Municipalidad de Santa Fe. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261012-1"></script>
+    <script src="app.js?v=20261012-2"></script>
   </body>
 </html>
