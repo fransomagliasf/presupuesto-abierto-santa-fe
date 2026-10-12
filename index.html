@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto Abierto · Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261009-3" />
+    <link rel="stylesheet" href="styles.css?v=20261012-1" />
   </head>
   <body>
     <header class="site-header">
@@ -161,6 +161,15 @@
       </section>
       </div>
       </div>
+
+      <section class="financing-analysis" aria-labelledby="financing-title">
+        <div class="lab-heading"><p class="eyebrow">Origen de los fondos</p><h2 id="financing-title">¿Cómo se financia el gasto?</h2><p id="financing-context">Composición y nivel de ejecución del gasto municipal según su fuente de financiamiento.</p></div>
+        <div class="financing-grid">
+          <article class="panel financing-card"><div><p class="eyebrow">Composición</p><h3>Participación en el crédito vigente</h3><p class="insight-description">Qué proporción del presupuesto actualizado corresponde a cada fuente.</p></div><div class="financing-composition"><div class="financing-donut"><canvas id="financing-composition-chart"></canvas></div><ul id="financing-composition-legend" class="resource-origin-legend"></ul></div></article>
+          <article class="panel financing-card"><div><p class="eyebrow">Ejecución</p><h3>Porcentaje ejecutado por fuente</h3><p id="financing-execution-note" class="insight-description"></p></div><div class="financing-bars"><canvas id="financing-execution-chart"></canvas></div></article>
+        </div>
+        <p id="financing-quality-note" class="note"></p>
+      </section>
 
       <section class="panel">
         <div class="section-heading">
@@ -342,6 +351,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: Municipalidad de Santa Fe. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261009-4"></script>
+    <script src="app.js?v=20261012-1"></script>
   </body>
 </html>

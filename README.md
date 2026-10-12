@@ -1,8 +1,8 @@
 # Presupuesto Abierto Santa Fe
 
 Sitio estático para explorar la ejecución presupuestaria municipal. Actualmente
-incluye el informe mensual **Estado de Ejecución del Presupuesto de Gastos por
-Objeto** de enero a septiembre de 2026.
+incluye los informes mensuales de gastos por objeto y fuente de financiamiento,
+recursos por rubro y Fondos Especiales de enero a septiembre de 2026.
 
 La interfaz usa JavaScript y CSS nativos. Las visualizaciones se renderizan con
 **Chart.js 4.4.7**, cargado desde jsDelivr con una versión fijada en
@@ -22,7 +22,7 @@ sitio carga los CSV con `fetch`.
 ## Incorporar un nuevo mes
 
 1. Conservar el PDF original recibido.
-2. Generar el CSV con `scripts/extract_gastos_por_objeto.py`.
+2. Generar el CSV con el extractor correspondiente de `scripts/`.
 3. Agregar el nuevo nombre de archivo a `DATA_FILES` en `app.js`.
 4. Verificar que las filas no tengan `revision_requerida=si`.
 5. Publicar los cambios en la rama principal. GitHub Pages se actualiza solo.

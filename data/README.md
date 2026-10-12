@@ -29,6 +29,23 @@ regenerar un CSV se necesita `pdftotext` y se ejecuta:
 python3 scripts/extract_gastos_por_objeto.py INFORME.pdf data/processed/gastos_por_objeto_YYYY-MM-DD.csv
 ```
 
+## Gastos por fuente de financiamiento
+
+Los CSV `gastos_por_fuente` contienen los totales municipales publicados en
+**Estado de Ejecución de Gastos por Fuente de Financiamiento**: Tesoro
+Municipal, recursos afectados de origen municipal, provincial y nacional, y
+Crédito interno cuando corresponde.
+
+El extractor aplica los mismos cuatro controles aritméticos por fila que la
+base por objeto y compara la suma de las fuentes con el total general impreso.
+Los nueve cierres de enero a septiembre de 2026 pasan todos los controles.
+Además, los totales de crédito aprobado, crédito vigente y devengado coinciden
+exactamente con la base por objeto en cada mes.
+
+```sh
+python3 scripts/extract_gastos_por_fuente.py INFORME.pdf data/processed/gastos_por_fuente_YYYY-MM-DD.csv
+```
+
 ## Recursos por rubro
 
 Los CSV `recursos_por_rubro` contienen las filas de concepto de los informes
