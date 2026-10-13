@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto Abierto · Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261012-2" />
+    <link rel="stylesheet" href="styles.css?v=20261013-1" />
   </head>
   <body>
     <header class="site-header">
@@ -136,7 +136,7 @@
         </div>
       </section>
 
-      <section class="chart-section">
+      <section class="chart-section bridge-layout">
         <article class="panel chart-panel">
           <div class="section-heading">
             <div>
@@ -152,10 +152,19 @@
             </div>
             <label id="bar-value-control" class="chart-value-toggle"><input id="show-bar-values" type="checkbox"> Mostrar valores</label>
           </div>
-          <p id="chart-total" class="chart-total" hidden></p>
           <div id="chart" class="chart" role="img" aria-label="Gráfico de evolución presupuestaria"><canvas id="budget-chart"></canvas><p id="chart-empty" class="note" hidden>No hay datos para esta combinación de filtros.</p></div>
           <p id="chart-note" class="note"></p>
         </article>
+        <aside class="panel bridge-explanation" aria-labelledby="bridge-explanation-title">
+          <div class="bridge-explanation-heading">
+            <div><p class="eyebrow">Lectura mensual</p><h2 id="bridge-explanation-title">Breve explicación</h2></div>
+            <div class="bridge-navigation" aria-label="Cambiar mes explicado"><button id="bridge-previous" type="button" aria-label="Mes anterior">←</button><button id="bridge-next" type="button" aria-label="Mes siguiente">→</button></div>
+          </div>
+          <p id="bridge-explanation-period" class="bridge-period">—</p>
+          <p id="bridge-explanation-summary" class="bridge-summary"></p>
+          <ol id="bridge-explanation-leaders" class="bridge-leaders"></ol>
+          <p class="bridge-method">Los porcentajes indican qué parte del movimiento bruto del mes corresponde a cada secretaría.</p>
+        </aside>
       </section>
       </div>
       </div>
@@ -326,7 +335,15 @@
         <p class="eyebrow">Guía inicial</p>
         <h2>¿Cómo leer el presupuesto?</h2>
         <p>El presupuesto muestra cuánto se autorizó gastar, cómo cambió esa autorización durante el año y cuánto del crédito disponible ya se utilizó.</p>
-        <div class="guide-steps"><article><span>1</span><div><strong>Crédito aprobado</strong><p>Es el monto autorizado al comenzar el ejercicio y funciona como punto de partida.</p></div></article><article><span>2</span><div><strong>Crédito vigente</strong><p>Incluye ampliaciones y reducciones realizadas después de la aprobación.</p></div></article><article><span>3</span><div><strong>Devengado</strong><p>Registra obligaciones reconocidas por bienes, servicios u obras ya recibidos.</p></div></article><article><span>4</span><div><strong>Porcentaje ejecutado</strong><p>Surge de dividir el devengado por el crédito vigente y multiplicarlo por 100.</p></div></article></div>
+        <section class="guide-concept">
+          <div class="guide-steps" aria-label="Recorrido básico del presupuesto"><article><span>1</span><div><strong>Crédito aprobado</strong><p>Es el monto autorizado al comenzar el ejercicio y funciona como punto de partida.</p></div></article><article><span>2</span><div><strong>Crédito vigente</strong><p>Incluye ampliaciones y reducciones realizadas después de la aprobación.</p></div></article><article><span>3</span><div><strong>Devengado</strong><p>Registra obligaciones reconocidas por bienes, servicios u obras ya recibidos.</p></div></article><article><span>4</span><div><strong>Porcentaje ejecutado</strong><p>Surge de dividir el devengado por el crédito vigente y multiplicarlo por 100.</p></div></article></div>
+          <article class="guide-copy"><p class="eyebrow">La idea central</p><h3>Del permiso para gastar a la ejecución</h3><p>El crédito aprobado es el punto de partida. Durante el año puede aumentar o reducirse y convertirse en crédito vigente. El devengado registra cuánto de ese permiso ya se transformó en una obligación concreta.</p><p>Comparar estos conceptos permite distinguir una baja ejecución de una reducción presupuestaria y entender mejor qué cambió.</p></article>
+        </section>
+        <section class="guide-directory" aria-labelledby="guide-directory-title">
+          <div><p class="eyebrow">Estructura municipal</p><h3 id="guide-directory-title">Secretarías y programas</h3><p>Directorio de referencia del presupuesto 2026. Desplegá una secretaría para conocer sus programas. Se incluyen los códigos oficiales para facilitar futuras comparaciones, sin mostrar importes.</p></div>
+          <div class="table-wrap"><table><thead><tr><th>Secretaría / jurisdicción</th><th>Código</th><th>Programas incluidos</th></tr></thead><tbody id="guide-directory-table"></tbody></table></div>
+          <nav id="guide-pagination" class="table-pagination" aria-label="Páginas del directorio de secretarías"></nav>
+        </section>
       </section>
     </main>
 
@@ -346,6 +363,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: Municipalidad de Santa Fe. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261012-3"></script>
+    <script src="app.js?v=20261013-1"></script>
   </body>
 </html>

@@ -23,12 +23,12 @@ const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "
 const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
 const updateDateFormat = new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", timeZone: "UTC" });
-let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, budgetChart = null, contributionChart = null, tableSort = { key: "accrued", direction: "desc" };
+let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, bridgeFocusPeriod = null, budgetChart = null, contributionChart = null, tableSort = { key: "accrued", direction: "desc" };
 let resourceData = [], resourceSelectedPeriods = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceChart = null, resourceGrowthChart = null, resourceOriginChart = null;
 let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Set(), fundActiveChart = "flow", fundChart = null, fundOriginChart = null;
 let financingData = [], financingCompositionChart = null, financingExecutionChart = null;
 const TABLE_PAGE_SIZE = 5;
-let expenseTablePage = 1, resourceTablePage = 1, fundTablePage = 1, activeDownloadView = "expenses";
+let expenseTablePage = 1, resourceTablePage = 1, fundTablePage = 1, guideTablePage = 1, guideExpandedSecretaries = new Set(), activeDownloadView = "expenses";
 
 function parseCSV(text) {
   const records = []; let record = [], field = "", quoted = false;
@@ -56,19 +56,22 @@ function niceStep(value) { if (!value || value <= 0) return 1; const magnitude =
 function sum(rows, field) { return rows.reduce((total, row) => total + cents(row, field), 0); }
 function executionPercent(accrued, current) { return current > 0 ? accrued / current * 100 : null; }
 function formatPercent(value) { return value === null ? "—" : `${value.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`; }
+function formatBillions(value) { return `${value < 0 ? "−" : ""}$ ${(Math.abs(value) / 100000000000).toLocaleString("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mil M`; }
 function signedVariation(value, base) {
   const sign = value > 0 ? "+" : value < 0 ? "−" : "";
   const percentage = base ? Math.abs(value / base * 100) : null;
   return `${sign}${formatCents(Math.abs(value))}${percentage === null ? "" : ` (${sign}${formatPercent(percentage)})`}`;
 }
 function populateSelect(id, values, label) { $(id).innerHTML = `<option value="">${label}</option>${values.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}`; }
+function populateSelectOptions(id, options, label) { $(id).innerHTML = `<option value="">${label}</option>${options.map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join("")}`; }
+function selectedOptionText(selector, fallback) { const select = $(selector); return select.value ? select.selectedOptions[0]?.textContent || fallback : fallback; }
 function setFilterEnabled(id, enabled) { const select = $(id); select.disabled = !enabled; select.closest(".filter-step")?.classList.toggle("is-disabled", !enabled); }
 function updatedLabel(period) { return period ? `Actualizado a ${updateDateFormat.format(date({ fecha_corte: period }))}` : "Sin datos disponibles"; }
-function paginate(items, requestedPage) { const pages = Math.max(1, Math.ceil(items.length / TABLE_PAGE_SIZE)), page = Math.min(Math.max(1, requestedPage), pages), start = (page - 1) * TABLE_PAGE_SIZE; return { items: items.slice(start, start + TABLE_PAGE_SIZE), page, pages, start }; }
+function paginate(items, requestedPage, pageSize = TABLE_PAGE_SIZE) { const pages = Math.max(1, Math.ceil(items.length / pageSize)), page = Math.min(Math.max(1, requestedPage), pages), start = (page - 1) * pageSize; return { items: items.slice(start, start + pageSize), page, pages, start, pageSize }; }
 function renderPagination(selector, state, type, total) {
   if (!total) { $(selector).innerHTML = ""; return; }
   const pageButtons = state.pages > 1 ? Array.from({ length: state.pages }, (_, index) => `<button type="button" class="${index + 1 === state.page ? "active" : ""}" data-pagination="${type}" data-page="${index + 1}" aria-label="Página ${index + 1}" aria-current="${index + 1 === state.page ? "page" : "false"}">${index + 1}</button>`).join("") : "";
-  $(selector).innerHTML = `<span>${state.start + 1}–${Math.min(state.start + TABLE_PAGE_SIZE, total)} de ${total}</span>${state.pages > 1 ? `<button type="button" data-pagination="${type}" data-page="${state.page - 1}" ${state.page === 1 ? "disabled" : ""} aria-label="Página anterior">‹</button>${pageButtons}<button type="button" data-pagination="${type}" data-page="${state.page + 1}" ${state.page === state.pages ? "disabled" : ""} aria-label="Página siguiente">›</button>` : ""}`;
+  $(selector).innerHTML = `<span>${state.start + 1}–${Math.min(state.start + state.pageSize, total)} de ${total}</span>${state.pages > 1 ? `<button type="button" data-pagination="${type}" data-page="${state.page - 1}" ${state.page === 1 ? "disabled" : ""} aria-label="Página anterior">‹</button>${pageButtons}<button type="button" data-pagination="${type}" data-page="${state.page + 1}" ${state.page === state.pages ? "disabled" : ""} aria-label="Página siguiente">›</button>` : ""}`;
 }
 function periods() { return unique(data.map((row) => row.fecha_corte)).sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
 
@@ -88,9 +91,10 @@ function expenseRowsForDependentFilters() {
 }
 function fillExpenseObjectFilter() {
   const previous = $("#object-filter").value, source = $("#source-filter").value;
-  const options = source ? unique(expenseRowsForDependentFilters().filter((row) => row.fuente_financiamiento_nombre === source).map((row) => `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`)) : [];
-  populateSelect("#object-filter", options, source ? "Todos los objetos" : "Seleccioná una fuente primero");
-  if (options.includes(previous)) $("#object-filter").value = previous;
+  const rows = source ? expenseRowsForDependentFilters().filter((row) => row.fuente_financiamiento_nombre === source) : [];
+  const options = [...new Map(rows.map((row) => [row.objeto_gasto_codigo, { value: row.objeto_gasto_codigo, label: row.objeto_gasto_nombre }])).values()].sort((a, b) => a.label.localeCompare(b.label, "es"));
+  populateSelectOptions("#object-filter", options, source ? "Todos los objetos" : "Seleccioná una fuente primero");
+  if (options.some((option) => option.value === previous)) $("#object-filter").value = previous;
   syncExpenseFilterState();
 }
 function fillExpenseDependentFilters() {
@@ -115,7 +119,7 @@ function renderProgramChips() {
 }
 function filteredRows(includeAllPeriods = false) {
   const jurisdiction = $("#jurisdiction-filter").value, source = $("#source-filter").value, object = $("#object-filter").value;
-  return data.filter((row) => (includeAllPeriods || selectedPeriods.has(row.fecha_corte)) && (!jurisdiction || row.jurisdiccion_nombre === jurisdiction) && (!jurisdiction || selectedPrograms.has(row.programa_nombre)) && (!source || row.fuente_financiamiento_nombre === source) && (!object || `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}` === object));
+  return data.filter((row) => (includeAllPeriods || selectedPeriods.has(row.fecha_corte)) && (!jurisdiction || row.jurisdiccion_nombre === jurisdiction) && (!jurisdiction || selectedPrograms.has(row.programa_nombre)) && (!source || row.fuente_financiamiento_nombre === source) && (!object || row.objeto_gasto_codigo === object));
 }
 function aggregatePeriods(rows) {
   const byPeriod = new Map();
@@ -140,7 +144,7 @@ function selectionDetails(latestPeriod, previousPeriod) {
     period: latestPeriod ? labelPeriod(latestPeriod) : "Sin período seleccionado",
     previous: previousPeriod ? labelPeriod(previousPeriod) : "",
     source: $("#source-filter").value,
-    object: $("#object-filter").value,
+    object: selectedOptionText("#object-filter", ""),
   };
 }
 function selectionDescription(latestPeriod, previousPeriod) {
@@ -176,19 +180,40 @@ const barValueLabelsPlugin = {
     context.restore();
   },
 };
-function monthlyModificationLeaders(period, previousPeriod, rows, totalChange) {
+const resourceGrowthLabelsPlugin = {
+  id: "resourceGrowthLabels",
+  afterDatasetsDraw(chart) {
+    const dataset = chart.data.datasets[0], meta = chart.getDatasetMeta(0), context = chart.ctx;
+    context.save(); context.font = "700 11px system-ui, sans-serif"; context.textBaseline = "middle";
+    meta.data.forEach((bar, index) => { const value = dataset.data[index], label = `${formatBillions(value)} (${formatPercent(dataset.shares[index])})`; context.fillStyle = value >= 0 ? "#187347" : "#a93642"; context.textAlign = value >= 0 ? "left" : "right"; context.fillText(label, bar.x + (value >= 0 ? 8 : -8), bar.y); });
+    context.restore();
+  },
+};
+function monthlyModificationBreakdown(period, previousPeriod, rows) {
   const aggregate = (targetPeriod) => { const groups = new Map(); if (!targetPeriod) return groups; rows.filter((row) => row.fecha_corte === targetPeriod).forEach((row) => { const values = groups.get(row.jurisdiccion_nombre) || { approved: 0, current: 0 }; values.approved += cents(row, "credito_aprobado_centavos"); values.current += cents(row, "credito_vigente_centavos"); groups.set(row.jurisdiccion_nombre, values); }); return new Map([...groups].map(([label, values]) => [label, values.current - values.approved])); };
   const current = aggregate(period), previous = aggregate(previousPeriod), labels = new Set([...current.keys(), ...previous.keys()]);
-  return [...labels].map((label) => { const value = (current.get(label) || 0) - (previous.get(label) || 0); return { label, value, share: totalChange ? value / totalChange * 100 : null }; }).filter((item) => item.value !== 0).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 3);
+  const items = [...labels].map((label) => ({ label, value: (current.get(label) || 0) - (previous.get(label) || 0) })).filter((item) => item.value !== 0).sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  const grossTotal = items.reduce((total, item) => total + Math.abs(item.value), 0);
+  return { grossTotal, items: items.map((item) => ({ ...item, share: grossTotal ? Math.abs(item.value) / grossTotal * 100 : null })) };
+}
+function renderBridgeExplanation(items, focusIndex) {
+  const item = items[focusIndex], previousButton = $("#bridge-previous"), nextButton = $("#bridge-next");
+  if (!item) { $("#bridge-explanation-title").textContent = "Breve explicación"; $("#bridge-explanation-period").textContent = "Sin período"; $("#bridge-explanation-summary").textContent = "No hay información para los filtros seleccionados."; $("#bridge-explanation-leaders").innerHTML = ""; previousButton.disabled = true; nextButton.disabled = true; return; }
+  const sign = item.change > 0 ? "+" : item.change < 0 ? "−" : "";
+  $("#bridge-explanation-title").textContent = `Breve explicación · ${labelPeriod(item.period)}`;
+  $("#bridge-explanation-period").textContent = `Movimiento neto: ${sign}${formatCents(Math.abs(item.change))}`;
+  $("#bridge-explanation-summary").textContent = `Durante el mes hubo movimientos por ${formatCents(item.breakdown.grossTotal)} entre aumentos y reducciones. La modificación acumulada llegó a ${item.end >= 0 ? "+" : "−"}${formatCents(Math.abs(item.end))}.`;
+  $("#bridge-explanation-leaders").innerHTML = item.leaders.length ? item.leaders.map((leader) => `<li><strong>${escapeHtml(leader.label)}</strong><small class="${leader.value >= 0 ? "positive" : "negative"}">${leader.value >= 0 ? "+" : "−"}${formatCents(Math.abs(leader.value))} · ${formatPercent(leader.share)} del movimiento mensual</small></li>`).join("") : "<li>Sin modificaciones registradas.</li>";
+  previousButton.disabled = focusIndex <= 0; nextButton.disabled = focusIndex >= items.length - 1;
 }
 function renderChart(rows) {
   const periodValues = aggregatePeriods(rows), allRows = filteredRows(true), comparisonValues = aggregatePeriods(allRows), latestSelectedPeriod = periodValues.at(-1)?.period;
-  const values = periodValues.map((value) => ({ ...value, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 })), chartTotal = $("#chart-total"), canvas = $("#budget-chart"), empty = $("#chart-empty");
+  const values = periodValues.map((value) => ({ ...value, execution: executionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12 })), canvas = $("#budget-chart"), empty = $("#chart-empty");
+  $(".bridge-layout").classList.toggle("bridge-line-mode", activeChart === "line"); $(".bridge-explanation").hidden = activeChart === "line";
   $("#bar-value-control").hidden = activeChart !== "bar";
-  chartTotal.hidden = activeChart !== "bar" || !values.length;
   empty.hidden = Boolean(values.length); canvas.hidden = !values.length;
   if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
-  if (!values.length) return;
+  if (!values.length) { renderBridgeExplanation([], -1); return; }
   if (typeof Chart === "undefined") { canvas.hidden = true; empty.hidden = false; empty.textContent = "No se pudo cargar la biblioteca de gráficos."; return; }
   empty.textContent = "No hay datos para esta combinación de filtros.";
   let labels = values.map((value) => labelPeriod(value.period)), datasets, yOptions, bridgeItems = [];
@@ -202,14 +227,16 @@ function renderChart(rows) {
     $("#chart-title").textContent = "Ejecución real y ritmo esperado";
     $("#chart-legend").innerHTML = '<span class="legend-execution"></span>% ejecutado <span class="legend-expected"></span>% esperado';
   } else {
-    const periodsAvailable = comparisonValues.filter((value) => date({ fecha_corte: value.period }) <= date({ fecha_corte: latestSelectedPeriod })); let running = 0;
-    bridgeItems = periodsAvailable.map((value, index) => { const next = value.current - value.approved, change = next - running, previousPeriod = index ? periodsAvailable[index - 1].period : null, item = { ...value, start: running, end: next, change, leaders: monthlyModificationLeaders(value.period, previousPeriod, allRows, change) }; running = next; return item; });
-    const latest = bridgeItems.at(-1), points = bridgeItems.map((value) => [value.start, value.end]), changes = bridgeItems.map((value) => value.change); labels = bridgeItems.map((value) => labelPeriod(value.period)); labels.push("Acumulado"); points.push([0, running]); changes.push(running);
+    let running = 0;
+    const allBridgeItems = comparisonValues.map((value, index) => { const next = value.current - value.approved, change = next - running, previousPeriod = index ? comparisonValues[index - 1].period : null, breakdown = monthlyModificationBreakdown(value.period, previousPeriod, allRows), item = { ...value, start: running, end: next, change, breakdown, leaders: breakdown.items.slice(0, 3) }; running = next; return item; });
+    if (!allBridgeItems.some((item) => item.period === bridgeFocusPeriod)) bridgeFocusPeriod = allBridgeItems.some((item) => item.period === latestSelectedPeriod) ? latestSelectedPeriod : allBridgeItems.at(-1)?.period;
+    const focusIndex = Math.max(0, allBridgeItems.findIndex((item) => item.period === bridgeFocusPeriod));
+    bridgeItems = allBridgeItems.slice(0, focusIndex + 1); running = bridgeItems.at(-1)?.end || 0; renderBridgeExplanation(allBridgeItems, focusIndex);
+    const points = bridgeItems.map((value) => [value.start, value.end]), changes = bridgeItems.map((value) => value.change); labels = bridgeItems.map((value) => labelPeriod(value.period)); labels.push("Acumulado"); points.push([0, running]); changes.push(running);
     const largest = Math.max(...points.flat().map(Math.abs), 1), step = niceStep(largest / 3), limit = Math.max(step, Math.ceil(largest / step) * step);
     datasets = [{ id: "waterfall", label: "Modificación", data: points, displayValues: changes, backgroundColor: [...bridgeItems.map((value) => value.change > 0 ? "#26905f" : value.change < 0 ? "#c74c56" : "#8c99a9"), "#1264a3"], borderRadius: 5, maxBarThickness: 56 }];
     yOptions = { min: -limit, max: limit, ticks: { stepSize: step, callback: formatAxisAmount } };
-    chartTotal.innerHTML = `Aprobado: <strong>${formatCents(latest.approved)}</strong> · Vigente: <strong>${formatCents(latest.current)}</strong> · Modificación acumulada: <strong class="${running >= 0 ? "positive" : "negative"}">${running >= 0 ? "+" : ""}${formatCents(running)}</strong>`;
-    $("#chart-title").textContent = "Puente presupuestario: del aprobado al vigente";
+    $("#chart-title").textContent = "Puente presupuestario";
     $("#chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento mensual <span class="legend-negative"></span>Reducción mensual <span class="legend-cumulative"></span>Modificación acumulada';
   }
   budgetChart = new Chart(canvas, {
@@ -223,7 +250,7 @@ function renderChart(rows) {
         legend: { display: false },
         tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, displayColors: true, callbacks: {
           label: (context) => { if (activeChart === "line") return `${context.dataset.label}: ${formatPercent(context.parsed.y)}`; const change = context.dataset.displayValues[context.dataIndex]; return context.dataIndex === bridgeItems.length ? `Modificación acumulada: ${change >= 0 ? "+" : ""}${formatCents(change)}` : `Movimiento del mes: ${change >= 0 ? "+" : ""}${formatCents(change)}`; },
-          afterBody: (items) => { if (!items.length) return []; const index = items[0].dataIndex; if (activeChart === "line") { const value = values[index], difference = value.execution === null ? null : value.execution - value.expected; return [difference === null ? "Diferencia: —" : `Diferencia: ${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`]; } if (index === bridgeItems.length) { const latest = bridgeItems.at(-1); return [`Crédito aprobado: ${formatCents(latest.approved)}`, `Crédito vigente: ${formatCents(latest.current)}`]; } const leaders = bridgeItems[index].leaders; return leaders.length ? ["", "Secretarías con mayor modificación:", ...leaders.map((item) => `${item.label}: ${item.value >= 0 ? "+" : "−"}${formatCents(Math.abs(item.value))} (${item.share === null ? "—" : `${item.share.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`})`)] : ["Sin modificaciones por secretaría."]; },
+          afterBody: (items) => { if (!items.length) return []; const index = items[0].dataIndex; if (activeChart === "line") { const value = values[index], difference = value.execution === null ? null : value.execution - value.expected; return [difference === null ? "Diferencia: —" : `Diferencia: ${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`]; } if (index === bridgeItems.length) return []; const leaders = bridgeItems[index].leaders; return leaders.length ? ["", "Mayor participación en el movimiento mensual:", ...leaders.map((item) => `${item.label}: ${item.value >= 0 ? "+" : "−"}${formatCents(Math.abs(item.value))} (${formatPercent(item.share)})`)] : ["Sin modificaciones por secretaría."]; },
         } },
       },
       scales: {
@@ -232,12 +259,12 @@ function renderChart(rows) {
       },
     },
   });
-  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "Cada barra enlaza la modificación acumulada de un cierre con el siguiente. Posate sobre un mes para ver las tres secretarías que más explican ese movimiento.";
+  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : "Cada barra enlaza la modificación acumulada de un cierre con el siguiente. Los porcentajes del detalle se calculan sobre la suma de todos los aumentos y reducciones del mes.";
 }
 function rankingLabel(row, dimension) {
-  if (dimension === "program") return `${row.jurisdiccion_nombre} · ${row.programa_codigo} · ${row.programa_nombre}`;
+  if (dimension === "program") return `${row.jurisdiccion_nombre} · ${row.programa_nombre}`;
   if (dimension === "source") return row.fuente_financiamiento_nombre;
-  if (dimension === "object") return `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`;
+  if (dimension === "object") return row.objeto_gasto_nombre;
   return row.jurisdiccion_nombre;
 }
 function rankingGroups(rows, dimension, period) {
@@ -274,14 +301,14 @@ function renderHeatmap(rows, latestPeriod) {
   const container = $("#execution-heatmap"), visiblePeriods = aggregatePeriods(rows).map((value) => value.period);
   if (!latestPeriod || !visiblePeriods.length) { container.innerHTML = '<p class="insight-empty">No hay períodos seleccionados.</p>'; return; }
   const jurisdictionSelected = $("#jurisdiction-filter").value;
-  const labelForRow = (row) => jurisdictionSelected ? `${row.programa_codigo} · ${row.programa_nombre}` : `${row.jurisdiccion_nombre} · ${row.programa_codigo} · ${row.programa_nombre}`;
+  const labelForRow = (row) => jurisdictionSelected ? row.programa_nombre : `${row.jurisdiccion_nombre} · ${row.programa_nombre}`;
   const groups = groupedRows(rows, labelForRow), ranked = [...groups.entries()].map(([label, group]) => ({ label, group, credit: sum(group.filter((row) => row.fecha_corte === latestPeriod), "credito_vigente_centavos") })).sort((a, b) => b.credit - a.credit).slice(0, 10);
   const header = visiblePeriods.map((period) => `<th>${escapeHtml(labelPeriod(period).split(" ")[0])}</th>`).join("");
   const body = ranked.map(({ label, group }) => `<tr><th title="${escapeHtml(label)}">${escapeHtml(label)}</th>${visiblePeriods.map((period) => { const periodRows = group.filter((row) => row.fecha_corte === period), values = totals(periodRows), execution = executionPercent(values.accrued, values.current), expected = Number(period.split("/")[1]) * 100 / 12; return `<td class="${heatClass(execution, expected)}" title="${formatPercent(execution)} ejecutado; ${formatPercent(expected)} esperado">${formatPercent(execution)}</td>`; }).join("")}</tr>`).join("");
   container.innerHTML = ranked.length ? `<table class="heatmap-table"><thead><tr><th>Programa</th>${header}</tr></thead><tbody>${body}</tbody></table><p class="note">Se muestran los 10 programas con mayor crédito vigente del último período seleccionado.</p>` : '<p class="insight-empty">No hay programas para mostrar.</p>';
 }
 function insightGrouping(rows) {
-  const byProgram = Boolean($("#jurisdiction-filter").value), labelForRow = byProgram ? (row) => `${row.programa_codigo} · ${row.programa_nombre}` : (row) => row.jurisdiccion_nombre;
+  const byProgram = Boolean($("#jurisdiction-filter").value), labelForRow = byProgram ? (row) => row.programa_nombre : (row) => row.jurisdiccion_nombre;
   return { byProgram, groups: groupedRows(rows, labelForRow) };
 }
 function renderContribution(rows, latestPeriod) {
@@ -337,7 +364,7 @@ function renderTable(rows) {
   const pageState = paginate(entries, expenseTablePage); expenseTablePage = pageState.page;
   $("#detail-table").innerHTML = pageState.items.map(([name, secretaryRows]) => {
     const open = expandedSecretaries.has(name), subdivisions = new Map();
-    secretaryRows.forEach((row) => { const label = breakdown === "program" ? `${row.programa_codigo} · ${row.programa_nombre}` : breakdown === "source" ? row.fuente_financiamiento_nombre : `${row.objeto_gasto_codigo} · ${row.objeto_gasto_nombre}`; const group = subdivisions.get(label) || []; group.push(row); subdivisions.set(label, group); });
+    secretaryRows.forEach((row) => { const label = breakdown === "program" ? row.programa_nombre : breakdown === "source" ? row.fuente_financiamiento_nombre : row.objeto_gasto_nombre; const group = subdivisions.get(label) || []; group.push(row); subdivisions.set(label, group); });
     const children = open ? sortedGroups([...subdivisions.entries()]).map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod, columnTotals)}</tr>`).join("") : "";
     return `<tr class="secretary-total"><td><button class="expand-row" type="button" data-secretary="${escapeHtml(name)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(name)}</button></td><td>Total de secretaría</td>${totalCells(totals(secretaryRows), latestPeriod, columnTotals)}</tr>${children}`;
   }).join("");
@@ -350,6 +377,16 @@ function render() {
   const rows = filteredRows(), periodsSelected = selectedPeriodSequence(), latestPeriod = periodsSelected.at(-1), previousPeriod = periodsSelected.at(-2);
   const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod);
   renderMetrics(latestRows, latestPeriod, previousPeriod); renderRankings(latestRows, latestPeriod); renderChart(rows); renderTable(rows); renderInsights(rows, latestRows, latestPeriod); renderFinancingAnalysis();
+}
+function guideDirectoryEntries() {
+  const latestPeriod = periods().at(-1), rows = data.filter((row) => row.fecha_corte === latestPeriod), groups = new Map();
+  rows.forEach((row) => { const item = groups.get(row.jurisdiccion_codigo) || { code: row.jurisdiccion_codigo, name: row.jurisdiccion_nombre, programs: new Map() }; item.programs.set(row.programa_codigo, row.programa_nombre); groups.set(row.jurisdiccion_codigo, item); });
+  return [...groups.values()].map((item) => ({ ...item, programs: [...item.programs.entries()].map(([code, name]) => ({ code, name })).sort((a, b) => a.name.localeCompare(b.name, "es")) })).sort((a, b) => a.name.localeCompare(b.name, "es"));
+}
+function renderGuideDirectory() {
+  const entries = guideDirectoryEntries(), pageState = paginate(entries, guideTablePage, 10); guideTablePage = pageState.page;
+  $("#guide-directory-table").innerHTML = pageState.items.map((item) => { const open = guideExpandedSecretaries.has(item.code), programs = open ? `<tr class="guide-program-row"><td colspan="3"><ul class="guide-programs">${item.programs.map((program) => `<li><span class="guide-code">${escapeHtml(program.code)}</span>${escapeHtml(program.name)}</li>`).join("")}</ul></td></tr>` : ""; return `<tr class="guide-directory-row"><td><button class="expand-row" type="button" data-guide-secretary="${escapeHtml(item.code)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(item.name)}</button></td><td><span class="guide-code">${escapeHtml(item.code)}</span></td><td>${item.programs.length.toLocaleString("es-AR")} programas</td></tr>${programs}`; }).join("");
+  renderPagination("#guide-pagination", pageState, "guide", entries.length);
 }
 function financingLabel(code) { return ({ "110": "Tesoro Municipal", "131": "Origen municipal", "132": "Origen provincial", "133": "Origen nacional", "150": "Crédito interno" })[code] || code; }
 function renderFinancingAnalysis() {
@@ -372,7 +409,7 @@ function renderFinancingAnalysis() {
   financingExecutionChart = new Chart(executionCanvas, { type: "bar", plugins: [expectedLine], data: { labels: items.map((item) => item.label), datasets: [{ data: rates, backgroundColor: items.map((item) => item.color), borderRadius: 5, maxBarThickness: 34 }] }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, financingExpectedLine: { value: expected }, tooltip: { callbacks: { label: (context) => `Ejecutado: ${formatPercent(context.parsed.x)}` } } }, scales: { x: { beginAtZero: true, max: Math.max(100, Math.ceil(Math.max(...rates) / 10) * 10), grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` } }, y: { grid: { display: false }, ticks: { color: "#46556d", font: { size: 11 } } } } } });
 }
 function resetFilters() {
-  selectedPeriods = new Set(periods()); selectedPrograms.clear(); expandedSecretaries.clear(); expenseTablePage = 1; $("#jurisdiction-filter").value = ""; $("#source-filter").value = ""; $("#object-filter").value = "";
+  selectedPeriods = new Set(periods()); selectedPrograms.clear(); expandedSecretaries.clear(); expenseTablePage = 1; bridgeFocusPeriod = null; $("#jurisdiction-filter").value = ""; $("#source-filter").value = ""; $("#object-filter").value = "";
   document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.add("active"); chip.setAttribute("aria-pressed", "true"); });
   $("#toggle-periods").textContent = "Quitar todos"; renderProgramChips(); fillExpenseDependentFilters(); render();
 }
@@ -420,18 +457,19 @@ function resourceTotals(rows) {
 }
 function collectionPercent(perceived, current) { return current > 0 ? perceived / current * 100 : null; }
 function fillResourceGroupFilter() {
-  const major = $("#resource-major-filter").value, majorCode = major.split(" · ")[0];
+  const majorCode = $("#resource-major-filter").value;
   const previous = $("#resource-group-filter").value;
-  const groups = major ? unique(resourceData.filter((row) => row.rubro_mayor_codigo === majorCode).map((row) => `${row.rubro_grupo_codigo} · ${row.rubro_grupo_nombre}`)) : [];
-  populateSelect("#resource-group-filter", groups, major ? "Todos los grupos" : "Seleccioná un rubro primero");
-  if (major && groups.includes(previous)) $("#resource-group-filter").value = previous;
+  const rows = majorCode ? resourceData.filter((row) => row.rubro_mayor_codigo === majorCode) : [];
+  const groups = [...new Map(rows.map((row) => [row.rubro_grupo_codigo, { value: row.rubro_grupo_codigo, label: row.rubro_grupo_nombre }])).values()].sort((a, b) => a.label.localeCompare(b.label, "es"));
+  populateSelectOptions("#resource-group-filter", groups, majorCode ? "Todos los grupos" : "Seleccioná un rubro primero");
+  if (groups.some((group) => group.value === previous)) $("#resource-group-filter").value = previous;
 }
 function fillResourceOriginFilter() {
-  const majorValue = $("#resource-major-filter").value, groupValue = $("#resource-group-filter").value, previous = $("#resource-origin-filter").value;
-  const majorCode = majorValue.split(" · ")[0], groupCode = groupValue.split(" · ")[0];
-  const options = groupValue ? unique(resourceData.filter((row) => row.rubro_mayor_codigo === majorCode && row.rubro_grupo_codigo === groupCode && row.procedencia_codigo).map((row) => `${row.procedencia_codigo} · ${row.procedencia_nombre}`)) : [];
-  populateSelect("#resource-origin-filter", options, groupValue ? "Todas las procedencias" : "Seleccioná un grupo primero");
-  if (groupValue && options.includes(previous)) $("#resource-origin-filter").value = previous;
+  const majorCode = $("#resource-major-filter").value, groupCode = $("#resource-group-filter").value, previous = $("#resource-origin-filter").value;
+  const rows = groupCode ? resourceData.filter((row) => row.rubro_mayor_codigo === majorCode && row.rubro_grupo_codigo === groupCode && row.procedencia_codigo) : [];
+  const options = [...new Map(rows.map((row) => [row.procedencia_codigo, { value: row.procedencia_codigo, label: row.procedencia_nombre }])).values()].sort((a, b) => a.label.localeCompare(b.label, "es"));
+  populateSelectOptions("#resource-origin-filter", options, groupCode ? "Todas las procedencias" : "Seleccioná un grupo primero");
+  if (options.some((option) => option.value === previous)) $("#resource-origin-filter").value = previous;
   syncResourceFilterState();
 }
 function syncResourceFilterState() { setFilterEnabled("#resource-group-filter", Boolean($("#resource-major-filter").value)); setFilterEnabled("#resource-origin-filter", Boolean($("#resource-group-filter").value)); }
@@ -440,14 +478,14 @@ function fillResourceFilters() {
   const byYear = new Map();
   resourcePeriods().forEach((period) => { const year = period.split("/")[2]; byYear.set(year, [...(byYear.get(year) || []), period]); });
   $("#resource-period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => `<section class="period-year"><div class="period-year-heading"><strong>${year}</strong><button class="small-action" type="button" data-resource-year="${year}">Todo el año</button></div><div class="month-list">${yearPeriods.map((period) => `<button type="button" class="month-option active" data-resource-period="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period).split(" ")[0])}</button>`).join("")}</div></section>`).join("");
-  populateSelect("#resource-major-filter", unique(resourceData.map((row) => row.rubro_mayor_codigo)).map((code) => { const row = resourceData.find((item) => item.rubro_mayor_codigo === code); return `${code} · ${row.rubro_mayor_nombre}`; }), "Todos los rubros");
+  const majorOptions = unique(resourceData.map((row) => row.rubro_mayor_codigo)).map((code) => { const row = resourceData.find((item) => item.rubro_mayor_codigo === code); return { value: code, label: row.rubro_mayor_nombre }; });
+  populateSelectOptions("#resource-major-filter", majorOptions, "Todos los rubros");
   fillResourceGroupFilter();
   fillResourceOriginFilter();
 }
 function resourceFilteredRows(includeAllPeriods = false) {
-  const majorValue = $("#resource-major-filter").value, groupValue = $("#resource-group-filter").value, originValue = $("#resource-origin-filter").value;
-  const majorCode = majorValue.split(" · ")[0], groupCode = groupValue.split(" · ")[0], originCode = originValue.split(" · ")[0];
-  return resourceData.filter((row) => (includeAllPeriods || resourceSelectedPeriods.has(row.fecha_corte)) && (!majorValue || row.rubro_mayor_codigo === majorCode) && (!groupValue || row.rubro_grupo_codigo === groupCode) && (!originValue || row.procedencia_codigo === originCode));
+  const majorCode = $("#resource-major-filter").value, groupCode = $("#resource-group-filter").value, originCode = $("#resource-origin-filter").value;
+  return resourceData.filter((row) => (includeAllPeriods || resourceSelectedPeriods.has(row.fecha_corte)) && (!majorCode || row.rubro_mayor_codigo === majorCode) && (!groupCode || row.rubro_grupo_codigo === groupCode) && (!originCode || row.procedencia_codigo === originCode));
 }
 function aggregateResourcePeriods(rows) {
   const grouped = new Map();
@@ -455,7 +493,7 @@ function aggregateResourcePeriods(rows) {
   return [...grouped.values()].sort((a, b) => date({ fecha_corte: a.period }) - date({ fecha_corte: b.period }));
 }
 function resourceContext(period) {
-  const major = $("#resource-major-filter").value || "Todos los rubros", group = $("#resource-group-filter").value || "Todos los grupos", origin = $("#resource-origin-filter").value || "Todas las procedencias";
+  const major = selectedOptionText("#resource-major-filter", "Todos los rubros"), group = selectedOptionText("#resource-group-filter", "Todos los grupos"), origin = selectedOptionText("#resource-origin-filter", "Todas las procedencias");
   return `Período: ${period ? labelPeriod(period) : "sin selección"} · Rubro: ${major} · Grupo: ${group} · Procedencia: ${origin}`;
 }
 function renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod) {
@@ -511,18 +549,18 @@ function renderResourceChart(rows) {
 function resourceAmountCell(value, total) { return `<td class="number">${formatCents(value)}<small class="cell-share">(${columnShare(value, total)} del total)</small></td>`; }
 function renderResourceTable(rows, latestPeriod) {
   const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), overall = resourceTotals(latestRows), groups = new Map();
-  latestRows.forEach((row) => { const key = `${row.rubro_mayor_codigo} · ${row.rubro_mayor_nombre}`, group = groups.get(key) || []; group.push(row); groups.set(key, group); });
+  latestRows.forEach((row) => { const key = row.rubro_mayor_nombre, group = groups.get(key) || []; group.push(row); groups.set(key, group); });
   const ordered = [...groups.entries()].sort((a, b) => resourceTotals(b[1]).perceived - resourceTotals(a[1]).perceived);
   const pageState = paginate(ordered, resourceTablePage); resourceTablePage = pageState.page;
   $("#resource-detail-table").innerHTML = pageState.items.map(([label, group]) => {
     const open = resourceExpandedMajors.has(label), values = resourceTotals(group), rate = collectionPercent(values.perceived, values.current);
-    const children = open ? [...group].sort((a, b) => cents(b, "recurso_percibido_centavos") - cents(a, "recurso_percibido_centavos")).map((row) => { const child = resourceTotals([row]), childRate = collectionPercent(child.perceived, child.current), origin = row.procedencia_codigo ? `${row.procedencia_codigo} · ${row.procedencia_nombre}` : "Sin procedencia informada"; return `<tr class="breakdown-row"><td></td><td><strong>${escapeHtml(`${row.rubro_codigo} · ${row.rubro_nombre}`)}</strong><small>${escapeHtml(origin)}</small></td>${resourceAmountCell(child.estimated, overall.estimated)}${resourceAmountCell(child.current, overall.current)}${resourceAmountCell(child.accrued, overall.accrued)}${resourceAmountCell(child.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: child.perceived, current: child.current }, latestPeriod).status}">${formatPercent(childRate)}</span></td></tr>`; }).join("") : "";
+    const children = open ? [...group].sort((a, b) => cents(b, "recurso_percibido_centavos") - cents(a, "recurso_percibido_centavos")).map((row) => { const child = resourceTotals([row]), childRate = collectionPercent(child.perceived, child.current), origin = row.procedencia_nombre || "Sin procedencia informada"; return `<tr class="breakdown-row"><td></td><td><strong>${escapeHtml(row.rubro_nombre)}</strong><small>${escapeHtml(origin)}</small></td>${resourceAmountCell(child.estimated, overall.estimated)}${resourceAmountCell(child.current, overall.current)}${resourceAmountCell(child.accrued, overall.accrued)}${resourceAmountCell(child.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: child.perceived, current: child.current }, latestPeriod).status}">${formatPercent(childRate)}</span></td></tr>`; }).join("") : "";
     return `<tr class="secretary-total"><td><button class="expand-row resource-expand-row" type="button" data-resource-major="${escapeHtml(label)}" aria-expanded="${open}"><span>${open ? "▾" : "▸"}</span>${escapeHtml(label)}</button></td><td>Total del rubro</td>${resourceAmountCell(values.estimated, overall.estimated)}${resourceAmountCell(values.current, overall.current)}${resourceAmountCell(values.accrued, overall.accrued)}${resourceAmountCell(values.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: values.perceived, current: values.current }, latestPeriod).status}">${formatPercent(rate)}</span></td></tr>${children}`;
   }).join("");
   renderPagination("#resource-pagination", pageState, "resources", ordered.length);
   $("#resource-table-note").textContent = latestPeriod ? `Valores acumulados a ${labelPeriod(latestPeriod)}. Los porcentajes entre paréntesis muestran la participación de cada rubro o concepto sobre el total visible de la columna.` : "No hay datos para mostrar.";
 }
-function resourceMajorLabel(row) { return `${row.rubro_mayor_codigo} · ${row.rubro_mayor_nombre}`; }
+function resourceMajorLabel(row) { return row.rubro_mayor_nombre; }
 function resourceOriginCategory(row) {
   const value = row.procedencia_nombre.toLocaleLowerCase("es");
   if (value.includes("municipal")) return "Origen municipal";
@@ -541,11 +579,12 @@ function renderResourceGrowth(latestRows, previousRows, latestPeriod, previousPe
   if (!latestPeriod || !previousPeriod || !previousRows) { note.textContent = "Seleccioná al menos dos períodos para calcular el ingreso del mes."; canvas.hidden = true; return; }
   const aggregate = (rows) => { const groups = new Map(); rows.forEach((row) => groups.set(resourceMajorLabel(row), (groups.get(resourceMajorLabel(row)) || 0) + cents(row, "recurso_percibido_centavos"))); return groups; };
   const current = aggregate(latestRows), previous = aggregate(previousRows), labels = new Set([...current.keys(), ...previous.keys()]);
-  const items = [...labels].map((label) => ({ label, value: (current.get(label) || 0) - (previous.get(label) || 0) })).filter((item) => item.value !== 0).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 8).reverse();
-  note.textContent = `Variación del recurso percibido entre ${labelPeriod(previousPeriod)} y ${labelPeriod(latestPeriod)}.`;
+  const allItems = [...labels].map((label) => ({ label, value: (current.get(label) || 0) - (previous.get(label) || 0) })).filter((item) => item.value !== 0).sort((a, b) => b.value - a.value), monthlyTotal = allItems.reduce((total, item) => total + item.value, 0);
+  const items = allItems.slice(0, 8).map((item) => ({ ...item, share: monthlyTotal ? item.value / monthlyTotal * 100 : null }));
+  note.textContent = `Variación del recurso percibido entre ${labelPeriod(previousPeriod)} y ${labelPeriod(latestPeriod)}. Los montos se expresan en miles de millones de pesos.`;
   canvas.hidden = !items.length;
   if (!renderGraph || !items.length || typeof Chart === "undefined") return;
-  resourceGrowthChart = new Chart(canvas, { type: "bar", data: { labels: items.map((item) => item.label), datasets: [{ data: items.map((item) => item.value), backgroundColor: items.map((item) => item.value >= 0 ? "#26905f" : "#c74c56"), borderRadius: 4 }] }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.parsed.x >= 0 ? "+" : ""}${formatCents(context.parsed.x)}` } } }, scales: { x: { grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#e3e8ef" }, ticks: { callback: formatAxisAmount } }, y: { grid: { display: false }, ticks: { font: { size: 10 }, callback(value) { const label = this.getLabelForValue(value); return label.length > 30 ? `${label.slice(0, 29)}…` : label; } } } } } });
+  resourceGrowthChart = new Chart(canvas, { type: "bar", data: { labels: items.map((item) => item.label), datasets: [{ data: items.map((item) => item.value), shares: items.map((item) => item.share), backgroundColor: items.map((item) => item.value >= 0 ? "#26905f" : "#c74c56"), borderRadius: 4 }] }, plugins: [resourceGrowthLabelsPlugin], options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, layout: { padding: { right: 125, left: 10 } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.parsed.x >= 0 ? "+" : ""}${formatCents(context.parsed.x)} (${formatPercent(items[context.dataIndex].share)})` } } }, scales: { x: { grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#e3e8ef" }, ticks: { display: false }, border: { display: false } }, y: { grid: { display: false }, ticks: { font: { size: 10 }, callback(value) { const label = this.getLabelForValue(value); return label.length > 30 ? `${label.slice(0, 29)}…` : label; } } } } } });
 }
 function renderResourceOrigins(latestRows, renderGraph) {
   if (resourceOriginChart) { resourceOriginChart.destroy(); resourceOriginChart = null; }
@@ -567,7 +606,7 @@ function renderResourcePace(latestRows, latestPeriod) {
   $("#resource-pace-behind").innerHTML = resourceRankingHtml(behind, renderer, "No hay rubros por debajo del ritmo."); $("#resource-pace-ahead").innerHTML = resourceRankingHtml(ahead, renderer, "No hay rubros por encima del ritmo.");
 }
 function renderResourceTopConcepts(latestRows) {
-  const total = sum(latestRows, "recurso_percibido_centavos"), items = latestRows.map((row) => ({ label: `${row.rubro_codigo} · ${row.rubro_nombre}`, value: cents(row, "recurso_percibido_centavos") })).filter((item) => item.value > 0).sort((a, b) => b.value - a.value).slice(0, 5);
+  const total = sum(latestRows, "recurso_percibido_centavos"), items = latestRows.map((row) => ({ label: row.rubro_nombre, value: cents(row, "recurso_percibido_centavos") })).filter((item) => item.value > 0).sort((a, b) => b.value - a.value).slice(0, 5);
   $("#resource-top-concepts").innerHTML = resourceRankingHtml(items, (item) => `${formatCents(item.value)} · ${columnShare(item.value, total)} del total`, "No hay recursos percibidos para esta selección.");
 }
 function renderResourceInsights(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph) { renderResourceGrowth(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph); renderResourceOrigins(latestRows, renderGraph); renderResourcePace(latestRows, latestPeriod); renderResourceTopConcepts(latestRows); }
@@ -588,25 +627,25 @@ function fundTotals(rows) {
   };
 }
 function fillFundNameFilter() {
-  const originValue = $("#fund-origin-filter").value, originCode = originValue.split(" · ")[0], previous = $("#fund-name-filter").value;
-  const codes = originValue ? unique(fundData.filter((row) => row.origen_codigo === originCode).map((row) => row.fondo_codigo)) : [];
-  const options = codes.map((code) => `${code} · ${canonicalFundName(code)}`); populateSelect("#fund-name-filter", options, originValue ? "Todos los fondos" : "Seleccioná un nivel primero"); if (originValue && options.includes(previous)) $("#fund-name-filter").value = previous; setFilterEnabled("#fund-name-filter", Boolean(originValue));
+  const originCode = $("#fund-origin-filter").value, previous = $("#fund-name-filter").value;
+  const codes = originCode ? unique(fundData.filter((row) => row.origen_codigo === originCode).map((row) => row.fondo_codigo)) : [];
+  const options = codes.map((code) => ({ value: code, label: canonicalFundName(code) })); populateSelectOptions("#fund-name-filter", options, originCode ? "Todos los fondos" : "Seleccioná un nivel primero"); if (options.some((option) => option.value === previous)) $("#fund-name-filter").value = previous; setFilterEnabled("#fund-name-filter", Boolean(originCode));
 }
 function fillFundFilters() {
   fundSelectedPeriods = new Set(fundPeriods()); const byYear = new Map();
   fundPeriods().forEach((period) => { const year = period.split("/")[2]; byYear.set(year, [...(byYear.get(year) || []), period]); });
   $("#fund-period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => `<section class="period-year"><div class="period-year-heading"><strong>${year}</strong><button class="small-action" type="button" data-fund-year="${year}">Todo el año</button></div><div class="month-list">${yearPeriods.map((period) => `<button type="button" class="month-option active" data-fund-period="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period).split(" ")[0])}</button>`).join("")}</div></section>`).join("");
-  const origins = unique(fundData.map((row) => row.origen_codigo)).map((code) => { const row = fundData.find((item) => item.origen_codigo === code); return `${code} · ${row.origen_nombre}`; }); populateSelect("#fund-origin-filter", origins, "Todos los niveles"); fillFundNameFilter();
+  const origins = unique(fundData.map((row) => row.origen_codigo)).map((code) => { const row = fundData.find((item) => item.origen_codigo === code); return { value: code, label: row.origen_nombre }; }); populateSelectOptions("#fund-origin-filter", origins, "Todos los niveles"); fillFundNameFilter();
 }
 function fundFilteredRows(includeAllPeriods = false) {
-  const originValue = $("#fund-origin-filter").value, nameValue = $("#fund-name-filter").value, originCode = originValue.split(" · ")[0], fundCode = nameValue.split(" · ")[0];
-  return fundData.filter((row) => (includeAllPeriods || fundSelectedPeriods.has(row.fecha_corte)) && (!originValue || row.origen_codigo === originCode) && (!nameValue || row.fondo_codigo === fundCode));
+  const originCode = $("#fund-origin-filter").value, fundCode = $("#fund-name-filter").value;
+  return fundData.filter((row) => (includeAllPeriods || fundSelectedPeriods.has(row.fecha_corte)) && (!originCode || row.origen_codigo === originCode) && (!fundCode || row.fondo_codigo === fundCode));
 }
 function aggregateFundPeriods(rows) {
   const grouped = new Map(); rows.forEach((row) => { const values = grouped.get(row.fecha_corte) || { period: row.fecha_corte, current: 0, perceived: 0, committed: 0, expenseAccrued: 0, paid: 0 }; values.current += cents(row, "recurso_vigente_centavos"); values.perceived += cents(row, "recurso_percibido_centavos"); values.committed += cents(row, "gasto_compromiso_centavos"); values.expenseAccrued += cents(row, "gasto_devengado_centavos"); values.paid += cents(row, "gasto_pagado_centavos"); grouped.set(row.fecha_corte, values); });
   return [...grouped.values()].sort((a, b) => date({ fecha_corte: a.period }) - date({ fecha_corte: b.period }));
 }
-function fundContext(period) { return `Período: ${period ? labelPeriod(period) : "sin selección"} · Nivel: ${$("#fund-origin-filter").value || "Todos"} · Fondo: ${$("#fund-name-filter").value || "Todos"}`; }
+function fundContext(period) { return `Período: ${period ? labelPeriod(period) : "sin selección"} · Nivel: ${selectedOptionText("#fund-origin-filter", "Todos")} · Fondo: ${selectedOptionText("#fund-name-filter", "Todos")}`; }
 function renderFundMetrics(latestRows, previousRows, latestPeriod, previousPeriod) {
   const values = fundTotals(latestRows), previous = previousRows ? fundTotals(previousRows) : null, balance = values.perceived - values.paid;
   $("#fund-metric-current").textContent = formatCents(values.current); $("#fund-metric-perceived").textContent = formatCents(values.perceived); $("#fund-metric-committed").textContent = formatCents(values.committed); $("#fund-metric-paid").textContent = formatCents(values.paid); $("#fund-metric-balance").textContent = formatCents(balance);
@@ -632,7 +671,7 @@ function renderFundChart(rows) {
     type = "line"; datasets = [{ label: "Recurso percibido", data: values.map((value) => value.perceived), borderColor: "#008a81", backgroundColor: "#008a81", borderWidth: 3, pointRadius: 4, tension: .25 }, { label: "Gasto pagado", data: values.map((value) => value.paid), borderColor: "#c45059", backgroundColor: "#c45059", borderWidth: 3, pointRadius: 4, tension: .25 }, { label: "Gasto comprometido", data: values.map((value) => value.committed), borderColor: "#d59a13", backgroundColor: "#d59a13", borderWidth: 2, borderDash: [7, 6], pointRadius: 3, tension: .2 }];
     $("#fund-chart-title").textContent = "Recursos y gastos acumulados"; $("#fund-chart-legend").innerHTML = '<span class="legend-fund-income"></span>Percibido <span class="legend-fund-paid"></span>Pagado <span class="legend-fund-committed"></span>Comprometido'; $("#fund-chart-note").textContent = "Permite comparar el ingreso acumulado con las obligaciones asumidas y los pagos realizados.";
   } else {
-    const latestPeriod = values.at(-1).period, latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), groups = new Map(); latestRows.forEach((row) => { const group = groups.get(`${row.origen_codigo} · ${row.origen_nombre}`) || []; group.push(row); groups.set(`${row.origen_codigo} · ${row.origen_nombre}`, group); }); const items = [...groups.entries()].map(([label, group]) => ({ label, values: fundTotals(group) }));
+    const latestPeriod = values.at(-1).period, latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), groups = new Map(); latestRows.forEach((row) => { const group = groups.get(row.origen_nombre) || []; group.push(row); groups.set(row.origen_nombre, group); }); const items = [...groups.entries()].map(([label, group]) => ({ label, values: fundTotals(group) }));
     labels = items.map((item) => item.label); datasets = [{ label: "Recurso percibido", data: items.map((item) => item.values.perceived), backgroundColor: "rgba(0, 138, 129, .82)", borderRadius: 5 }, { label: "Gasto pagado", data: items.map((item) => item.values.paid), backgroundColor: "rgba(196, 80, 89, .75)", borderRadius: 5 }];
     $("#fund-chart-title").textContent = "Recursos y pagos por origen"; $("#fund-chart-legend").innerHTML = '<span class="legend-fund-income"></span>Percibido <span class="legend-fund-paid"></span>Pagado'; $("#fund-chart-note").textContent = `Comparación acumulada a ${labelPeriod(latestPeriod)} entre los niveles visibles.`;
   }
@@ -640,18 +679,18 @@ function renderFundChart(rows) {
 }
 function fundAmountCell(value, total) { return `<td class="number">${formatCents(value)}<small class="cell-share">(${columnShare(value, total)} del total)</small></td>`; }
 function renderFundTable(rows, latestPeriod) {
-  const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), overall = fundTotals(latestRows), groups = new Map(); latestRows.forEach((row) => { const label = `${row.origen_codigo} · ${row.origen_nombre}`, group = groups.get(label) || []; group.push(row); groups.set(label, group); });
+  const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), overall = fundTotals(latestRows), groups = new Map(); latestRows.forEach((row) => { const label = row.origen_nombre, group = groups.get(label) || []; group.push(row); groups.set(label, group); });
   const ordered = [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0], "es")), pageState = paginate(ordered, fundTablePage); fundTablePage = pageState.page;
-  $("#fund-detail-table").innerHTML = pageState.items.map(([label, group]) => { const open = fundExpandedOrigins.has(label), values = fundTotals(group), balance = values.perceived - values.paid; const children = open ? [...group].sort((a, b) => cents(b, "recurso_percibido_centavos") - cents(a, "recurso_percibido_centavos")).map((row) => { const child = fundTotals([row]), childBalance = child.perceived - child.paid; return `<tr class="breakdown-row"><td></td><td><strong>${escapeHtml(`${row.fondo_codigo} · ${canonicalFundName(row.fondo_codigo)}`)}</strong></td>${fundAmountCell(child.current, overall.current)}${fundAmountCell(child.perceived, overall.perceived)}${fundAmountCell(child.committed, overall.committed)}${fundAmountCell(child.expenseAccrued, overall.expenseAccrued)}${fundAmountCell(child.paid, overall.paid)}<td class="number ${childBalance < 0 ? "negative" : "positive"}">${formatCents(childBalance)}</td></tr>`; }).join("") : ""; return `<tr class="secretary-total"><td><button class="expand-row fund-expand-row" type="button" data-fund-origin="${escapeHtml(label)}" aria-expanded="${open}"><span>${open ? "▾" : "▸"}</span>${escapeHtml(label)}</button></td><td>Total del nivel</td>${fundAmountCell(values.current, overall.current)}${fundAmountCell(values.perceived, overall.perceived)}${fundAmountCell(values.committed, overall.committed)}${fundAmountCell(values.expenseAccrued, overall.expenseAccrued)}${fundAmountCell(values.paid, overall.paid)}<td class="number ${balance < 0 ? "negative" : "positive"}">${formatCents(balance)}</td></tr>${children}`; }).join("");
+  $("#fund-detail-table").innerHTML = pageState.items.map(([label, group]) => { const open = fundExpandedOrigins.has(label), values = fundTotals(group), balance = values.perceived - values.paid; const children = open ? [...group].sort((a, b) => cents(b, "recurso_percibido_centavos") - cents(a, "recurso_percibido_centavos")).map((row) => { const child = fundTotals([row]), childBalance = child.perceived - child.paid; return `<tr class="breakdown-row"><td></td><td><strong>${escapeHtml(canonicalFundName(row.fondo_codigo))}</strong></td>${fundAmountCell(child.current, overall.current)}${fundAmountCell(child.perceived, overall.perceived)}${fundAmountCell(child.committed, overall.committed)}${fundAmountCell(child.expenseAccrued, overall.expenseAccrued)}${fundAmountCell(child.paid, overall.paid)}<td class="number ${childBalance < 0 ? "negative" : "positive"}">${formatCents(childBalance)}</td></tr>`; }).join("") : ""; return `<tr class="secretary-total"><td><button class="expand-row fund-expand-row" type="button" data-fund-origin="${escapeHtml(label)}" aria-expanded="${open}"><span>${open ? "▾" : "▸"}</span>${escapeHtml(label)}</button></td><td>Total del nivel</td>${fundAmountCell(values.current, overall.current)}${fundAmountCell(values.perceived, overall.perceived)}${fundAmountCell(values.committed, overall.committed)}${fundAmountCell(values.expenseAccrued, overall.expenseAccrued)}${fundAmountCell(values.paid, overall.paid)}<td class="number ${balance < 0 ? "negative" : "positive"}">${formatCents(balance)}</td></tr>${children}`; }).join("");
   renderPagination("#fund-pagination", pageState, "funds", ordered.length);
   $("#fund-table-note").textContent = latestPeriod ? `Valores acumulados a ${labelPeriod(latestPeriod)}. El balance mostrado es recurso percibido menos gasto pagado y puede ser negativo si se utilizaron saldos de ejercicios anteriores.` : "No hay datos para mostrar.";
 }
 function renderFundInsights(latestRows, renderGraph) {
-  if (fundOriginChart) { fundOriginChart.destroy(); fundOriginChart = null; } const groups = new Map(); latestRows.forEach((row) => groups.set(`${row.origen_codigo} · ${row.origen_nombre}`, (groups.get(`${row.origen_codigo} · ${row.origen_nombre}`) || 0) + cents(row, "recurso_percibido_centavos")));
-  const palette = { "12": "#008a81", "22": "#438dcc", "32": "#7b3fc6", "42": "#e0a71b" }, items = [...groups.entries()].map(([label, value]) => ({ label, value, color: palette[label.split(" · ")[0]] })).filter((item) => item.value !== 0).sort((a, b) => b.value - a.value), total = items.reduce((value, item) => value + item.value, 0);
+  if (fundOriginChart) { fundOriginChart.destroy(); fundOriginChart = null; } const groups = new Map(); latestRows.forEach((row) => { const item = groups.get(row.origen_nombre) || { code: row.origen_codigo, value: 0 }; item.value += cents(row, "recurso_percibido_centavos"); groups.set(row.origen_nombre, item); });
+  const palette = { "12": "#008a81", "22": "#438dcc", "32": "#7b3fc6", "42": "#e0a71b" }, items = [...groups.entries()].map(([label, item]) => ({ label, value: item.value, color: palette[item.code] || "#9aa7b7" })).filter((item) => item.value !== 0).sort((a, b) => b.value - a.value), total = items.reduce((value, item) => value + item.value, 0);
   $("#fund-origin-legend").innerHTML = items.length ? items.map((item) => `<li><i style="background:${item.color}"></i><span>${escapeHtml(item.label)}</span><strong>${columnShare(item.value, total)}</strong><small>${formatCents(item.value)}</small></li>`).join("") : '<li class="ranking-empty">Sin recursos percibidos.</li>'; const canvas = $("#fund-origin-chart"); canvas.hidden = !items.length;
   if (renderGraph && items.length && typeof Chart !== "undefined") fundOriginChart = new Chart(canvas, { type: "doughnut", data: { labels: items.map((item) => item.label), datasets: [{ data: items.map((item) => item.value), backgroundColor: items.map((item) => item.color), borderColor: "#fff", borderWidth: 3 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: "66%", plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.label}: ${formatCents(context.parsed)} (${columnShare(context.parsed, total)})` } } } } });
-  const top = latestRows.map((row) => ({ label: `${row.fondo_codigo} · ${canonicalFundName(row.fondo_codigo)}`, value: cents(row, "recurso_percibido_centavos") })).filter((item) => item.value > 0).sort((a, b) => b.value - a.value).slice(0, 7); $("#fund-top-list").innerHTML = resourceRankingHtml(top, (item) => `${formatCents(item.value)} · ${columnShare(item.value, total)} del total`, "Sin recursos percibidos.");
+  const top = latestRows.map((row) => ({ label: canonicalFundName(row.fondo_codigo), value: cents(row, "recurso_percibido_centavos") })).filter((item) => item.value > 0).sort((a, b) => b.value - a.value).slice(0, 7); $("#fund-top-list").innerHTML = resourceRankingHtml(top, (item) => `${formatCents(item.value)} · ${columnShare(item.value, total)} del total`, "Sin recursos percibidos.");
 }
 function renderFunds(renderGraph = true) {
   const rows = fundFilteredRows(), selected = [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })), latestPeriod = selected.at(-1), previousPeriod = selected.at(-2), latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
@@ -667,7 +706,7 @@ async function init() {
     resourceData = (await Promise.all(RESOURCE_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     fundData = (await Promise.all(FUND_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     financingData = (await Promise.all(FINANCING_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
-    fillFilters(); fillResourceFilters(); fillFundFilters(); render(); renderResources(false); renderFunds(false);
+    fillFilters(); fillResourceFilters(); fillFundFilters(); render(); renderResources(false); renderFunds(false); renderGuideDirectory();
     const latestLoadedPeriod = [...periods(), ...resourcePeriods(), ...fundPeriods()].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), updateText = updatedLabel(latestLoadedPeriod);
     $("#updated-at").textContent = updateText; $("#resource-loaded-status").textContent = updatedLabel(resourcePeriods().at(-1)); $("#fund-loaded-status").textContent = updatedLabel(fundPeriods().at(-1));
     $("#period-filter").addEventListener("click", (event) => {
@@ -682,7 +721,7 @@ async function init() {
       document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.toggle("active", selectedPeriods.has(chip.dataset.period)); chip.setAttribute("aria-pressed", selectedPeriods.has(chip.dataset.period)); });
       const isAllSelected = selectedPeriods.size === periods().length;
       $("#toggle-periods").textContent = isAllSelected ? "Quitar todos" : "Seleccionar todos";
-      render();
+      bridgeFocusPeriod = null; render();
     });
     $("#jurisdiction-filter").addEventListener("change", () => { selectedPrograms = new Set(programsForSelectedJurisdiction()); expandedSecretaries.clear(); renderProgramChips(); fillExpenseDependentFilters(); render(); });
     $("#program-filter").addEventListener("change", (event) => { const checkbox = event.target.closest("[data-program]"); if (!checkbox) return; checkbox.checked ? selectedPrograms.add(checkbox.dataset.program) : selectedPrograms.delete(checkbox.dataset.program); renderProgramChips(); fillExpenseDependentFilters(); render(); });
@@ -693,11 +732,13 @@ async function init() {
     setupFilterPanelToggle("#toggle-filter-sidebar", "#filter-sidebar-body", "#dashboard-layout", "filtros de gastos");
     setupFilterPanelToggle("#toggle-resource-filters", "#resource-filter-body", "#resource-layout", "filtros de recursos");
     setupFilterPanelToggle("#toggle-fund-filters", "#fund-filter-body", "#fund-layout", "filtros de fondos");
-    $("#toggle-periods").addEventListener("click", () => { selectedPeriods = selectedPeriods.size === periods().length ? new Set() : new Set(periods()); $("#toggle-periods").textContent = selectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.toggle("active", selectedPeriods.has(chip.dataset.period)); chip.setAttribute("aria-pressed", selectedPeriods.has(chip.dataset.period)); }); render(); });
+    $("#toggle-periods").addEventListener("click", () => { selectedPeriods = selectedPeriods.size === periods().length ? new Set() : new Set(periods()); bridgeFocusPeriod = null; $("#toggle-periods").textContent = selectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.toggle("active", selectedPeriods.has(chip.dataset.period)); chip.setAttribute("aria-pressed", selectedPeriods.has(chip.dataset.period)); }); render(); });
     $("#source-filter").addEventListener("change", () => { fillExpenseObjectFilter(); render(); });
     ["#object-filter", "#detail-breakdown-filter", "#ranking-dimension"].forEach((id) => $(id).addEventListener("change", render));
-    document.querySelectorAll(".chart-tab").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll(".chart-tab").forEach((item) => { item.classList.toggle("active", item === tab); item.setAttribute("aria-selected", String(item === tab)); }); renderChart(filteredRows()); }));
+    document.querySelectorAll("[data-chart]").forEach((tab) => tab.addEventListener("click", () => { activeChart = tab.dataset.chart; document.querySelectorAll("[data-chart]").forEach((item) => { item.classList.toggle("active", item === tab); item.setAttribute("aria-selected", String(item === tab)); }); renderChart(filteredRows()); }));
     $("#show-bar-values").addEventListener("change", (event) => { showBarValues = event.target.checked; renderChart(filteredRows()); });
+    const moveBridgeFocus = (direction) => { const available = aggregatePeriods(filteredRows(true)).map((value) => value.period), index = available.indexOf(bridgeFocusPeriod), nextIndex = Math.min(Math.max(index + direction, 0), available.length - 1); if (available[nextIndex]) { bridgeFocusPeriod = available[nextIndex]; renderChart(filteredRows()); } };
+    $("#bridge-previous").addEventListener("click", () => moveBridgeFocus(-1)); $("#bridge-next").addEventListener("click", () => moveBridgeFocus(1));
     document.querySelectorAll(".header-tabs [data-page]").forEach((button) => button.addEventListener("click", () => { const page = button.dataset.page; document.querySelectorAll(".page-view").forEach((view) => { view.hidden = view.id !== `page-${page}`; }); document.querySelectorAll(".header-tabs [data-page]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); }));
     document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((button) => button.addEventListener("click", () => { const tracking = button.dataset.tracking; document.querySelectorAll(".tracking-view").forEach((view) => { view.hidden = view.id !== `tracking-${tracking}`; }); document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); const latestPeriod = tracking === "resources" ? resourcePeriods().at(-1) : tracking === "funds" ? fundPeriods().at(-1) : periods().at(-1); $("#updated-at").textContent = updatedLabel(latestPeriod); if (tracking === "resources") requestAnimationFrame(() => renderResources()); if (tracking === "funds") requestAnimationFrame(() => renderFunds()); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });
@@ -705,7 +746,8 @@ async function init() {
     $("#clear-filters").addEventListener("click", resetFilters);
     document.querySelectorAll("[data-download-view]").forEach((button) => button.addEventListener("click", () => openDownloadDialog(button.dataset.downloadView)));
     $("#generate-download").addEventListener("click", () => { const selected = [...$("#download-options").querySelectorAll("input:checked:not(:disabled)")].map((input) => input.value); if (!selected.length) { $("#download-error").hidden = false; return; } $("#download-error").hidden = true; exportDashboardImage(activeDownloadView, selected); $("#download-dialog").close(); });
-    document.querySelectorAll(".table-pagination").forEach((pagination) => pagination.addEventListener("click", (event) => { const button = event.target.closest("[data-pagination]"); if (!button || button.disabled) return; const page = Number(button.dataset.page); if (button.dataset.pagination === "expenses") { expenseTablePage = page; renderTable(filteredRows()); } else if (button.dataset.pagination === "resources") { resourceTablePage = page; renderResourceTable(resourceFilteredRows(), [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1)); } else { fundTablePage = page; renderFundTable(fundFilteredRows(), [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1)); } }));
+    $("#guide-directory-table").addEventListener("click", (event) => { const button = event.target.closest("[data-guide-secretary]"); if (!button) return; const code = button.dataset.guideSecretary; guideExpandedSecretaries.has(code) ? guideExpandedSecretaries.delete(code) : guideExpandedSecretaries.add(code); renderGuideDirectory(); });
+    document.querySelectorAll(".table-pagination").forEach((pagination) => pagination.addEventListener("click", (event) => { const button = event.target.closest("[data-pagination]"); if (!button || button.disabled) return; const page = Number(button.dataset.page); if (button.dataset.pagination === "expenses") { expenseTablePage = page; renderTable(filteredRows()); } else if (button.dataset.pagination === "resources") { resourceTablePage = page; renderResourceTable(resourceFilteredRows(), [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1)); } else if (button.dataset.pagination === "guide") { guideTablePage = page; renderGuideDirectory(); } else { fundTablePage = page; renderFundTable(fundFilteredRows(), [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1)); } }));
     $("#resource-period-filter").addEventListener("click", (event) => {
       const yearButton = event.target.closest("[data-resource-year]");
       if (yearButton) { const year = yearButton.dataset.resourceYear, yearPeriods = resourcePeriods().filter((period) => period.endsWith(`/${year}`)), allSelected = yearPeriods.every((period) => resourceSelectedPeriods.has(period)); yearPeriods.forEach((period) => allSelected ? resourceSelectedPeriods.delete(period) : resourceSelectedPeriods.add(period)); }
