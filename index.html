@@ -4,19 +4,25 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
-    <title>Presupuesto Abierto · Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261013-3" />
+    <title>Presupuesto abierto de la ciudad de Santa Fe</title>
+    <link rel="stylesheet" href="styles.css?v=20261013-4" />
   </head>
   <body>
     <header class="site-header">
       <div class="header-top">
         <div class="header-brand">
-          <p class="eyebrow">Municipalidad de Santa Fe</p>
-          <h1>Presupuesto abierto</h1>
+          <p class="eyebrow">Transparencia presupuestaria municipal</p>
+          <h1>Presupuesto abierto de la ciudad de Santa Fe</h1>
           <p class="subtitle">Seguimiento de la ejecución presupuestaria municipal</p>
-          <p class="header-source">Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a></p>
         </div>
-        <p id="updated-at" class="update-note" aria-live="polite">Cargando información…</p>
+        <div class="header-actions">
+          <p id="updated-at" class="update-note" aria-live="polite"><span class="live-dot" aria-hidden="true"></span><span>Actualizado</span><strong id="updated-period">Cargando…</strong></p>
+          <nav class="header-social" aria-label="Redes sociales">
+            <a href="#" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" class="social-fill"/></svg></a>
+            <a href="#" aria-label="X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4l14 16M19 4L5 20"/></svg></a>
+            <a href="#" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.6a8 8 0 0 1-11.8 7L4 20l1.4-4A8 8 0 1 1 20 11.6Z"/><path d="M9 8.5c.7 2.3 2.2 3.8 4.5 4.6l1.3-1 1.7.8c-.2 1.5-1.2 2.3-2.8 2.2-3.8-.4-6.4-3-6.8-6.8-.1-1.6.7-2.6 2.2-2.8l.8 1.7Z"/></svg></a>
+          </nav>
+        </div>
       </div>
       <nav class="header-tabs" aria-label="Secciones principales">
         <button type="button" data-page="summary" aria-selected="false">Resumen</button>
@@ -94,6 +100,8 @@
       </aside>
 
       <div class="dashboard-primary">
+
+      <aside class="monthly-brief" aria-live="polite"><div><p class="eyebrow">Síntesis del mes</p><h2 id="expense-brief-title">Panorama presupuestario</h2></div><p id="expense-brief-text">Calculando los principales movimientos…</p></aside>
 
       <section class="summary-section" aria-labelledby="summary-title">
         <div class="summary-heading">
@@ -214,31 +222,32 @@
       <section class="insights-lab" aria-labelledby="insights-title">
         <div class="lab-heading"><p class="eyebrow">Laboratorio</p><h2 id="insights-title">Nuevas formas de analizar los datos</h2><p>Prototipos vinculados a los filtros actuales para evaluar qué visualizaciones conviene profundizar.</p></div>
         <div class="insights-grid">
-          <article class="panel insight-card insight-wide"><p class="eyebrow">Ritmo de ejecución</p><h3>Mapa de calor por programa y mes</h3><p class="insight-description">Compara cada programa con el ritmo esperado para el mes.</p><div id="execution-heatmap" class="heatmap-wrap"></div></article>
+          <article class="panel insight-card insight-wide"><div class="insight-card-heading"><div><p class="eyebrow">Ritmo de ejecución</p><h3>Mapa de calor por programa y mes</h3></div><button id="toggle-heatmap" class="small-action" type="button" aria-expanded="false">Ver todos</button></div><p class="insight-description">Compara cada programa con el ritmo esperado para el mes.</p><div id="execution-heatmap" class="heatmap-wrap"></div></article>
           <article class="panel insight-card"><p class="eyebrow">Origen del cambio</p><h3>Contribución a las modificaciones</h3><p id="contribution-note" class="insight-description"></p><div class="mini-chart"><canvas id="contribution-chart"></canvas></div></article>
-          <article class="panel insight-card"><p class="eyebrow">Priorización</p><h3>Alertas relevantes</h3><p class="insight-description">Combina atraso de ejecución y tamaño del crédito vigente.</p><ol id="budget-alerts" class="alert-list"></ol></article>
+          <article class="panel insight-card"><p class="eyebrow">Priorización</p><h3>Alertas relevantes</h3><p class="insight-description">Se incluyen desvíos de más de 5 puntos. La gravedad se ordena multiplicando los puntos de atraso por el crédito vigente: cuanto mayor es el atraso y el presupuesto involucrado, más alta es la alerta.</p><ol id="budget-alerts" class="alert-list"></ol></article>
           <article class="panel insight-card insight-wide year-comparison"><div><p class="eyebrow">Próxima etapa</p><h3>Comparación entre años</h3><p class="insight-description">El panel está preparado para comparar el mismo mes entre ejercicios cuando incorporemos datos de 2025 o 2027.</p></div><div class="year-placeholder"><strong>2026</strong><span>Primer año disponible</span></div></article>
         </div>
       </section>
       </section>
 
       <section id="tracking-resources" class="tracking-view resources-dashboard" role="tabpanel" hidden>
-        <div id="resource-layout" class="resource-layout filter-layout">
+        <div id="resource-layout" class="resource-layout filter-layout resource-top-layout">
           <aside class="panel resource-filters collapsible-filter-panel" aria-labelledby="resource-filters-title">
-            <div class="filter-sidebar-heading"><div><p class="eyebrow">Explorar</p><h2 id="resource-filters-title">Filtros de recursos</h2></div><button id="toggle-resource-filters" class="sidebar-toggle" type="button" aria-expanded="true" aria-label="Plegar filtros de recursos">‹</button></div>
+            <div class="filter-sidebar-heading"><div><p class="eyebrow">Combinar categorías</p><h2 id="resource-filters-title">Filtros de recursos</h2></div><button id="toggle-resource-filters" class="small-action" type="button" aria-expanded="true">Reducir filtros</button></div>
             <div id="resource-filter-body" class="resource-filter-stack">
-              <div><div class="filter-heading"><p class="filter-label">Períodos incluidos</p><button id="resource-toggle-periods" class="small-action" type="button">Quitar todos</button></div><div id="resource-period-filter" class="period-picker"></div></div>
-              <label class="filter-step">Rubro principal<select id="resource-major-filter"></select></label>
-              <label class="filter-step">Grupo de recursos<select id="resource-group-filter"></select><small>Se habilita al seleccionar un rubro.</small></label>
-              <label class="filter-step">Procedencia<select id="resource-origin-filter"></select><small>Se habilita al seleccionar un grupo.</small></label>
+              <section class="resource-filter-block resource-period-block"><div class="filter-heading"><p class="filter-label">Períodos</p><button id="resource-toggle-periods" class="small-action" type="button">Quitar todos</button></div><div id="resource-period-filter" class="period-picker"></div></section>
+              <section class="resource-filter-block"><div class="filter-heading"><p class="filter-label">Rubros</p><button class="small-action" type="button" data-clear-resource="major">Todos</button></div><div id="resource-major-options" class="multi-chip-list" role="group" aria-label="Rubros"></div></section>
+              <section class="resource-filter-block"><div class="filter-heading"><p class="filter-label">Detalles</p><button class="small-action" type="button" data-clear-resource="detail">Todos</button></div><div id="resource-detail-options" class="multi-chip-list multi-chip-scroll" role="group" aria-label="Detalles"></div></section>
+              <section class="resource-filter-block"><div class="filter-heading"><p class="filter-label">Procedencias</p><button class="small-action" type="button" data-clear-resource="origin">Todas</button></div><div id="resource-origin-options" class="multi-chip-list" role="group" aria-label="Procedencias"></div></section>
               <button id="resource-clear-filters" class="text-button resource-clear" type="button">Restablecer filtros</button>
             </div>
           </aside>
 
           <div class="resource-primary">
+            <aside class="monthly-brief" aria-live="polite"><div><p class="eyebrow">Síntesis del mes</p><h2 id="resource-brief-title">Panorama de la recaudación</h2></div><p id="resource-brief-text">Calculando los principales movimientos…</p></aside>
             <section class="resource-heading">
               <div><p class="eyebrow">Ingresos municipales</p><h2>Resumen de recursos</h2><p id="resource-summary-context" class="note"></p></div>
-              <div class="view-heading-actions"><span id="resource-loaded-status" class="resource-status">Actualizando…</span><button class="download-button" type="button" data-download-view="resources">Crear imagen</button></div>
+              <div class="view-heading-actions"><button class="download-button" type="button" data-download-view="resources">Crear imagen</button></div>
             </section>
             <section class="resource-metric-grid" aria-label="Indicadores de recursos">
               <article class="metric resource-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Estimación actualizada luego de ampliaciones o reducciones durante el año.</span></span></div><strong id="resource-metric-current">—</strong><small id="resource-current-note">—</small></article>
@@ -270,7 +279,7 @@
         <section class="resource-insights" aria-labelledby="resource-insights-title">
           <div class="lab-heading"><p class="eyebrow">Lecturas complementarias</p><h2 id="resource-insights-title">¿Qué explica la recaudación?</h2><p>Paneles exploratorios vinculados a los períodos, rubros y procedencias seleccionados.</p></div>
           <div class="resource-insight-grid">
-            <article class="panel resource-insight-card"><p class="eyebrow">Variación mensual</p><h3>Rubros que explican los ingresos del mes</h3><p id="resource-growth-note" class="insight-description"></p><div class="resource-mini-chart"><canvas id="resource-growth-chart"></canvas></div></article>
+            <article class="panel resource-insight-card"><p class="eyebrow">Variación mensual</p><h3>Qué explica los ingresos del mes</h3><div class="metric-switch resource-growth-switch" role="tablist" aria-label="Nivel de detalle del gráfico"><button class="active" type="button" data-resource-growth="major" aria-selected="true">Por rubro</button><button type="button" data-resource-growth="detail" aria-selected="false">Por detalle</button></div><p id="resource-growth-note" class="insight-description"></p><div class="resource-mini-chart"><canvas id="resource-growth-chart"></canvas></div></article>
             <article class="panel resource-insight-card"><p class="eyebrow">Composición</p><h3>Procedencia del recurso percibido</h3><p class="insight-description">Participación sobre el total acumulado del último período seleccionado.</p><div class="resource-origin-layout"><div class="resource-donut-chart"><canvas id="resource-origin-chart"></canvas></div><ul id="resource-origin-legend" class="resource-origin-legend"></ul></div></article>
             <article class="panel resource-insight-card"><p class="eyebrow">Ritmo anual</p><h3>Recaudación frente a lo esperado</h3><p id="resource-pace-note" class="insight-description"></p><div class="pace-columns"><div><strong>Más atrasados</strong><ol id="resource-pace-behind" class="resource-ranking-list"></ol></div><div><strong>Más adelantados</strong><ol id="resource-pace-ahead" class="resource-ranking-list"></ol></div></div></article>
             <article class="panel resource-insight-card resource-concentration-card"><p class="eyebrow">Concentración</p><h3>Principales conceptos recaudadores</h3><p id="resource-concentration-note" class="insight-description"></p><div class="resource-concentration-chart"><canvas id="resource-concentration-chart"></canvas></div></article>
@@ -291,7 +300,8 @@
           </aside>
 
           <div class="fund-primary">
-            <section class="fund-heading"><div><p class="eyebrow">Recursos afectados</p><h2>Resumen de Fondos Especiales</h2><p id="fund-summary-context" class="note"></p></div><div class="view-heading-actions"><span id="fund-loaded-status" class="fund-status">Actualizando…</span><button class="download-button" type="button" data-download-view="funds">Crear imagen</button></div></section>
+            <aside class="monthly-brief" aria-live="polite"><div><p class="eyebrow">Síntesis del mes</p><h2 id="fund-brief-title">Panorama de los fondos especiales</h2></div><p id="fund-brief-text">Calculando los principales movimientos…</p></aside>
+            <section class="fund-heading"><div><p class="eyebrow">Recursos afectados</p><h2>Resumen de Fondos Especiales</h2><p id="fund-summary-context" class="note"></p></div><div class="view-heading-actions"><button class="download-button" type="button" data-download-view="funds">Crear imagen</button></div></section>
             <section class="fund-metric-grid" aria-label="Indicadores de fondos especiales">
               <article class="metric fund-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Monto disponible o previsto para los recursos afectados del fondo.</span></span></div><strong id="fund-metric-current">—</strong><small id="fund-current-note">—</small></article>
               <article class="metric fund-metric"><div class="metric-heading"><p>Recurso percibido</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso percibido</strong>Ingresos afectados que efectivamente se cobraron.</span></span></div><strong id="fund-metric-perceived">—</strong><small id="fund-perceived-note">—</small></article>
@@ -357,11 +367,11 @@
     </dialog>
 
     <footer class="site-footer">
-      <div><strong>Presupuesto Abierto Santa Fe</strong><p>Una herramienta ciudadana para explorar la evolución del presupuesto municipal.</p></div>
-      <div class="footer-social"><strong>Redes sociales</strong><p>Instagram · X · Facebook · <a href="https://github.com/fransomagliasf/presupuesto-abierto-santa-fe">GitHub</a></p></div>
-      <div><strong>Datos y metodología</strong><p>Fuente: Municipalidad de Santa Fe. Importes publicados en los informes mensuales de ejecución.</p></div>
+      <div><strong>Presupuesto abierto de la ciudad de Santa Fe</strong><p>Una herramienta ciudadana para explorar la evolución del presupuesto municipal.</p></div>
+      <div><strong>Feedback y política de errores</strong><p>Próximamente vas a poder informar observaciones, inconsistencias o sugerencias desde este espacio.</p></div>
+      <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261013-3"></script>
+    <script src="app.js?v=20261013-4"></script>
   </body>
 </html>
