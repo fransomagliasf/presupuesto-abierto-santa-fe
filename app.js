@@ -24,7 +24,7 @@ const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", curren
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
 const updateDateFormat = new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", timeZone: "UTC" });
 let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, bridgeFocusPeriod = null, budgetChart = null, contributionChart = null, tableSort = { key: "name", direction: "asc" };
-let resourceData = [], resourceSelectedPeriods = new Set(), resourceSelectedMajors = new Set(), resourceSelectedDetails = new Set(), resourceSelectedOrigins = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceGrowthDimension = "major", resourceChart = null, resourceGrowthChart = null, resourceOriginChart = null, resourceConcentrationChart = null;
+let resourceData = [], resourceSelectedPeriods = new Set(), resourceSelectedMajors = new Set(), resourceSelectedDetails = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceGrowthDimension = "major", resourceChart = null, resourceGrowthChart = null, resourceOriginChart = null, resourceConcentrationChart = null;
 let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Set(), fundActiveChart = "flow", fundRankingMetric = "perceived", fundChart = null, fundOriginChart = null;
 let financingData = [], financingCompositionChart = null, financingExecutionChart = null;
 const TABLE_PAGE_SIZE = 5;
@@ -170,13 +170,6 @@ function renderMetrics(rows, latestPeriod, previousPeriod) {
   const executionDifference = execution === null || expected === null ? null : execution - expected;
   const executionNote = $("#metric-execution-benchmark"); executionNote.classList.remove("positive", "negative"); executionNote.textContent = executionDifference === null ? "Sin período" : `${executionDifference >= 0 ? "+" : "−"}${Math.abs(executionDifference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p. frente al ritmo esperado`; if (executionDifference !== null && executionDifference !== 0) executionNote.classList.add(executionDifference > 0 ? "positive" : "negative");
   $("#summary-context").textContent = selectionDescription(latestPeriod, previousPeriod);
-}
-function renderExpenseBrief(latestRows, previousRows, latestPeriod, previousPeriod) {
-  const title = $("#expense-brief-title"), copy = $("#expense-brief-text");
-  if (!latestPeriod || !latestRows.length) { title.textContent = "Panorama presupuestario"; copy.textContent = "Seleccioná al menos un período para generar la síntesis."; return; }
-  const values = totals(latestRows), previous = previousRows?.length ? totals(previousRows) : null, rate = executionPercent(values.accrued, values.current), currentChange = previous ? values.current - previous.current : null, accruedChange = previous ? values.accrued - previous.accrued : null;
-  title.textContent = `Qué pasó en ${labelPeriod(latestPeriod)}`;
-  copy.textContent = previous ? `La ejecución llegó al ${formatPercent(rate)} del crédito vigente. Frente a ${labelPeriod(previousPeriod)}, el crédito cambió ${signedVariation(currentChange, previous.current)} y el devengado creció ${signedVariation(accruedChange, previous.accrued)}.` : `La ejecución acumulada alcanzó el ${formatPercent(rate)} sobre un crédito vigente de ${formatCents(values.current)}.`;
 }
 const barValueLabelsPlugin = {
   id: "barValueLabels",
@@ -392,8 +385,8 @@ function renderTable(rows) {
 }
 function render() {
   const rows = filteredRows(), periodsSelected = selectedPeriodSequence(), latestPeriod = periodsSelected.at(-1), previousPeriod = periodsSelected.at(-2);
-  const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
-  renderExpenseBrief(latestRows, previousRows, latestPeriod, previousPeriod); renderMetrics(latestRows, latestPeriod, previousPeriod); renderRankings(latestRows, latestPeriod); renderChart(rows); renderTable(rows); renderInsights(rows, latestRows, latestPeriod); renderFinancingAnalysis();
+  const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod);
+  renderMetrics(latestRows, latestPeriod, previousPeriod); renderRankings(latestRows, latestPeriod); renderChart(rows); renderTable(rows); renderInsights(rows, latestRows, latestPeriod); renderFinancingAnalysis();
 }
 function guideDirectoryEntries() {
   const latestPeriod = periods().at(-1), rows = data.filter((row) => row.fecha_corte === latestPeriod), groups = new Map();
@@ -475,16 +468,13 @@ function resourceTotals(rows) {
 function collectionPercent(perceived, current) { return current > 0 ? perceived / current * 100 : null; }
 function renderResourceOptionButtons() {
   const majorNames = unique(resourceData.map((row) => row.rubro_mayor_nombre));
-  const detailRows = resourceSelectedMajors.size ? resourceData.filter((row) => resourceSelectedMajors.has(row.rubro_mayor_nombre)) : resourceData;
+  const detailRows = resourceSelectedMajors.size ? resourceData.filter((row) => resourceSelectedMajors.has(row.rubro_mayor_nombre)) : [];
   const detailNames = unique(detailRows.map((row) => row.rubro_nombre));
   resourceSelectedDetails = new Set([...resourceSelectedDetails].filter((name) => detailNames.includes(name)));
-  const originRows = resourceSelectedDetails.size ? detailRows.filter((row) => resourceSelectedDetails.has(row.rubro_nombre)) : detailRows;
-  const originNames = unique(originRows.map((row) => row.procedencia_nombre).filter(Boolean));
-  resourceSelectedOrigins = new Set([...resourceSelectedOrigins].filter((name) => originNames.includes(name)));
   const buttons = (names, selected, type) => names.length ? names.map((name) => `<button type="button" class="${selected.has(name) ? "active" : ""}" data-resource-filter="${type}" data-value="${escapeHtml(name)}" aria-pressed="${selected.has(name)}">${escapeHtml(name)}</button>`).join("") : '<span class="multi-chip-empty">No hay opciones para esta combinación.</span>';
   $("#resource-major-options").innerHTML = buttons(majorNames, resourceSelectedMajors, "major");
-  $("#resource-detail-options").innerHTML = buttons(detailNames, resourceSelectedDetails, "detail");
-  $("#resource-origin-options").innerHTML = buttons(originNames, resourceSelectedOrigins, "origin");
+  const groupedDetails = new Map(); detailRows.forEach((row) => { const group = groupedDetails.get(row.rubro_mayor_nombre) || new Set(); group.add(row.rubro_nombre); groupedDetails.set(row.rubro_mayor_nombre, group); });
+  $("#resource-detail-options").innerHTML = [...groupedDetails.entries()].sort(([a], [b]) => a.localeCompare(b, "es")).map(([major, details]) => { const names = [...details].sort((a, b) => a.localeCompare(b, "es")); return `<section class="resource-detail-group"><div class="resource-detail-group-heading"><h3>${escapeHtml(major)}</h3><span class="resource-detail-count">${names.length} ${names.length === 1 ? "detalle" : "detalles"}</span></div><div class="resource-detail-tags">${buttons(names, resourceSelectedDetails, "detail")}</div></section>`; }).join("") || '<span class="multi-chip-empty">Seleccioná un rubro para conocer sus detalles.</span>';
 }
 function fillResourceFilters() {
   resourceSelectedPeriods = new Set(resourcePeriods());
@@ -494,7 +484,7 @@ function fillResourceFilters() {
   renderResourceOptionButtons();
 }
 function resourceFilteredRows(includeAllPeriods = false) {
-  return resourceData.filter((row) => (includeAllPeriods || resourceSelectedPeriods.has(row.fecha_corte)) && (!resourceSelectedMajors.size || resourceSelectedMajors.has(row.rubro_mayor_nombre)) && (!resourceSelectedDetails.size || resourceSelectedDetails.has(row.rubro_nombre)) && (!resourceSelectedOrigins.size || resourceSelectedOrigins.has(row.procedencia_nombre)));
+  return resourceData.filter((row) => (includeAllPeriods || resourceSelectedPeriods.has(row.fecha_corte)) && (!resourceSelectedMajors.size || resourceSelectedMajors.has(row.rubro_mayor_nombre)) && (!resourceSelectedDetails.size || resourceSelectedDetails.has(row.rubro_nombre)));
 }
 function aggregateResourcePeriods(rows) {
   const grouped = new Map();
@@ -503,7 +493,7 @@ function aggregateResourcePeriods(rows) {
 }
 function resourceContext(period) {
   const selection = (items, allLabel) => !items.size ? allLabel : items.size <= 2 ? [...items].join(" + ") : `${items.size} seleccionados`;
-  return `Período: ${period ? labelPeriod(period) : "sin selección"} · Rubros: ${selection(resourceSelectedMajors, "Todos")} · Detalles: ${selection(resourceSelectedDetails, "Todos")} · Procedencias: ${selection(resourceSelectedOrigins, "Todas")}`;
+  return `Período: ${period ? labelPeriod(period) : "sin selección"} · Rubros: ${selection(resourceSelectedMajors, "Todos")} · Detalles: ${selection(resourceSelectedDetails, "Todos")}`;
 }
 function renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod) {
   const values = resourceTotals(latestRows), previous = previousRows ? resourceTotals(previousRows) : null, rate = collectionPercent(values.perceived, values.current), expected = latestPeriod ? Number(latestPeriod.split("/")[1]) * 100 / 12 : null;
@@ -517,13 +507,6 @@ function renderResourceMetrics(latestRows, previousRows, latestPeriod, previousP
   setNote("#resource-rate-note", rateDifference === null ? "Sin período" : `${rateDifference >= 0 ? "+" : "−"}${Math.abs(rateDifference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p. frente al ritmo esperado`, rateDifference);
   $("#resource-summary-context").textContent = resourceContext(latestPeriod);
 }
-function renderResourceBrief(latestRows, previousRows, latestPeriod, previousPeriod) {
-  const title = $("#resource-brief-title"), copy = $("#resource-brief-text");
-  if (!latestPeriod || !latestRows.length) { title.textContent = "Panorama de la recaudación"; copy.textContent = "Seleccioná al menos un período para generar la síntesis."; return; }
-  const values = resourceTotals(latestRows), previous = previousRows?.length ? resourceTotals(previousRows) : null, rate = collectionPercent(values.perceived, values.current), perceivedChange = previous ? values.perceived - previous.perceived : null, estimateChange = values.current - values.estimated;
-  title.textContent = `Qué pasó en ${labelPeriod(latestPeriod)}`;
-  copy.textContent = previous ? `Se recaudó el ${formatPercent(rate)} del recurso vigente. Desde ${labelPeriod(previousPeriod)} ingresaron ${formatCents(perceivedChange)} y la estimación vigente se ubica ${signedVariation(estimateChange, values.estimated)} respecto de la original.` : `La recaudación acumulada alcanzó ${formatCents(values.perceived)}, equivalente al ${formatPercent(rate)} del recurso vigente.`;
-}
 function renderResourceQuality() {
   const row = resourceData[0], container = $("#resource-quality-note");
   if (!row || row.total_general_reconcilia !== "no") { container.hidden = true; return; }
@@ -531,13 +514,28 @@ function renderResourceQuality() {
   container.hidden = false;
   container.innerHTML = `<strong>Control de calidad del documento fuente</strong><span>La suma de los conceptos es ${formatExactCents(difference)} menor que el TOTAL GENERAL impreso en devengado y percibido. La diferencia se repite en los nueve PDF; se muestran los conceptos extraídos sin alterar.</span>`;
 }
+function renderResourceChartReading(values) {
+  const latest = values.at(-1), previous = values.at(-2), title = $("#resource-reading-title"), value = $("#resource-reading-value"), text = $("#resource-reading-text"), context = $("#resource-reading-context");
+  if (!latest) { title.textContent = "Sin información disponible"; value.textContent = "—"; text.textContent = "Modificá los filtros o seleccioná al menos un período."; context.textContent = ""; return; }
+  if (resourceActiveChart === "collection") {
+    const difference = latest.rate === null ? null : latest.rate - latest.expected;
+    title.textContent = "Nivel de recaudación"; value.textContent = formatPercent(latest.rate); text.textContent = difference === null ? "No hay recurso vigente para calcular el porcentaje." : `El ritmo lineal esperado a esta altura del año es ${formatPercent(latest.expected)}. La selección está ${Math.abs(difference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} puntos ${difference >= 0 ? "por encima" : "por debajo"} de esa referencia.`;
+  } else if (resourceActiveChart === "income") {
+    const change = previous ? latest.monthlyPerceived - previous.monthlyPerceived : null;
+    title.textContent = "Ingresos del último mes"; value.textContent = formatCents(latest.monthlyPerceived); text.textContent = change === null ? "Es el ingreso registrado desde el cierre anterior." : `Frente al movimiento del mes anterior, representa ${signedVariation(change, previous.monthlyPerceived)}.`;
+  } else {
+    title.textContent = "Última modificación"; value.textContent = `${latest.monthlyModification >= 0 ? "+" : "−"}${formatCents(Math.abs(latest.monthlyModification))}`; text.textContent = `El cambio acumulado entre el recurso vigente y el estimado es ${latest.modification >= 0 ? "+" : "−"}${formatCents(Math.abs(latest.modification))}.`;
+  }
+  value.classList.toggle("negative", resourceActiveChart !== "collection" && (resourceActiveChart === "income" ? latest.monthlyPerceived < 0 : latest.monthlyModification < 0));
+  context.textContent = resourceContext(latest.period);
+}
 function renderResourceChart(rows) {
   const selected = aggregateResourcePeriods(rows), all = aggregateResourcePeriods(resourceFilteredRows(true)), allIndex = new Map(all.map((value, index) => [value.period, index])), canvas = $("#resource-chart"), empty = $("#resource-chart-empty");
   if (resourceChart) { resourceChart.destroy(); resourceChart = null; }
   empty.hidden = Boolean(selected.length); canvas.hidden = !selected.length;
-  if (!selected.length) { empty.textContent = "No hay datos para esta selección."; return; }
-  if (typeof Chart === "undefined") { canvas.hidden = true; empty.hidden = false; empty.textContent = "No se pudo cargar la biblioteca de gráficos."; return; }
+  if (!selected.length) { empty.textContent = "No hay datos para esta selección."; renderResourceChartReading([]); return; }
   const values = selected.map((value) => { const index = allIndex.get(value.period), previous = index > 0 ? all[index - 1] : null; return { ...value, rate: collectionPercent(value.perceived, value.current), accruedRate: collectionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12, monthlyPerceived: value.perceived - (previous?.perceived || 0), modification: value.current - value.estimated, monthlyModification: (value.current - value.estimated) - (previous ? previous.current - previous.estimated : 0) }; });
+  renderResourceChartReading(values);
   let type = "line", datasets, y, tooltipFormatter;
   if (resourceActiveChart === "collection") {
     datasets = [
@@ -560,6 +558,7 @@ function renderResourceChart(rows) {
     ]; y = { min: -limit, max: limit, ticks: { stepSize: step, callback: formatAxisAmount } }; tooltipFormatter = (context) => `${context.dataset.label}: ${context.parsed.y >= 0 ? "+" : ""}${formatCents(context.parsed.y)}`;
     $("#resource-chart-title").textContent = "Cambios en la estimación de recursos"; $("#resource-chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento mensual <span class="legend-negative"></span>Reducción mensual <span class="legend-cumulative"></span>Acumulado'; $("#resource-chart-note").textContent = "Cada barra compara la modificación acumulada con el mes anterior; la línea muestra la diferencia total entre vigente y estimado.";
   }
+  if (typeof Chart === "undefined") { canvas.hidden = true; empty.hidden = false; empty.textContent = "No se pudo cargar la biblioteca de gráficos."; return; }
   resourceChart = new Chart(canvas, { type, data: { labels: values.map((value) => labelPeriod(value.period)), datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, callbacks: { label: tooltipFormatter } } }, scales: { x: { grid: { display: false }, border: { display: false } }, y: { ...y, border: { display: false }, grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#dce3eb", lineWidth: (context) => context.tick.value === 0 ? 2 : 1 }, ticks: { ...y.ticks, color: "#60708a", padding: 10 } } } } });
 }
 function resourceAmountCell(value, total) { return `<td class="number">${formatCents(value)}<small class="cell-share">(${columnShare(value, total)} del total)</small></td>`; }
@@ -635,10 +634,10 @@ function renderResourceConcentration(latestRows, renderGraph) {
 function renderResourceInsights(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph) { renderResourceGrowth(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph); renderResourceOrigins(latestRows, renderGraph); renderResourcePace(latestRows, latestPeriod); renderResourceConcentration(latestRows, renderGraph); }
 function renderResources(renderGraph = true) {
   const rows = resourceFilteredRows(), selected = [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })), latestPeriod = selected.at(-1), previousPeriod = selected.at(-2), latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
-  renderResourceBrief(latestRows, previousRows, latestPeriod, previousPeriod); renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderResourceQuality(); renderResourceTable(rows, latestPeriod); renderResourceInsights(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph); if (renderGraph) renderResourceChart(rows);
+  renderResourceMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderResourceQuality(); renderResourceTable(rows, latestPeriod); renderResourceInsights(latestRows, previousRows, latestPeriod, previousPeriod, renderGraph); if (renderGraph) renderResourceChart(rows);
 }
 function resetResourceFilters() {
-  resourceSelectedPeriods = new Set(resourcePeriods()); resourceSelectedMajors.clear(); resourceSelectedDetails.clear(); resourceSelectedOrigins.clear(); resourceExpandedMajors.clear(); resourceTablePage = 1; renderResourceOptionButtons();
+  resourceSelectedPeriods = new Set(resourcePeriods()); resourceSelectedMajors.clear(); resourceSelectedDetails.clear(); resourceExpandedMajors.clear(); resourceTablePage = 1; renderResourceOptionButtons();
   document.querySelectorAll("[data-resource-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#resource-toggle-periods").textContent = "Quitar todos"; renderResources();
 }
 function fundPeriods() { return unique(fundData.map((row) => row.fecha_corte)).sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
@@ -681,13 +680,6 @@ function renderFundMetrics(latestRows, previousRows, latestPeriod, previousPerio
   setNote("#fund-balance-note", balance >= 0 ? "Ingresos percibidos por encima de los pagos" : "Los pagos utilizaron ingresos o saldos previos", balance);
   $("#fund-summary-context").textContent = fundContext(latestPeriod);
 }
-function renderFundBrief(latestRows, previousRows, latestPeriod, previousPeriod) {
-  const title = $("#fund-brief-title"), copy = $("#fund-brief-text");
-  if (!latestPeriod || !latestRows.length) { title.textContent = "Panorama de los fondos especiales"; copy.textContent = "Seleccioná al menos un período para generar la síntesis."; return; }
-  const values = fundTotals(latestRows), previous = previousRows?.length ? fundTotals(previousRows) : null, balance = values.perceived - values.paid, perceivedChange = previous ? values.perceived - previous.perceived : null, paidChange = previous ? values.paid - previous.paid : null;
-  title.textContent = `Qué pasó en ${labelPeriod(latestPeriod)}`;
-  copy.textContent = previous ? `Desde ${labelPeriod(previousPeriod)} se percibieron ${formatCents(perceivedChange)} y se pagaron ${formatCents(paidChange)}. El saldo simple entre ingresos percibidos y pagos acumulados es ${formatCents(balance)}.` : `Los fondos acumulan ${formatCents(values.perceived)} percibidos y ${formatCents(values.paid)} pagados, con un saldo simple de ${formatCents(balance)}.`;
-}
 function renderFundChart(rows) {
   const selected = aggregateFundPeriods(rows), all = aggregateFundPeriods(fundFilteredRows(true)), allIndex = new Map(all.map((value, index) => [value.period, index])), canvas = $("#fund-chart"), empty = $("#fund-chart-empty");
   if (fundChart) { fundChart.destroy(); fundChart = null; } empty.hidden = Boolean(selected.length); canvas.hidden = !selected.length;
@@ -728,7 +720,7 @@ function renderFundInsights(latestRows, renderGraph) {
 }
 function renderFunds(renderGraph = true) {
   const rows = fundFilteredRows(), selected = [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })), latestPeriod = selected.at(-1), previousPeriod = selected.at(-2), latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
-  renderFundBrief(latestRows, previousRows, latestPeriod, previousPeriod); renderFundMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderFundTable(rows, latestPeriod); renderFundInsights(latestRows, renderGraph); if (renderGraph) renderFundChart(rows);
+  renderFundMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderFundTable(rows, latestPeriod); renderFundInsights(latestRows, renderGraph); if (renderGraph) renderFundChart(rows);
 }
 function resetFundFilters() { fundSelectedPeriods = new Set(fundPeriods()); fundExpandedOrigins.clear(); fundTablePage = 1; $("#fund-origin-filter").value = ""; $("#fund-name-filter").value = ""; fillFundNameFilter(); document.querySelectorAll("[data-fund-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#fund-toggle-periods").textContent = "Quitar todos"; renderFunds(); }
 function setupFilterPanelToggle(buttonSelector, bodySelector, layoutSelector, name) {
@@ -789,7 +781,7 @@ async function init() {
       document.querySelectorAll("[data-resource-period]").forEach((button) => { const active = resourceSelectedPeriods.has(button.dataset.resourcePeriod); button.classList.toggle("active", active); button.setAttribute("aria-pressed", String(active)); }); $("#resource-toggle-periods").textContent = resourceSelectedPeriods.size === resourcePeriods().length ? "Quitar todos" : "Seleccionar todos"; renderResources();
     });
     $("#resource-toggle-periods").addEventListener("click", () => { resourceSelectedPeriods = resourceSelectedPeriods.size === resourcePeriods().length ? new Set() : new Set(resourcePeriods()); document.querySelectorAll("[data-resource-period]").forEach((button) => { const active = resourceSelectedPeriods.has(button.dataset.resourcePeriod); button.classList.toggle("active", active); button.setAttribute("aria-pressed", String(active)); }); $("#resource-toggle-periods").textContent = resourceSelectedPeriods.size ? "Quitar todos" : "Seleccionar todos"; renderResources(); });
-    $("#resource-filter-body").addEventListener("click", (event) => { const clear = event.target.closest("[data-clear-resource]"); if (clear) { ({ major: resourceSelectedMajors, detail: resourceSelectedDetails, origin: resourceSelectedOrigins })[clear.dataset.clearResource].clear(); renderResourceOptionButtons(); renderResources(); return; } const button = event.target.closest("[data-resource-filter]"); if (!button) return; const sets = { major: resourceSelectedMajors, detail: resourceSelectedDetails, origin: resourceSelectedOrigins }, selected = sets[button.dataset.resourceFilter], value = button.dataset.value; selected.has(value) ? selected.delete(value) : selected.add(value); resourceExpandedMajors.clear(); resourceTablePage = 1; renderResourceOptionButtons(); renderResources(); });
+    $("#resource-filter-body").addEventListener("click", (event) => { const clear = event.target.closest("[data-clear-resource]"); if (clear) { ({ major: resourceSelectedMajors, detail: resourceSelectedDetails })[clear.dataset.clearResource].clear(); renderResourceOptionButtons(); renderResources(); return; } const button = event.target.closest("[data-resource-filter]"); if (!button) return; const sets = { major: resourceSelectedMajors, detail: resourceSelectedDetails }, selected = sets[button.dataset.resourceFilter], value = button.dataset.value; selected.has(value) ? selected.delete(value) : selected.add(value); resourceExpandedMajors.clear(); resourceTablePage = 1; renderResourceOptionButtons(); renderResources(); });
     $("#resource-clear-filters").addEventListener("click", resetResourceFilters);
     $("#resource-detail-table").addEventListener("click", (event) => { const button = event.target.closest("[data-resource-major]"); if (!button) return; const key = button.dataset.resourceMajor; resourceExpandedMajors.has(key) ? resourceExpandedMajors.delete(key) : resourceExpandedMajors.add(key); renderResourceTable(resourceFilteredRows(), [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1)); });
     document.querySelectorAll("[data-resource-chart]").forEach((button) => button.addEventListener("click", () => { resourceActiveChart = button.dataset.resourceChart; document.querySelectorAll("[data-resource-chart]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); renderResourceChart(resourceFilteredRows()); }));
