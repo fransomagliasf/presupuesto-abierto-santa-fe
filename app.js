@@ -23,7 +23,7 @@ const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "
 const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
 const updateDateFormat = new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", timeZone: "UTC" });
-let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, bridgeFocusPeriod = null, budgetChart = null, contributionChart = null, tableSort = { key: "accrued", direction: "desc" };
+let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = false, bridgeFocusPeriod = null, budgetChart = null, contributionChart = null, tableSort = { key: "name", direction: "asc" };
 let resourceData = [], resourceSelectedPeriods = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceChart = null, resourceGrowthChart = null, resourceOriginChart = null, resourceConcentrationChart = null;
 let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Set(), fundActiveChart = "flow", fundRankingMetric = "perceived", fundChart = null, fundOriginChart = null;
 let financingData = [], financingCompositionChart = null, financingExecutionChart = null;
@@ -83,7 +83,7 @@ function fillFilters() {
   populateSelect("#jurisdiction-filter", unique(data.map((r) => r.jurisdiccion_nombre)), "Todas las secretarías");
   fillExpenseDependentFilters();
 }
-function programsForSelectedJurisdiction() { const jurisdiction = $("#jurisdiction-filter").value; return unique(data.filter((row) => row.jurisdiccion_nombre === jurisdiction).map((row) => row.programa_nombre)); }
+function programsForSelectedJurisdiction() { const jurisdiction = $("#jurisdiction-filter").value, programs = new Map(); data.filter((row) => row.jurisdiccion_nombre === jurisdiction).forEach((row) => programs.set(row.programa_codigo, row.programa_nombre)); return [...programs.entries()].sort(([codeA], [codeB]) => codeA.localeCompare(codeB, "es", { numeric: true })).map(([, name]) => name); }
 function expenseRowsForDependentFilters() {
   const jurisdiction = $("#jurisdiction-filter").value;
   if (!jurisdiction) return data;
@@ -186,6 +186,15 @@ const resourceGrowthLabelsPlugin = {
     const dataset = chart.data.datasets[0], meta = chart.getDatasetMeta(0), context = chart.ctx;
     context.save(); context.font = "700 11px system-ui, sans-serif"; context.textBaseline = "middle";
     meta.data.forEach((bar, index) => { const value = dataset.data[index], label = `${formatBillions(value)} (${formatPercent(dataset.shares[index])})`; context.fillStyle = value >= 0 ? "#187347" : "#a93642"; context.textAlign = value >= 0 ? "left" : "right"; context.fillText(label, bar.x + (value >= 0 ? 8 : -8), bar.y); });
+    context.restore();
+  },
+};
+const contributionValueLabelsPlugin = {
+  id: "contributionValueLabels",
+  afterDatasetsDraw(chart) {
+    const dataset = chart.data.datasets[0], meta = chart.getDatasetMeta(0), context = chart.ctx;
+    context.save(); context.font = "700 11px system-ui, sans-serif"; context.textBaseline = "middle";
+    meta.data.forEach((bar, index) => { const value = dataset.data[index]; context.fillStyle = value >= 0 ? "#187347" : "#a93642"; context.textAlign = value >= 0 ? "left" : "right"; context.fillText(`${value > 0 ? "+" : ""}${formatAxisAmount(value)}`, bar.x + (value >= 0 ? 8 : -8), bar.y); });
     context.restore();
   },
 };
@@ -300,7 +309,7 @@ function heatClass(execution, expected) { if (execution === null) return "heat-u
 function renderHeatmap(rows, latestPeriod) {
   const container = $("#execution-heatmap"), visiblePeriods = aggregatePeriods(rows).map((value) => value.period);
   if (!latestPeriod || !visiblePeriods.length) { container.innerHTML = '<p class="insight-empty">No hay períodos seleccionados.</p>'; return; }
-  const groups = groupedRows(rows, (row) => `${row.jurisdiccion_nombre}\u0000${row.programa_nombre}`), ranked = [...groups.values()].map((group) => ({ secretary: group[0].jurisdiccion_nombre, program: group[0].programa_nombre, group, credit: sum(group.filter((row) => row.fecha_corte === latestPeriod), "credito_vigente_centavos") })).sort((a, b) => b.credit - a.credit).slice(0, 10);
+  const groups = groupedRows(rows, (row) => `${row.jurisdiccion_nombre}\u0000${row.programa_nombre}`), ranked = [...groups.values()].map((group) => ({ secretary: group[0].jurisdiccion_nombre, program: group[0].programa_nombre, group, credit: sum(group.filter((row) => row.fecha_corte === latestPeriod), "credito_vigente_centavos") })).sort((a, b) => b.credit - a.credit).slice(0, 10).sort((a, b) => a.secretary.localeCompare(b.secretary, "es") || b.credit - a.credit);
   const header = visiblePeriods.map((period) => `<th>${escapeHtml(labelPeriod(period).split(" ")[0])}</th>`).join("");
   const body = ranked.map(({ secretary, program, group }) => `<tr><th><span class="heatmap-label"><strong>${escapeHtml(secretary)}</strong><span>${escapeHtml(program)}</span></span></th>${visiblePeriods.map((period) => { const periodRows = group.filter((row) => row.fecha_corte === period), values = totals(periodRows), execution = executionPercent(values.accrued, values.current), expected = Number(period.split("/")[1]) * 100 / 12; return `<td class="${heatClass(execution, expected)}" title="${formatPercent(execution)} ejecutado; ${formatPercent(expected)} esperado">${formatPercent(execution)}</td>`; }).join("")}</tr>`).join("");
   container.innerHTML = ranked.length ? `<table class="heatmap-table"><thead><tr><th>Secretaría y programa</th>${header}</tr></thead><tbody>${body}</tbody></table><p class="note">Se muestran los 10 programas con mayor crédito vigente del último período seleccionado.</p>` : '<p class="insight-empty">No hay programas para mostrar.</p>';
@@ -315,7 +324,7 @@ function renderContribution(rows, latestPeriod) {
   $("#contribution-note").textContent = latestPeriod ? `Mayores aportes acumulados por ${byProgram ? "programa" : "secretaría"} a ${labelPeriod(latestPeriod)}.` : "Sin período seleccionado.";
   if (!items.length || typeof Chart === "undefined") return;
   const largest = Math.max(...items.map((item) => Math.abs(item.value)), 1), step = niceStep(largest / 3), limit = Math.ceil(largest / step) * step;
-  contributionChart = new Chart($("#contribution-chart"), { type: "bar", data: { labels: items.map((item) => item.label), datasets: [{ data: items.map((item) => item.value), backgroundColor: items.map((item) => item.value >= 0 ? "#26905f" : "#c74c56"), borderRadius: 4 }] }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.parsed.x >= 0 ? "+" : ""}${formatCents(context.parsed.x)}` } } }, scales: { x: { min: -limit, max: limit, grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#e3e8ef" }, ticks: { stepSize: step, callback: formatAxisAmount } }, y: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 10 } } } } } });
+  contributionChart = new Chart($("#contribution-chart"), { type: "bar", data: { labels: items.map((item) => item.label), datasets: [{ data: items.map((item) => item.value), backgroundColor: items.map((item) => item.value >= 0 ? "#26905f" : "#c74c56"), borderRadius: 4 }] }, plugins: [contributionValueLabelsPlugin], options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, layout: { padding: { left: 85, right: 85 } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.parsed.x >= 0 ? "+" : ""}${formatCents(context.parsed.x)}` } } }, scales: { x: { min: -limit, max: limit, grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#e3e8ef" }, ticks: { stepSize: step, callback: formatAxisAmount } }, y: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 10 } } } } } });
 }
 function renderAlerts(rows, latestPeriod) {
   const container = $("#budget-alerts"); if (!latestPeriod) { container.innerHTML = '<li class="insight-empty">Sin período seleccionado.</li>'; return; }
@@ -363,7 +372,8 @@ function renderTable(rows) {
   $("#detail-table").innerHTML = pageState.items.map(([name, secretaryRows]) => {
     const open = expandedSecretaries.has(name), subdivisions = new Map();
     secretaryRows.forEach((row) => { const label = breakdown === "program" ? row.programa_nombre : breakdown === "source" ? row.fuente_financiamiento_nombre : row.objeto_gasto_nombre; const group = subdivisions.get(label) || []; group.push(row); subdivisions.set(label, group); });
-    const children = open ? sortedGroups([...subdivisions.entries()]).map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod, columnTotals)}</tr>`).join("") : "";
+    const subdivisionEntries = breakdown === "program" && tableSort.key === "name" ? [...subdivisions.entries()].sort((a, b) => totals(b[1]).accrued - totals(a[1]).accrued) : sortedGroups([...subdivisions.entries()]);
+    const children = open ? subdivisionEntries.map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod, columnTotals)}</tr>`).join("") : "";
     return `<tr class="secretary-total"><td><button class="expand-row" type="button" data-secretary="${escapeHtml(name)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(name)}</button></td><td>Total de secretaría</td>${totalCells(totals(secretaryRows), latestPeriod, columnTotals)}</tr>${children}`;
   }).join("");
   renderPagination("#expense-pagination", pageState, "expenses", entries.length);
@@ -379,7 +389,7 @@ function render() {
 function guideDirectoryEntries() {
   const latestPeriod = periods().at(-1), rows = data.filter((row) => row.fecha_corte === latestPeriod), groups = new Map();
   rows.forEach((row) => { const item = groups.get(row.jurisdiccion_codigo) || { code: row.jurisdiccion_codigo, name: row.jurisdiccion_nombre, programs: new Map() }; item.programs.set(row.programa_codigo, row.programa_nombre); groups.set(row.jurisdiccion_codigo, item); });
-  return [...groups.values()].map((item) => ({ ...item, programs: [...item.programs.entries()].map(([code, name]) => ({ code, name })).sort((a, b) => a.name.localeCompare(b.name, "es")) })).sort((a, b) => a.name.localeCompare(b.name, "es"));
+  return [...groups.values()].map((item) => ({ ...item, programs: [...item.programs.entries()].map(([code, name]) => ({ code, name })).sort((a, b) => a.code.localeCompare(b.code, "es", { numeric: true })) })).sort((a, b) => a.name.localeCompare(b.name, "es"));
 }
 function renderGuideDirectory() {
   const entries = guideDirectoryEntries(), pageState = paginate(entries, guideTablePage, 10); guideTablePage = pageState.page;
@@ -407,7 +417,7 @@ function renderFinancingAnalysis() {
   financingExecutionChart = new Chart(executionCanvas, { type: "bar", plugins: [expectedLine], data: { labels: items.map((item) => item.label), datasets: [{ data: rates, backgroundColor: items.map((item) => item.color), borderRadius: 5, maxBarThickness: 34 }] }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, financingExpectedLine: { value: expected }, tooltip: { callbacks: { label: (context) => `Ejecutado: ${formatPercent(context.parsed.x)}` } } }, scales: { x: { beginAtZero: true, max: Math.max(100, Math.ceil(Math.max(...rates) / 10) * 10), grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` } }, y: { grid: { display: false }, ticks: { color: "#46556d", font: { size: 11 } } } } } });
 }
 function resetFilters() {
-  selectedPeriods = new Set(periods()); selectedPrograms.clear(); expandedSecretaries.clear(); expenseTablePage = 1; bridgeFocusPeriod = null; $("#jurisdiction-filter").value = ""; $("#source-filter").value = ""; $("#object-filter").value = "";
+  selectedPeriods = new Set(periods()); selectedPrograms.clear(); expandedSecretaries.clear(); expenseTablePage = 1; bridgeFocusPeriod = null; tableSort = { key: "name", direction: "asc" }; $("#jurisdiction-filter").value = ""; $("#source-filter").value = ""; $("#object-filter").value = "";
   document.querySelectorAll(".month-option[data-period]").forEach((chip) => { chip.classList.add("active"); chip.setAttribute("aria-pressed", "true"); });
   $("#toggle-periods").textContent = "Quitar todos"; renderProgramChips(); fillExpenseDependentFilters(); render();
 }
