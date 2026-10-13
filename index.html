@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261013-5" />
+    <link rel="stylesheet" href="styles.css?v=20261013-6" />
   </head>
   <body>
     <header class="site-header">
@@ -51,7 +51,7 @@
             <p class="eyebrow">Explorar</p>
             <h2 id="filters-title">Filtros</h2>
           </div>
-          <button id="toggle-filter-sidebar" class="sidebar-toggle" type="button" aria-expanded="true" aria-label="Plegar filtros">‹</button>
+          <button id="toggle-filter-sidebar" class="sidebar-toggle filter-collapse-toggle" type="button" aria-expanded="true" aria-label="Plegar filtros">‹</button>
         </div>
         <div id="filter-sidebar-body">
         <div class="filter-columns">
@@ -106,7 +106,7 @@
             <h2 id="summary-title">Resumen</h2>
             <p id="summary-context" class="note"></p>
           </div>
-          <button class="download-button" type="button" data-download-view="expenses">Crear imagen</button>
+          <button class="download-button" type="button" data-download-view="expenses">Crear resumen</button>
         </div>
         <div class="summary-grid" aria-label="Resumen del período más reciente seleccionado">
           <article class="metric"><div class="metric-heading"><p>Crédito vigente</p><span class="metric-help" tabindex="0" aria-label="Qué es el crédito vigente">i<span class="metric-info"><strong>Crédito vigente</strong>Es el crédito aprobado luego de incorporar todas las modificaciones presupuestarias acumuladas.</span></span></div><strong id="metric-current">—</strong><small id="metric-current-change">—</small></article>
@@ -151,9 +151,10 @@
           <div class="chart-controls">
             <div class="chart-tabs" role="tablist" aria-label="Tipo de gráfico">
               <button class="chart-tab active" type="button" role="tab" data-chart="bar" aria-selected="true">Puente presupuestario</button>
+              <button class="chart-tab" type="button" role="tab" data-chart="current" aria-selected="false">Crédito vigente</button>
               <button class="chart-tab" type="button" role="tab" data-chart="line" aria-selected="false">% ejecutado</button>
             </div>
-            <label id="bar-value-control" class="chart-value-toggle"><input id="show-bar-values" type="checkbox"> Mostrar valores</label>
+            <label id="bar-value-control" class="chart-value-toggle"><input id="show-bar-values" type="checkbox" checked> Mostrar valores</label>
           </div>
           <div id="chart" class="chart" role="img" aria-label="Gráfico de evolución presupuestaria"><canvas id="budget-chart"></canvas><p id="chart-empty" class="note" hidden>No hay datos para esta combinación de filtros.</p></div>
           <p id="chart-note" class="note"></p>
@@ -229,7 +230,7 @@
       <section id="tracking-resources" class="tracking-view resources-dashboard" role="tabpanel" hidden>
         <div id="resource-layout" class="resource-layout filter-layout resource-top-layout">
           <aside class="panel resource-filters collapsible-filter-panel" aria-labelledby="resource-filters-title">
-            <div class="filter-sidebar-heading"><div><p class="eyebrow">Combinar categorías</p><h2 id="resource-filters-title">Filtros de recursos</h2></div><button id="toggle-resource-filters" class="small-action" type="button" aria-expanded="true">Reducir filtros</button></div>
+            <div class="filter-sidebar-heading"><div><p class="eyebrow">Combinar categorías</p><h2 id="resource-filters-title">Filtros de recursos</h2></div><button id="toggle-resource-filters" class="small-action filter-collapse-toggle" type="button" aria-expanded="true">Reducir</button></div>
             <div id="resource-filter-body" class="resource-filter-stack">
               <section class="resource-filter-block resource-period-block"><div class="filter-heading"><p class="filter-label">Períodos</p><button id="resource-toggle-periods" class="small-action" type="button">Quitar todos</button></div><div id="resource-period-filter" class="period-picker"></div></section>
               <section class="resource-filter-block resource-major-block"><div class="filter-heading"><p class="filter-label">Rubros</p><button class="small-action" type="button" data-clear-resource="major">Todos</button></div><div id="resource-major-options" class="multi-chip-list" role="group" aria-label="Rubros"></div></section>
@@ -241,7 +242,7 @@
           <div class="resource-primary">
             <section class="resource-heading">
               <div><p class="eyebrow">Ingresos municipales</p><h2>Resumen de recursos</h2><p id="resource-summary-context" class="note"></p></div>
-              <div class="view-heading-actions"><button class="download-button" type="button" data-download-view="resources">Crear imagen</button></div>
+              <div class="view-heading-actions"><button class="download-button" type="button" data-download-view="resources">Crear resumen</button></div>
             </section>
             <section class="resource-metric-grid" aria-label="Indicadores de recursos">
               <article class="metric resource-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Estimación actualizada luego de ampliaciones o reducciones durante el año.</span></span></div><strong id="resource-metric-current">—</strong><small id="resource-current-note">—</small></article>
@@ -253,11 +254,12 @@
             <section class="resource-chart-layout">
             <article class="panel resource-chart-panel">
               <div class="section-heading"><div><p class="eyebrow">Evolución</p><h2 id="resource-chart-title">Recaudación y ritmo esperado</h2></div><div id="resource-chart-legend" class="legend"></div></div>
-              <div class="chart-tabs resource-chart-tabs" role="tablist" aria-label="Tipo de gráfico de recursos">
+              <div class="chart-controls"><div class="chart-tabs resource-chart-tabs" role="tablist" aria-label="Tipo de gráfico de recursos">
                 <button class="chart-tab active" type="button" data-resource-chart="collection" aria-selected="true">% recaudado</button>
                 <button class="chart-tab" type="button" data-resource-chart="income" aria-selected="false">Ingresos mensuales</button>
                 <button class="chart-tab" type="button" data-resource-chart="modification" aria-selected="false">Modificaciones</button>
-              </div>
+                <button class="chart-tab" type="button" data-resource-chart="current" aria-selected="false">Recurso vigente</button>
+              </div><label class="chart-value-toggle"><input id="resource-show-values" type="checkbox" checked> Mostrar valores</label></div>
               <div class="chart"><canvas id="resource-chart"></canvas><p id="resource-chart-empty" class="note" hidden>No hay datos para esta selección.</p></div>
               <p id="resource-chart-note" class="note"></p>
             </article>
@@ -287,7 +289,7 @@
       <section id="tracking-funds" class="tracking-view funds-dashboard" role="tabpanel" hidden>
         <div id="fund-layout" class="fund-layout filter-layout">
           <aside class="panel fund-filters collapsible-filter-panel" aria-labelledby="fund-filters-title">
-            <div class="filter-sidebar-heading"><div><p class="eyebrow">Explorar</p><h2 id="fund-filters-title">Filtros de fondos</h2></div><button id="toggle-fund-filters" class="sidebar-toggle" type="button" aria-expanded="true" aria-label="Plegar filtros de fondos">‹</button></div>
+            <div class="filter-sidebar-heading"><div><p class="eyebrow">Explorar</p><h2 id="fund-filters-title">Filtros de fondos</h2></div><button id="toggle-fund-filters" class="sidebar-toggle filter-collapse-toggle" type="button" aria-expanded="true" aria-label="Plegar filtros de fondos">‹</button></div>
             <div id="fund-filter-body" class="fund-filter-stack">
               <div><div class="filter-heading"><p class="filter-label">Períodos incluidos</p><button id="fund-toggle-periods" class="small-action" type="button">Quitar todos</button></div><div id="fund-period-filter" class="period-picker"></div></div>
               <label class="filter-step">Nivel / origen<select id="fund-origin-filter"></select></label>
@@ -297,7 +299,7 @@
           </aside>
 
           <div class="fund-primary">
-            <section class="fund-heading"><div><p class="eyebrow">Recursos afectados</p><h2>Resumen de Fondos Especiales</h2><p id="fund-summary-context" class="note"></p></div><div class="view-heading-actions"><button class="download-button" type="button" data-download-view="funds">Crear imagen</button></div></section>
+            <section class="fund-heading"><div><p class="eyebrow">Recursos afectados</p><h2>Resumen de Fondos Especiales</h2><p id="fund-summary-context" class="note"></p></div><div class="view-heading-actions"><button class="download-button" type="button" data-download-view="funds">Crear resumen</button></div></section>
             <section class="fund-metric-grid" aria-label="Indicadores de fondos especiales">
               <article class="metric fund-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Monto disponible o previsto para los recursos afectados del fondo.</span></span></div><strong id="fund-metric-current">—</strong><small id="fund-current-note">—</small></article>
               <article class="metric fund-metric"><div class="metric-heading"><p>Recurso percibido</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso percibido</strong>Ingresos afectados que efectivamente se cobraron.</span></span></div><strong id="fund-metric-perceived">—</strong><small id="fund-perceived-note">—</small></article>
@@ -308,11 +310,11 @@
 
             <section class="panel fund-chart-panel">
               <div class="section-heading"><div><p class="eyebrow">Evolución</p><h2 id="fund-chart-title">Ingresos y pagos de cada mes</h2></div><div id="fund-chart-legend" class="legend"></div></div>
-              <div class="chart-tabs fund-chart-tabs" role="tablist" aria-label="Tipo de gráfico de fondos especiales">
+              <div class="chart-controls"><div class="chart-tabs fund-chart-tabs" role="tablist" aria-label="Tipo de gráfico de fondos especiales">
                 <button class="chart-tab active" type="button" data-fund-chart="flow" aria-selected="true">Flujo mensual</button>
                 <button class="chart-tab" type="button" data-fund-chart="cumulative" aria-selected="false">Acumulado</button>
                 <button class="chart-tab" type="button" data-fund-chart="origin" aria-selected="false">Por origen</button>
-              </div>
+              </div><label class="chart-value-toggle"><input id="fund-show-values" type="checkbox" checked> Mostrar valores</label></div>
               <div class="chart"><canvas id="fund-chart"></canvas><p id="fund-chart-empty" class="note" hidden>No hay datos para esta selección.</p></div>
               <p id="fund-chart-note" class="note"></p>
             </section>
@@ -354,7 +356,7 @@
 
     <dialog id="download-dialog" class="download-dialog">
       <form method="dialog">
-        <div class="download-dialog-heading"><div><p class="eyebrow">Exportar</p><h2 id="download-dialog-title">Crear imagen</h2></div><button class="dialog-close" type="submit" value="cancel" aria-label="Cerrar">×</button></div>
+        <div class="download-dialog-heading"><div><p class="eyebrow">Exportar</p><h2 id="download-dialog-title">Crear resumen</h2></div><button class="dialog-close" type="submit" value="cancel" aria-label="Cerrar">×</button></div>
         <p class="download-dialog-intro">Elegí qué elementos querés incluir en el PNG. La imagen incorporará el período y los filtros aplicados.</p>
         <div id="download-options" class="download-options"></div>
         <p id="download-error" class="download-error" hidden>Seleccioná al menos un elemento disponible.</p>
@@ -368,6 +370,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261013-5"></script>
+    <script src="app.js?v=20261013-6"></script>
   </body>
 </html>
