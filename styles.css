@@ -126,6 +126,7 @@ main { width: min(1440px, calc(100% - 2.5rem)); }
 .insights-lab { margin: 2.5rem 0 1.5rem; }.lab-heading { margin-bottom: 1.2rem; }.lab-heading h2 { font-size: 1.65rem; }.lab-heading > p:last-child { max-width: 760px; margin: .45rem 0 0; color: var(--muted); }
 .insights-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; }.insight-card { min-width: 0; margin: 0; }.insight-wide { grid-column: 1 / -1; }.insight-card h3 { margin: 0; font-size: 1.08rem; }.insight-description { margin: .35rem 0 1rem; color: var(--muted); font-size: .82rem; }.insight-empty { margin: 1rem 0; color: var(--muted); font-size: .84rem; }
 .heatmap-wrap { overflow-x: auto; }.heatmap-table { min-width: 760px; font-size: .76rem; }.heatmap-table th, .heatmap-table td { padding: .48rem; text-align: center; }.heatmap-table thead th { background: #f5f8fc; }.heatmap-table tbody th { max-width: 310px; overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }.heatmap-table td { border: 3px solid white; border-radius: 6px; font-weight: 750; }.heat-red { color: #87252e; background: #f7d8dc; }.heat-yellow { color: #704900; background: #fff0bd; }.heat-green { color: #155c39; background: #d7f0df; }.heat-blue { color: #164c7c; background: #d8eafa; }.heat-unknown { color: #536174; background: #e9edf2; }
+.heatmap-label { display: grid; gap: .12rem; min-width: 245px; white-space: normal; }.heatmap-label strong { color: #273750; font-size: .76rem; line-height: 1.25; }.heatmap-label span { color: #60708a; font-size: .72rem; font-weight: 400; line-height: 1.3; }
 .mini-chart { position: relative; height: 310px; }.mini-chart canvas { width: 100% !important; height: 100% !important; }
 .alert-list { display: grid; gap: .7rem; margin: 1rem 0 0; padding: 0; list-style: none; }.alert-list li:not(.insight-empty) { display: grid; grid-template-columns: 1.7rem minmax(0, 1fr); gap: .6rem; padding: .65rem; border: 1px solid #e4e9ef; border-radius: 8px; background: #fafbfd; }.alert-list li > span { display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border-radius: 50%; color: #87252e; background: #f7d8dc; font-size: .72rem; font-weight: 750; }.alert-list strong, .alert-list small { display: block; }.alert-list strong { overflow: hidden; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }.alert-list small { margin-top: .2rem; font-size: .7rem; }
 .year-comparison { display: flex; justify-content: space-between; gap: 2rem; align-items: center; }.year-placeholder { display: grid; min-width: 170px; padding: 1.2rem; border: 1px dashed #9db0c3; border-radius: 10px; text-align: center; }.year-placeholder strong { color: var(--blue); font-size: 2rem; }.year-placeholder span { color: var(--muted); font-size: .78rem; }
@@ -147,6 +148,9 @@ main { width: min(1440px, calc(100% - 2.5rem)); }
 .tracking-tabs button[data-tracking="expenses"].active { color: #76242d; background: #f3cfd3; box-shadow: inset 0 0 0 1px #d98e96, 0 2px 6px rgb(139 48 57 / 14%); }
 .tracking-tabs button[data-tracking="resources"].active { color: #12583c; background: #ccebdd; box-shadow: inset 0 0 0 1px #79bea2, 0 2px 6px rgb(23 104 71 / 14%); }
 .tracking-tabs button[data-tracking="funds"].active { color: #654600; background: #ffe69a; box-shadow: inset 0 0 0 1px #d8ac34, 0 2px 6px rgb(118 83 0 / 14%); }
+.header-tracking-tabs { justify-content: center; margin: .7rem auto 0; padding: .4rem; border-color: rgb(255 255 255 / 24%); background: rgb(4 31 54 / 38%); }
+.header-tracking-tabs button { min-width: 210px; padding: .72rem 1rem; }
+.header-tracking-tabs button small { opacity: .82; }
 .tracking-view[hidden] { display: none; }
 .resource-status { flex: none; padding: .5rem .7rem; border: 1px solid #86c8b1; border-radius: 999px; color: #176847; background: #e1f4ec; font-size: .78rem; font-weight: 750; }
 .resources-dashboard { min-height: 560px; }
@@ -195,9 +199,12 @@ main { width: min(1440px, calc(100% - 2.5rem)); }
 .resource-ranking-list li strong { overflow: hidden; color: #33415a; font-size: .77rem; text-overflow: ellipsis; white-space: nowrap; }
 .resource-ranking-list li small { margin-top: .12rem; font-size: .7rem; }
 .resource-top-list { gap: .8rem; margin-top: 1rem; }
+.resource-concentration-card { display: flex; min-height: 265px; flex-direction: column; }
+.resource-concentration-chart { height: 120px; margin-top: auto; }.resource-concentration-chart canvas { width: 100% !important; height: 100% !important; }
 
 @media (max-width: 1050px) { .resource-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .resource-layout { grid-template-columns: 1fr; }.resource-filters { position: static; }.resource-filter-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }.resource-filter-stack > div, .resource-clear { grid-column: 1 / -1; }.resource-quality { grid-template-columns: 1fr; }.resource-quality strong { white-space: normal; }.resource-insight-grid { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .header-tracking-tabs { display: grid; width: 100%; grid-template-columns: 1fr; }.header-tracking-tabs button { min-width: 0; } }
 @media (max-width: 560px) { .tracking-tabs { display: grid; width: 100%; grid-template-columns: 1fr 1fr; }.tracking-tabs button { min-width: 0; }.resource-heading { flex-direction: column; }.resource-filter-stack, .resource-metric-grid { grid-template-columns: 1fr; }.resource-filter-stack > div, .resource-clear { grid-column: auto; }.resource-chart-tabs { display: grid; width: 100%; grid-template-columns: 1fr; }.resource-origin-layout, .pace-columns { grid-template-columns: 1fr; } }
 
 /* Fondos Especiales */
@@ -231,6 +238,16 @@ main { width: min(1440px, calc(100% - 2.5rem)); }
 .fund-origin-layout { display: grid; grid-template-columns: minmax(180px, .8fr) minmax(230px, 1.2fr); gap: 1rem; align-items: center; min-height: 300px; }
 .fund-donut-chart { height: 240px; }
 .fund-donut-chart canvas { width: 100% !important; height: 100% !important; }
+.metric-switch { display: inline-flex; gap: .2rem; margin: .85rem 0 .2rem; padding: .22rem; border-radius: 8px; background: #edf2f7; }
+.metric-switch button { padding: .42rem .62rem; border: 0; border-radius: 6px; color: #59687d; background: transparent; cursor: pointer; font: 700 .74rem/1.2 system-ui, sans-serif; }
+.metric-switch button.active { color: #164c7c; background: white; box-shadow: 0 1px 3px rgb(20 38 65 / 14%); }
+.fund-ranking-list { display: grid; gap: .5rem; margin: .7rem 0 0; padding: 0; list-style: none; }
+.fund-ranking-columns, .fund-ranking-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto 72px; gap: .75rem; align-items: center; }
+.fund-ranking-columns { padding: 0 .65rem; color: #718096; font-size: .65rem; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }.fund-ranking-columns span:not(:first-child) { text-align: right; }
+.fund-ranking-list li { height: 62px; padding: .55rem .65rem; border: 1px solid #e1e7ee; border-radius: 8px; background: #fafbfd; }
+.fund-ranking-list strong { display: -webkit-box; overflow: hidden; color: #33415a; font-size: .76rem; font-weight: 650; line-height: 1.25; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.fund-ranking-list .fund-ranking-amount { color: #164c7c; font-size: .76rem; font-weight: 750; white-space: nowrap; }
+.fund-ranking-list .fund-ranking-share { color: #60708a; font-size: .72rem; font-weight: 700; text-align: right; white-space: nowrap; }
 
 @media (max-width: 1050px) { .fund-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .fund-layout { grid-template-columns: 1fr; }.fund-filters { position: static; }.fund-filter-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }.fund-filter-stack > div, .fund-clear { grid-column: 1 / -1; }.fund-insight-grid { grid-template-columns: 1fr; } }

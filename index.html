@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto Abierto · Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261013-1" />
+    <link rel="stylesheet" href="styles.css?v=20261013-2" />
   </head>
   <body>
     <header class="site-header">
@@ -23,6 +23,11 @@
         <button class="active" type="button" data-page="tracking" aria-selected="true">Seguimiento mensual</button>
         <button type="button" data-page="guide" aria-selected="false">¿Cómo leer el presupuesto?</button>
       </nav>
+      <nav id="header-tracking-tabs" class="tracking-tabs header-tracking-tabs" role="tablist" aria-label="Tipo de seguimiento mensual">
+        <button class="active" type="button" role="tab" data-tracking="expenses" aria-controls="tracking-expenses" aria-selected="true"><span>Gastos</span><small>Ejecución por objeto</small></button>
+        <button type="button" role="tab" data-tracking="resources" aria-controls="tracking-resources" aria-selected="false"><span>Recursos</span><small>Estimación y recaudación</small></button>
+        <button type="button" role="tab" data-tracking="funds" aria-controls="tracking-funds" aria-selected="false"><span>Fondos Especiales</span><small>Recursos afectados y gastos</small></button>
+      </nav>
     </header>
 
     <main>
@@ -34,12 +39,6 @@
       </section>
 
       <section id="page-tracking" class="page-view">
-      <nav class="tracking-tabs" role="tablist" aria-label="Tipo de seguimiento mensual">
-        <button class="active" type="button" role="tab" data-tracking="expenses" aria-controls="tracking-expenses" aria-selected="true"><span>Gastos</span><small>Ejecución por objeto</small></button>
-        <button type="button" role="tab" data-tracking="resources" aria-controls="tracking-resources" aria-selected="false"><span>Recursos</span><small>Estimación y recaudación</small></button>
-        <button type="button" role="tab" data-tracking="funds" aria-controls="tracking-funds" aria-selected="false"><span>Fondos Especiales</span><small>Recursos afectados y gastos</small></button>
-      </nav>
-
       <section id="tracking-expenses" class="tracking-view" role="tabpanel">
       <div id="dashboard-layout" class="dashboard-layout filter-layout">
       <aside id="filter-sidebar" class="panel filter-sidebar collapsible-filter-panel" aria-labelledby="filters-title">
@@ -274,7 +273,7 @@
             <article class="panel resource-insight-card"><p class="eyebrow">Variación mensual</p><h3>Rubros que explican los ingresos del mes</h3><p id="resource-growth-note" class="insight-description"></p><div class="resource-mini-chart"><canvas id="resource-growth-chart"></canvas></div></article>
             <article class="panel resource-insight-card"><p class="eyebrow">Composición</p><h3>Procedencia del recurso percibido</h3><p class="insight-description">Participación sobre el total acumulado del último período seleccionado.</p><div class="resource-origin-layout"><div class="resource-donut-chart"><canvas id="resource-origin-chart"></canvas></div><ul id="resource-origin-legend" class="resource-origin-legend"></ul></div></article>
             <article class="panel resource-insight-card"><p class="eyebrow">Ritmo anual</p><h3>Recaudación frente a lo esperado</h3><p id="resource-pace-note" class="insight-description"></p><div class="pace-columns"><div><strong>Más atrasados</strong><ol id="resource-pace-behind" class="resource-ranking-list"></ol></div><div><strong>Más adelantados</strong><ol id="resource-pace-ahead" class="resource-ranking-list"></ol></div></div></article>
-            <article class="panel resource-insight-card"><p class="eyebrow">Concentración</p><h3>Principales conceptos recaudadores</h3><p class="insight-description">Conceptos con mayor recurso percibido acumulado.</p><ol id="resource-top-concepts" class="resource-ranking-list resource-top-list"></ol></article>
+            <article class="panel resource-insight-card resource-concentration-card"><p class="eyebrow">Concentración</p><h3>Principales conceptos recaudadores</h3><p id="resource-concentration-note" class="insight-description"></p><div class="resource-concentration-chart"><canvas id="resource-concentration-chart"></canvas></div></article>
           </div>
         </section>
       </section>
@@ -325,7 +324,7 @@
           <div class="lab-heading"><p class="eyebrow">Lecturas complementarias</p><h2 id="fund-insights-title">Composición y movimientos destacados</h2><p>Estas lecturas también responden a los filtros seleccionados.</p></div>
           <div class="fund-insight-grid">
             <article class="panel fund-insight-card"><p class="eyebrow">Composición</p><h3>Participación por origen</h3><p class="insight-description">Distribución del recurso percibido acumulado.</p><div class="fund-origin-layout"><div class="fund-donut-chart"><canvas id="fund-origin-chart"></canvas></div><ul id="fund-origin-legend" class="resource-origin-legend"></ul></div></article>
-            <article class="panel fund-insight-card"><p class="eyebrow">Principales fondos</p><h3>Mayor recurso percibido</h3><p class="insight-description">Fondos con mayor ingreso efectivo en el último cierre.</p><ol id="fund-top-list" class="resource-ranking-list resource-top-list"></ol></article>
+            <article class="panel fund-insight-card fund-ranking-card"><p class="eyebrow">Principales fondos</p><h3 id="fund-ranking-title">Mayor recurso percibido</h3><div class="metric-switch fund-ranking-switch" role="tablist" aria-label="Métrica del ranking de fondos"><button class="active" type="button" data-fund-ranking="perceived" aria-selected="true">Mayor recurso percibido</button><button type="button" data-fund-ranking="accrued" aria-selected="false">Mayor recurso devengado</button></div><p id="fund-ranking-note" class="insight-description"></p><div class="fund-ranking-columns" aria-hidden="true"><span>Fondo especial</span><span>Monto</span><span>Participación</span></div><ol id="fund-top-list" class="fund-ranking-list"></ol></article>
           </div>
         </section>
       </section>
@@ -363,6 +362,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: Municipalidad de Santa Fe. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261013-1"></script>
+    <script src="app.js?v=20261013-2"></script>
   </body>
 </html>
