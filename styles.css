@@ -66,6 +66,8 @@ main { width: min(1540px, calc(100% - 1rem)); }
 .bridge-leaders strong, .bridge-leaders small { display: block; }
 .bridge-leaders strong { color: #33415a; font-size: .78rem; line-height: 1.35; }
 .bridge-leaders small { margin-top: .15rem; font-size: .73rem; font-weight: 700; }
+.bridge-program-heading { margin: 1rem 0 .45rem; color: #60708a; font-size: .7rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.bridge-program-highlights { display: grid; gap: .45rem; margin: 0; padding: 0; list-style: none; }.bridge-program-highlights li { position: relative; padding: .55rem .65rem; border: 1px solid #dce5ed; border-radius: 8px; background: rgb(255 255 255 / 72%); }.bridge-program-highlights span, .bridge-program-highlights strong, .bridge-program-highlights small { display: block; padding-right: 88px; }.bridge-program-highlights span { color: #60708a; font-size: .62rem; font-weight: 750; text-transform: uppercase; }.bridge-program-highlights strong { margin-top: .12rem; color: #33415a; font-size: .72rem; line-height: 1.25; }.bridge-program-highlights small { margin-top: .12rem; color: #7a8798; font-size: .64rem; line-height: 1.25; }.bridge-program-highlights b { position: absolute; top: 50%; right: .65rem; font-size: .7rem; transform: translateY(-50%); }
 .bridge-method { margin: auto 0 0; padding-top: 1rem; color: var(--muted); font-size: .72rem; line-height: 1.45; }
 .chart { width: 100%; height: 390px; min-height: 390px; }
 .chart canvas { width: 100% !important; height: 100% !important; }
@@ -132,11 +134,10 @@ main { width: min(1540px, calc(100% - 1rem)); }
 .heatmap-label { display: grid; gap: .12rem; min-width: 245px; white-space: normal; }.heatmap-label strong { color: #273750; font-size: .76rem; line-height: 1.25; }.heatmap-label span { color: #60708a; font-size: .72rem; font-weight: 400; line-height: 1.3; }
 .mini-chart { position: relative; height: 310px; }.mini-chart canvas { width: 100% !important; height: 100% !important; }
 .alert-list { display: grid; gap: .7rem; margin: 1rem 0 0; padding: 0; list-style: none; }.alert-list li:not(.insight-empty) { display: grid; grid-template-columns: 1.7rem minmax(0, 1fr); gap: .6rem; padding: .65rem; border: 1px solid #e4e9ef; border-radius: 8px; background: #fafbfd; }.alert-list li > span { display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border-radius: 50%; color: #87252e; background: #f7d8dc; font-size: .72rem; font-weight: 750; }.alert-list strong, .alert-list small { display: block; }.alert-list strong { overflow: hidden; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }.alert-list small { margin-top: .2rem; font-size: .7rem; }
-.year-comparison { display: flex; justify-content: space-between; gap: 2rem; align-items: center; }.year-placeholder { display: grid; min-width: 170px; padding: 1.2rem; border: 1px dashed #9db0c3; border-radius: 10px; text-align: center; }.year-placeholder strong { color: var(--blue); font-size: 2rem; }.year-placeholder span { color: var(--muted); font-size: .78rem; }
 
 @media (max-width: 960px) { .bridge-layout, .guide-concept { grid-template-columns: 1fr; }.bridge-explanation { min-height: 300px; } }
 @media (max-width: 800px) { .header-top { display: block; }.header-top .update-note { margin-top: 1rem; text-align: center; }.header-tabs { margin-top: 1.5rem; }.header-tabs button { flex: 1 1 auto; }.placeholder-grid, .guide-steps { grid-template-columns: 1fr; } }
-@media (max-width: 700px) { .insights-grid { grid-template-columns: 1fr; }.insight-wide { grid-column: auto; }.year-comparison { align-items: stretch; flex-direction: column; }.year-placeholder { min-width: 0; } }
+@media (max-width: 700px) { .insights-grid { grid-template-columns: 1fr; }.insight-wide { grid-column: auto; } }
 @media (max-width: 560px) { .chart { height: 330px; min-height: 330px; }.chart-controls { align-items: flex-start; flex-direction: column; }.landing-panel { padding: 1.4rem; }.header-tabs { display: grid; grid-template-columns: 1fr; }.header-tabs button { text-align: left; } }
 
 /* Subsecciones del seguimiento mensual */
@@ -319,6 +320,7 @@ main { width: min(1540px, calc(100% - 1rem)); }
 .financing-card { min-width: 0; margin: 0; }
 .financing-card h3 { margin: 0; font-size: 1.08rem; }
 .financing-composition { display: grid; grid-template-columns: minmax(190px, .85fr) minmax(230px, 1.15fr); gap: 1rem; align-items: center; min-height: 300px; }
+.financing-legend-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem; margin-bottom: .55rem; padding: 0 0 .4rem 1.15rem; border-bottom: 1px solid #dce3eb; color: #718096; font-size: .64rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }.financing-legend-heading strong { font-size: inherit; }
 .financing-donut { height: 245px; }
 .financing-bars { height: 300px; }
 .financing-donut canvas, .financing-bars canvas { width: 100% !important; height: 100% !important; }

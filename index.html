@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261014-1" />
+    <link rel="stylesheet" href="styles.css?v=20261014-2" />
   </head>
   <body>
     <header class="site-header">
@@ -133,13 +133,13 @@
         <p id="ranking-context" class="note"></p>
         <div class="ranking-grid">
           <article class="ranking-chart-card">
-            <div><h3>Ejecución</h3><p>Los tres porcentajes más altos y los tres más bajos.</p></div>
+            <div><h3>Ejecución. Top 3 más altos y más bajos.</h3></div>
             <div class="ranking-chart-key"><span class="key-executed"></span>Ejecutado <span class="key-gap"></span>Brecha al ritmo esperado <span class="key-rest"></span>Resto hasta 100%</div>
             <div class="ranking-chart-groups"><span>↑ Primer bloque: mayor ejecución</span><span>↓ Segundo bloque: menor ejecución</span></div>
             <div class="ranking-chart"><canvas id="ranking-execution-chart"></canvas><p id="ranking-execution-empty" class="ranking-empty" hidden></p></div>
           </article>
           <article class="ranking-chart-card">
-            <div><h3>Financiamiento</h3><p>Los tres mayores aumentos y las tres mayores reducciones. El porcentaje compara el crédito vigente con el aprobado.</p></div>
+            <div><h3>Financiamiento. Top 3 financiados y desfinanciados</h3></div>
             <div class="ranking-chart-key"><span class="key-funded"></span>Más financiado <span class="key-defunded"></span>Más desfinanciado</div>
             <div class="ranking-chart-groups"><span>↑ Primer bloque: más financiados</span><span>↓ Segundo bloque: más desfinanciados</span></div>
             <div class="ranking-chart"><canvas id="ranking-funding-chart"></canvas><p id="ranking-funding-empty" class="ranking-empty" hidden></p></div>
@@ -175,6 +175,8 @@
           <p id="bridge-explanation-period" class="bridge-period">—</p>
           <p id="bridge-explanation-summary" class="bridge-summary"></p>
           <ol id="bridge-explanation-leaders" class="bridge-leaders"></ol>
+          <p class="bridge-program-heading">Programas destacados</p>
+          <ol id="bridge-program-highlights" class="bridge-program-highlights"></ol>
           <p class="bridge-method">Los porcentajes indican qué parte del movimiento bruto del mes corresponde a cada secretaría.</p>
         </aside>
       </section>
@@ -184,7 +186,7 @@
       <section class="financing-analysis" aria-labelledby="financing-title">
         <div class="lab-heading"><p class="eyebrow">Origen de los fondos</p><h2 id="financing-title">¿Cómo se financia el gasto?</h2><p id="financing-context">Composición y nivel de ejecución del gasto municipal según su fuente de financiamiento.</p></div>
         <div class="financing-grid">
-          <article class="panel financing-card"><div><p class="eyebrow">Composición</p><h3>Participación en el crédito vigente</h3><p class="insight-description">Qué proporción del presupuesto actualizado corresponde a cada fuente.</p></div><div class="financing-composition"><div class="financing-donut"><canvas id="financing-composition-chart"></canvas></div><ul id="financing-composition-legend" class="resource-origin-legend"></ul></div></article>
+          <article class="panel financing-card"><div><p class="eyebrow">Composición</p><h3>Participación en el crédito vigente</h3><p class="insight-description">Qué proporción del presupuesto actualizado corresponde a cada fuente.</p></div><div class="financing-composition"><div class="financing-donut"><canvas id="financing-composition-chart"></canvas></div><div class="financing-legend-wrap"><div class="financing-legend-heading"><span>Fuente</span><strong>% del total</strong></div><ul id="financing-composition-legend" class="resource-origin-legend"></ul></div></div></article>
           <article class="panel financing-card"><div><p class="eyebrow">Ejecución</p><h3>Porcentaje ejecutado por fuente</h3><p id="financing-execution-note" class="insight-description"></p></div><div class="financing-bars"><canvas id="financing-execution-chart"></canvas></div></article>
         </div>
         <p id="financing-quality-note" class="note"></p>
@@ -230,7 +232,6 @@
           <article class="panel insight-card insight-wide"><div class="insight-card-heading"><div><p class="eyebrow">Ritmo de ejecución</p><h3>Mapa de calor por programa y mes</h3></div><button id="toggle-heatmap" class="small-action" type="button" aria-expanded="false">Ver todos</button></div><p class="insight-description">Compara cada programa con el ritmo esperado para el mes.</p><div id="execution-heatmap" class="heatmap-wrap"></div></article>
           <article class="panel insight-card"><p class="eyebrow">Origen del cambio</p><h3>Contribución a las modificaciones</h3><p id="contribution-note" class="insight-description"></p><div class="mini-chart"><canvas id="contribution-chart"></canvas></div></article>
           <article class="panel insight-card"><p class="eyebrow">Priorización</p><h3>Alertas relevantes</h3><p class="insight-description">Se incluyen desvíos de más de 5 puntos. La gravedad se ordena multiplicando los puntos de atraso por el crédito vigente: cuanto mayor es el atraso y el presupuesto involucrado, más alta es la alerta.</p><ol id="budget-alerts" class="alert-list"></ol></article>
-          <article class="panel insight-card insight-wide year-comparison"><div><p class="eyebrow">Próxima etapa</p><h3>Comparación entre años</h3><p class="insight-description">El panel está preparado para comparar el mismo mes entre ejercicios cuando incorporemos datos de 2025 o 2027.</p></div><div class="year-placeholder"><strong>2026</strong><span>Primer año disponible</span></div></article>
         </div>
       </section>
       </section>
@@ -378,6 +379,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261014-1"></script>
+    <script src="app.js?v=20261014-2"></script>
   </body>
 </html>
