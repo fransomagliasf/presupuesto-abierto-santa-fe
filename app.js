@@ -444,24 +444,30 @@ function renderInsights(rows, latestRows, latestPeriod) { renderHeatmap(rows, la
 function totals(rows) { return { approved: sum(rows, "credito_aprobado_centavos"), current: sum(rows, "credito_vigente_centavos"), accrued: sum(rows, "devengado_centavos"), available: sum(rows, "credito_disponible_centavos") }; }
 function renderPublicSummary() {
   const expensePeriod = periods().at(-1), expenseRows = data.filter((row) => row.fecha_corte === expensePeriod), budget = totals(expenseRows), budgetChange = budget.current - budget.approved, budgetChangeRate = budget.approved ? budgetChange / budget.approved * 100 : null;
+  const resourcePeriod = resourcePeriods().at(-1), latestResourceRows = resourceData.filter((row) => row.fecha_corte === resourcePeriod), resources = resourceTotals(latestResourceRows), collectionRate = collectionPercent(resources.perceived, resources.current), resourceChange = resources.current - resources.estimated;
+  const paid = sum(expenseRows, "pagado_centavos"), financialResult = resources.perceived - paid;
   $("#public-summary-period").textContent = expensePeriod ? `Datos al cierre de ${labelPeriod(expensePeriod)}` : "Sin datos disponibles";
-  $("#public-budget-approved").textContent = formatBillions(budget.approved); $("#public-budget-approved-exact").textContent = formatCents(budget.approved);
-  $("#public-budget-current").textContent = formatBillions(budget.current); $("#public-budget-current-exact").textContent = formatCents(budget.current);
+  $("#public-total-paid").textContent = formatBillions(paid); $("#public-total-collected").textContent = formatBillions(resources.perceived);
+  const resultElement = $("#public-financial-result"); resultElement.textContent = `${financialResult >= 0 ? "+" : "−"}${formatBillions(Math.abs(financialResult))}`; resultElement.classList.toggle("positive", financialResult >= 0); resultElement.classList.toggle("negative", financialResult < 0);
+  $("#public-financial-result-note").textContent = financialResult >= 0 ? "Lo percibido supera a los pagos realizados" : "Los pagos realizados superan a lo percibido";
+  $("#public-budget-approved").textContent = formatBillions(budget.approved);
+  $("#public-budget-current").textContent = formatBillions(budget.current);
   const budgetChangeElement = $("#public-budget-change"); budgetChangeElement.textContent = budgetChangeRate === null ? "—" : `${budgetChangeRate >= 0 ? "+" : "−"}${formatPercent(Math.abs(budgetChangeRate))}`; budgetChangeElement.classList.toggle("positive", budgetChange > 0); budgetChangeElement.classList.toggle("negative", budgetChange < 0);
   $("#public-budget-change-note").textContent = budgetChange === 0 ? "Sin modificaciones sobre el monto aprobado" : `${budgetChange > 0 ? "+" : "−"}${formatBillions(Math.abs(budgetChange))} frente al aprobado`;
-  $("#public-budget-explanation").innerHTML = budgetChange === 0 ? "Hasta el último cierre, el presupuesto no registra cambios respecto del monto inicial." : `Hasta el último cierre, el presupuesto ${budgetChange > 0 ? "aumentó" : "se redujo"} en <strong>${formatBillions(Math.abs(budgetChange))}</strong>, una variación de <strong>${budgetChangeRate >= 0 ? "+" : "−"}${formatPercent(Math.abs(budgetChangeRate))}</strong>.`;
+  const budgetTone = budgetChange >= 0 ? "positive-text" : "negative-text";
+  $("#public-budget-explanation").innerHTML = budgetChange === 0 ? "Hasta el último cierre, el presupuesto no registra cambios respecto del monto inicial." : `Hasta el último cierre, el presupuesto ${budgetChange > 0 ? "aumentó" : "se redujo"} en <strong class="${budgetTone}">${formatBillions(Math.abs(budgetChange))}</strong>, una variación de <strong class="${budgetTone}">${budgetChangeRate >= 0 ? "+" : "−"}${formatPercent(Math.abs(budgetChangeRate))}</strong>.`;
 
   const secretaryGroups = new Map(); expenseRows.forEach((row) => { const group = secretaryGroups.get(row.jurisdiccion_nombre) || []; group.push(row); secretaryGroups.set(row.jurisdiccion_nombre, group); });
   const secretaries = [...secretaryGroups.entries()].map(([name, rows]) => ({ name, values: totals(rows) })).sort((a, b) => b.values.current - a.values.current);
-  $("#public-expense-table").innerHTML = secretaries.map((item) => `<tr><td>${escapeHtml(item.name)}</td><td class="number"><strong>${columnShare(item.values.current, budget.current)}</strong></td><td class="number">${columnShare(item.values.approved, budget.approved)}</td></tr>`).join("");
+  $("#public-expense-table").innerHTML = secretaries.map((item) => { const approvedShare = budget.approved ? item.values.approved / budget.approved * 100 : null, currentShare = budget.current ? item.values.current / budget.current * 100 : null, difference = approvedShare === null || currentShare === null ? null : Math.round((currentShare - approvedShare) * 10) / 10, differenceClass = difference > 0 ? "positive" : difference < 0 ? "negative" : ""; return `<tr><td>${escapeHtml(item.name)}</td><td class="number">${formatPercent(approvedShare)}</td><td class="number"><strong>${formatPercent(currentShare)}</strong></td><td class="number ${differenceClass}">${difference === null ? "—" : `${difference > 0 ? "+" : difference < 0 ? "−" : ""}${Math.abs(difference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`}</td></tr>`; }).join("");
   const leadingSecretaries = secretaries.slice(0, 3), leadingShare = leadingSecretaries.reduce((total, item) => total + item.values.current, 0);
   $("#public-expense-explanation").innerHTML = leadingSecretaries.length ? `<ol>${leadingSecretaries.map((item, index) => `<li><span>${index + 1}</span><p><strong>${escapeHtml(item.name)}</strong><small>${columnShare(item.values.current, budget.current)} del crédito vigente</small></p></li>`).join("")}</ol><p>En conjunto, estas tres áreas concentran el <strong>${columnShare(leadingShare, budget.current)}</strong> del presupuesto vigente.</p>` : "<p>No hay datos de gastos disponibles.</p>";
 
-  const resourcePeriod = resourcePeriods().at(-1), latestResourceRows = resourceData.filter((row) => row.fecha_corte === resourcePeriod), resources = resourceTotals(latestResourceRows), collectionRate = collectionPercent(resources.perceived, resources.current), resourceChange = resources.current - resources.estimated;
-  $("#public-resource-approved").textContent = formatBillions(resources.estimated); $("#public-resource-approved-exact").textContent = formatCents(resources.estimated);
-  $("#public-resource-current").textContent = formatBillions(resources.current); $("#public-resource-current-exact").textContent = formatCents(resources.current);
+  $("#public-resource-approved").textContent = formatBillions(resources.estimated);
+  $("#public-resource-current").textContent = formatBillions(resources.current);
   $("#public-resource-rate").textContent = formatPercent(collectionRate); $("#public-resource-rate-note").textContent = `${formatBillions(resources.perceived)} efectivamente percibidos`;
-  $("#public-resource-explanation").innerHTML = `La previsión vigente ${resourceChange >= 0 ? "aumentó" : "se redujo"} <strong>${formatBillions(Math.abs(resourceChange))}</strong> frente a la estimación inicial. A ${resourcePeriod ? labelPeriod(resourcePeriod) : "la fecha"} se percibieron <strong>${formatBillions(resources.perceived)}</strong>.`;
+  const resourceTone = resourceChange >= 0 ? "positive-text" : "negative-text";
+  $("#public-resource-explanation").innerHTML = `La previsión vigente ${resourceChange >= 0 ? "aumentó" : "se redujo"} <strong class="${resourceTone}">${formatBillions(Math.abs(resourceChange))}</strong> frente a la estimación inicial. A ${resourcePeriod ? labelPeriod(resourcePeriod) : "la fecha"} se percibieron <strong class="positive-text">${formatBillions(resources.perceived)}</strong>.`;
   const featuredResources = new Map([
     ["12.2.01.00", { short: "DReI", name: "Derecho de Registro e Inspección" }],
     ["12.1.01.00", { short: "TGI", name: "Tasa General de Inmuebles" }],
@@ -470,7 +476,9 @@ function renderPublicSummary() {
     ["11.4.03.00", { short: "Ingresos Brutos", name: "Coparticipación por Ingresos Brutos" }],
   ]);
   const resourceCards = [...featuredResources.entries()].map(([code, labels]) => ({ ...labels, value: sum(latestResourceRows.filter((row) => row.rubro_codigo === code), "recurso_percibido_centavos") })).sort((a, b) => b.value - a.value);
-  $("#public-resource-cards").innerHTML = resourceCards.map((item, index) => `<article><div class="public-income-rank">${index + 1}</div><p>${escapeHtml(item.short)}</p><h4>${escapeHtml(item.name)}</h4><strong>${formatBillions(item.value)}</strong><span>${columnShare(item.value, resources.perceived)} del total recaudado</span><small>${formatCents(item.value)}</small></article>`).join("");
+  $("#public-resource-cards").innerHTML = resourceCards.map((item, index) => `<article><div class="public-income-rank">${index + 1}</div><h4>${escapeHtml(item.name)}</h4><strong>${formatBillions(item.value)}</strong><span>${columnShare(item.value, resources.perceived)} del total recaudado</span></article>`).join("");
+  const highlightedTotal = resourceCards.reduce((total, item) => total + item.value, 0), topThreeTotal = resourceCards.slice(0, 3).reduce((total, item) => total + item.value, 0);
+  $("#public-resource-highlight-summary").innerHTML = `<p><strong>Lectura conjunta:</strong> estos cinco ingresos explican el <b>${columnShare(highlightedTotal, resources.perceived)}</b> de todo lo recaudado. Los tres primeros —${resourceCards.slice(0, 3).map((item) => escapeHtml(item.short)).join(", ")}— concentran por sí solos el <b>${columnShare(topThreeTotal, resources.perceived)}</b>.</p>`;
 }
 function executionAssessment(values, period) {
   const actual = executionPercent(values.accrued, values.current);

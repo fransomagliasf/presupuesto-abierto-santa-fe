@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261014-4" />
+    <link rel="stylesheet" href="styles.css?v=20261014-5" />
   </head>
   <body>
     <header class="site-header">
@@ -41,12 +41,22 @@
           <p id="public-summary-period" class="public-summary-period">Último cierre disponible</p>
         </header>
 
+        <section class="public-summary-section public-financial-section" aria-labelledby="public-financial-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Primera impresión</p><h2 id="public-financial-title">Situación financiera hasta el último cierre</h2></div><p>Una comparación directa entre el dinero ingresado y los pagos realizados durante el año.</p></div>
+          <article class="public-financial-strip">
+            <div class="public-financial-paid"><span>Todo lo pagado</span><strong id="public-total-paid">—</strong><small>Gastos efectivamente pagados</small></div>
+            <div class="public-financial-collected"><span>Todo lo recaudado</span><strong id="public-total-collected">—</strong><small>Recursos efectivamente percibidos</small></div>
+            <div class="public-financial-result"><span>Resultado financiero parcial</span><strong id="public-financial-result">—</strong><small id="public-financial-result-note">Percibido menos pagado</small></div>
+          </article>
+          <p class="public-financial-note">Es una fotografía parcial al mes informado. Un resultado positivo o negativo no equivale al cierre definitivo del ejercicio.</p>
+        </section>
+
         <section class="public-summary-section" aria-labelledby="public-budget-title">
           <div class="public-section-heading"><div><p class="eyebrow">Panorama general</p><h2 id="public-budget-title">Presupuesto de gastos</h2></div></div>
           <div class="public-story-layout">
             <article class="public-metric-strip" aria-label="Indicadores generales del presupuesto de gastos">
-              <div><span>Presupuesto aprobado</span><strong id="public-budget-approved">—</strong><small id="public-budget-approved-exact">—</small></div>
-              <div><span>Presupuesto vigente</span><strong id="public-budget-current">—</strong><small id="public-budget-current-exact">—</small></div>
+              <div><span>Presupuesto aprobado</span><strong id="public-budget-approved">—</strong></div>
+              <div><span>Presupuesto vigente</span><strong id="public-budget-current">—</strong></div>
               <div><span>Aumento del presupuesto</span><strong id="public-budget-change">—</strong><small id="public-budget-change-note">—</small></div>
             </article>
             <aside class="public-explainer"><p class="eyebrow">¿Qué significa?</p><h3>Del presupuesto inicial al presupuesto actualizado</h3><p>El <strong>aprobado</strong> es el monto autorizado al comenzar el año. El <strong>vigente</strong> incorpora las ampliaciones y reducciones realizadas después.</p><p id="public-budget-explanation"></p></aside>
@@ -56,7 +66,7 @@
         <section class="public-summary-section" aria-labelledby="public-expenses-title">
           <div class="public-section-heading"><div><p class="eyebrow">Sector 1 · Gastos</p><h2 id="public-expenses-title">¿Cómo se distribuye el presupuesto?</h2></div><p>Cada porcentaje muestra qué parte del total municipal corresponde a cada secretaría o jurisdicción.</p></div>
           <div class="public-expense-layout">
-            <article class="panel public-table-card"><div class="table-wrap"><table><thead><tr><th>Nombre</th><th class="number">% según crédito vigente</th><th class="number">% según crédito aprobado</th></tr></thead><tbody id="public-expense-table"></tbody></table></div></article>
+            <article class="panel public-table-card"><div class="table-wrap"><table><thead><tr><th>Nombre</th><th class="number">% aprobado</th><th class="number">% vigente</th><th class="number">% diferencia</th></tr></thead><tbody id="public-expense-table"></tbody></table></div></article>
             <aside class="panel public-ranking-copy"><p class="eyebrow">Lectura rápida</p><h3>Las áreas con mayor presupuesto</h3><div id="public-expense-explanation"></div><p class="public-method-note">El orden se calcula sobre el crédito vigente del último cierre disponible.</p></aside>
           </div>
         </section>
@@ -65,14 +75,15 @@
           <div class="public-section-heading"><div><p class="eyebrow">Sector 2 · Recursos</p><h2 id="public-resources-title">¿Cuánto prevé recaudar la ciudad?</h2></div></div>
           <div class="public-story-layout">
             <article class="public-metric-strip public-resource-strip" aria-label="Indicadores generales de recursos">
-              <div><span>Recursos aprobados</span><strong id="public-resource-approved">—</strong><small id="public-resource-approved-exact">—</small></div>
-              <div><span>Recurso vigente</span><strong id="public-resource-current">—</strong><small id="public-resource-current-exact">—</small></div>
+              <div><span>Recursos aprobados</span><strong id="public-resource-approved">—</strong></div>
+              <div><span>Recurso vigente</span><strong id="public-resource-current">—</strong></div>
               <div><span>Porcentaje recaudado</span><strong id="public-resource-rate">—</strong><small id="public-resource-rate-note">—</small></div>
             </article>
             <aside class="public-explainer public-resource-explainer"><p class="eyebrow">¿Cómo se lee?</p><h3>Previsión y recaudación efectiva</h3><p>El recurso vigente es la estimación actualizada de ingresos. El porcentaje recaudado muestra cuánto de esa previsión ya ingresó efectivamente.</p><p id="public-resource-explanation"></p></aside>
           </div>
           <div class="public-section-heading public-income-heading"><div><p class="eyebrow">Ingresos destacados</p><h3>¿Qué recursos explican una parte importante de la recaudación?</h3></div><p>Ordenados de mayor a menor según lo efectivamente percibido.</p></div>
           <div id="public-resource-cards" class="public-resource-cards"></div>
+          <article id="public-resource-highlight-summary" class="public-highlight-summary"></article>
         </section>
       </section>
 
@@ -413,6 +424,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261014-4"></script>
+    <script src="app.js?v=20261014-5"></script>
   </body>
 </html>
