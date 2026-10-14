@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261014-3" />
+    <link rel="stylesheet" href="styles.css?v=20261014-4" />
   </head>
   <body>
     <header class="site-header">
@@ -35,11 +35,45 @@
     </header>
 
     <main>
-      <section id="page-summary" class="page-view landing-panel" hidden>
-        <p class="eyebrow">Vista general</p>
-        <h2>Resumen del presupuesto municipal</h2>
-        <p>Este espacio reunirá los principales indicadores anuales, los cambios más relevantes y una lectura rápida del estado general del presupuesto de la ciudad.</p>
-        <div class="placeholder-grid"><article><strong>Panorama anual</strong><span>Indicadores consolidados y evolución global.</span></article><article><strong>Principales movimientos</strong><span>Cambios de crédito y niveles de ejecución destacados.</span></article><article><strong>Datos para compartir</strong><span>Resúmenes visuales preparados para difusión.</span></article></div>
+      <section id="page-summary" class="page-view public-summary-page" hidden>
+        <header class="public-summary-hero">
+          <div><p class="eyebrow">Vista general</p><h2>El presupuesto municipal, en pocas palabras</h2><p>Una lectura simple de cuánto puede gastar la ciudad, cómo se distribuye ese presupuesto y cuáles son sus principales ingresos.</p></div>
+          <p id="public-summary-period" class="public-summary-period">Último cierre disponible</p>
+        </header>
+
+        <section class="public-summary-section" aria-labelledby="public-budget-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Panorama general</p><h2 id="public-budget-title">Presupuesto de gastos</h2></div></div>
+          <div class="public-story-layout">
+            <article class="public-metric-strip" aria-label="Indicadores generales del presupuesto de gastos">
+              <div><span>Presupuesto aprobado</span><strong id="public-budget-approved">—</strong><small id="public-budget-approved-exact">—</small></div>
+              <div><span>Presupuesto vigente</span><strong id="public-budget-current">—</strong><small id="public-budget-current-exact">—</small></div>
+              <div><span>Aumento del presupuesto</span><strong id="public-budget-change">—</strong><small id="public-budget-change-note">—</small></div>
+            </article>
+            <aside class="public-explainer"><p class="eyebrow">¿Qué significa?</p><h3>Del presupuesto inicial al presupuesto actualizado</h3><p>El <strong>aprobado</strong> es el monto autorizado al comenzar el año. El <strong>vigente</strong> incorpora las ampliaciones y reducciones realizadas después.</p><p id="public-budget-explanation"></p></aside>
+          </div>
+        </section>
+
+        <section class="public-summary-section" aria-labelledby="public-expenses-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Sector 1 · Gastos</p><h2 id="public-expenses-title">¿Cómo se distribuye el presupuesto?</h2></div><p>Cada porcentaje muestra qué parte del total municipal corresponde a cada secretaría o jurisdicción.</p></div>
+          <div class="public-expense-layout">
+            <article class="panel public-table-card"><div class="table-wrap"><table><thead><tr><th>Nombre</th><th class="number">% según crédito vigente</th><th class="number">% según crédito aprobado</th></tr></thead><tbody id="public-expense-table"></tbody></table></div></article>
+            <aside class="panel public-ranking-copy"><p class="eyebrow">Lectura rápida</p><h3>Las áreas con mayor presupuesto</h3><div id="public-expense-explanation"></div><p class="public-method-note">El orden se calcula sobre el crédito vigente del último cierre disponible.</p></aside>
+          </div>
+        </section>
+
+        <section class="public-summary-section" aria-labelledby="public-resources-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Sector 2 · Recursos</p><h2 id="public-resources-title">¿Cuánto prevé recaudar la ciudad?</h2></div></div>
+          <div class="public-story-layout">
+            <article class="public-metric-strip public-resource-strip" aria-label="Indicadores generales de recursos">
+              <div><span>Recursos aprobados</span><strong id="public-resource-approved">—</strong><small id="public-resource-approved-exact">—</small></div>
+              <div><span>Recurso vigente</span><strong id="public-resource-current">—</strong><small id="public-resource-current-exact">—</small></div>
+              <div><span>Porcentaje recaudado</span><strong id="public-resource-rate">—</strong><small id="public-resource-rate-note">—</small></div>
+            </article>
+            <aside class="public-explainer public-resource-explainer"><p class="eyebrow">¿Cómo se lee?</p><h3>Previsión y recaudación efectiva</h3><p>El recurso vigente es la estimación actualizada de ingresos. El porcentaje recaudado muestra cuánto de esa previsión ya ingresó efectivamente.</p><p id="public-resource-explanation"></p></aside>
+          </div>
+          <div class="public-section-heading public-income-heading"><div><p class="eyebrow">Ingresos destacados</p><h3>¿Qué recursos explican una parte importante de la recaudación?</h3></div><p>Ordenados de mayor a menor según lo efectivamente percibido.</p></div>
+          <div id="public-resource-cards" class="public-resource-cards"></div>
+        </section>
       </section>
 
       <section id="page-tracking" class="page-view">
@@ -332,7 +366,7 @@
 
         <section class="panel fund-table-panel">
           <div class="section-heading"><div><p class="eyebrow">Detalle</p><h2>Fondos por nivel de origen</h2></div><p class="legend">Seleccioná la flecha para ver cada fondo</p></div>
-          <div class="table-wrap"><table><thead><tr><th>Nivel / origen</th><th>Fondo</th><th class="number">Recurso vigente</th><th class="number">Percibido</th><th class="number">Comprometido</th><th class="number">Devengado</th><th class="number">Pagado</th><th class="number">Percibido − pagado</th></tr></thead><tbody id="fund-detail-table"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr class="fund-group-header"><th rowspan="2">Nivel / origen</th><th rowspan="2">Fondo</th><th colspan="2">Recursos</th><th colspan="3">Gastos</th><th rowspan="2"><span class="fund-result-title">Resultado<small>Percibido − pagado <span class="info-help fund-balance-help" tabindex="0" aria-label="Cómo interpretar percibido menos pagado">i<span class="info-card"><strong>¿Qué muestra este resultado?</strong><span><b class="positive">Positivo:</b> hasta ese mes ingresó más dinero del que se pagó.</span><span><b class="negative">Negativo:</b> los pagos superaron los ingresos percibidos del período; puede indicar el uso de saldos anteriores o una diferencia temporal entre cobros y pagos.</span><small>No representa por sí solo un déficit o superávit definitivo del fondo.</small></span></span></small></span></th></tr><tr><th class="number">Vigente</th><th class="number">Percibido</th><th class="number">Comprometido</th><th class="number">Devengado</th><th class="number">Pagado</th></tr></thead><tbody id="fund-detail-table"></tbody></table></div>
           <nav id="fund-pagination" class="table-pagination" aria-label="Páginas de la tabla de fondos especiales"></nav>
           <p id="fund-table-note" class="note"></p>
         </section>
@@ -379,6 +413,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261014-3"></script>
+    <script src="app.js?v=20261014-4"></script>
   </body>
 </html>

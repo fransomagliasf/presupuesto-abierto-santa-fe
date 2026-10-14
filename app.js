@@ -442,6 +442,36 @@ function renderAlerts(rows, latestPeriod) {
 }
 function renderInsights(rows, latestRows, latestPeriod) { renderHeatmap(rows, latestPeriod); renderContribution(latestRows, latestPeriod); renderAlerts(latestRows, latestPeriod); }
 function totals(rows) { return { approved: sum(rows, "credito_aprobado_centavos"), current: sum(rows, "credito_vigente_centavos"), accrued: sum(rows, "devengado_centavos"), available: sum(rows, "credito_disponible_centavos") }; }
+function renderPublicSummary() {
+  const expensePeriod = periods().at(-1), expenseRows = data.filter((row) => row.fecha_corte === expensePeriod), budget = totals(expenseRows), budgetChange = budget.current - budget.approved, budgetChangeRate = budget.approved ? budgetChange / budget.approved * 100 : null;
+  $("#public-summary-period").textContent = expensePeriod ? `Datos al cierre de ${labelPeriod(expensePeriod)}` : "Sin datos disponibles";
+  $("#public-budget-approved").textContent = formatBillions(budget.approved); $("#public-budget-approved-exact").textContent = formatCents(budget.approved);
+  $("#public-budget-current").textContent = formatBillions(budget.current); $("#public-budget-current-exact").textContent = formatCents(budget.current);
+  const budgetChangeElement = $("#public-budget-change"); budgetChangeElement.textContent = budgetChangeRate === null ? "—" : `${budgetChangeRate >= 0 ? "+" : "−"}${formatPercent(Math.abs(budgetChangeRate))}`; budgetChangeElement.classList.toggle("positive", budgetChange > 0); budgetChangeElement.classList.toggle("negative", budgetChange < 0);
+  $("#public-budget-change-note").textContent = budgetChange === 0 ? "Sin modificaciones sobre el monto aprobado" : `${budgetChange > 0 ? "+" : "−"}${formatBillions(Math.abs(budgetChange))} frente al aprobado`;
+  $("#public-budget-explanation").innerHTML = budgetChange === 0 ? "Hasta el último cierre, el presupuesto no registra cambios respecto del monto inicial." : `Hasta el último cierre, el presupuesto ${budgetChange > 0 ? "aumentó" : "se redujo"} en <strong>${formatBillions(Math.abs(budgetChange))}</strong>, una variación de <strong>${budgetChangeRate >= 0 ? "+" : "−"}${formatPercent(Math.abs(budgetChangeRate))}</strong>.`;
+
+  const secretaryGroups = new Map(); expenseRows.forEach((row) => { const group = secretaryGroups.get(row.jurisdiccion_nombre) || []; group.push(row); secretaryGroups.set(row.jurisdiccion_nombre, group); });
+  const secretaries = [...secretaryGroups.entries()].map(([name, rows]) => ({ name, values: totals(rows) })).sort((a, b) => b.values.current - a.values.current);
+  $("#public-expense-table").innerHTML = secretaries.map((item) => `<tr><td>${escapeHtml(item.name)}</td><td class="number"><strong>${columnShare(item.values.current, budget.current)}</strong></td><td class="number">${columnShare(item.values.approved, budget.approved)}</td></tr>`).join("");
+  const leadingSecretaries = secretaries.slice(0, 3), leadingShare = leadingSecretaries.reduce((total, item) => total + item.values.current, 0);
+  $("#public-expense-explanation").innerHTML = leadingSecretaries.length ? `<ol>${leadingSecretaries.map((item, index) => `<li><span>${index + 1}</span><p><strong>${escapeHtml(item.name)}</strong><small>${columnShare(item.values.current, budget.current)} del crédito vigente</small></p></li>`).join("")}</ol><p>En conjunto, estas tres áreas concentran el <strong>${columnShare(leadingShare, budget.current)}</strong> del presupuesto vigente.</p>` : "<p>No hay datos de gastos disponibles.</p>";
+
+  const resourcePeriod = resourcePeriods().at(-1), latestResourceRows = resourceData.filter((row) => row.fecha_corte === resourcePeriod), resources = resourceTotals(latestResourceRows), collectionRate = collectionPercent(resources.perceived, resources.current), resourceChange = resources.current - resources.estimated;
+  $("#public-resource-approved").textContent = formatBillions(resources.estimated); $("#public-resource-approved-exact").textContent = formatCents(resources.estimated);
+  $("#public-resource-current").textContent = formatBillions(resources.current); $("#public-resource-current-exact").textContent = formatCents(resources.current);
+  $("#public-resource-rate").textContent = formatPercent(collectionRate); $("#public-resource-rate-note").textContent = `${formatBillions(resources.perceived)} efectivamente percibidos`;
+  $("#public-resource-explanation").innerHTML = `La previsión vigente ${resourceChange >= 0 ? "aumentó" : "se redujo"} <strong>${formatBillions(Math.abs(resourceChange))}</strong> frente a la estimación inicial. A ${resourcePeriod ? labelPeriod(resourcePeriod) : "la fecha"} se percibieron <strong>${formatBillions(resources.perceived)}</strong>.`;
+  const featuredResources = new Map([
+    ["12.2.01.00", { short: "DReI", name: "Derecho de Registro e Inspección" }],
+    ["12.1.01.00", { short: "TGI", name: "Tasa General de Inmuebles" }],
+    ["12.6.01.00", { short: "Multas", name: "Multas a las Contravenciones" }],
+    ["11.4.04.00", { short: "Coparticipación Federal", name: "Coparticipación Federal" }],
+    ["11.4.03.00", { short: "Ingresos Brutos", name: "Coparticipación por Ingresos Brutos" }],
+  ]);
+  const resourceCards = [...featuredResources.entries()].map(([code, labels]) => ({ ...labels, value: sum(latestResourceRows.filter((row) => row.rubro_codigo === code), "recurso_percibido_centavos") })).sort((a, b) => b.value - a.value);
+  $("#public-resource-cards").innerHTML = resourceCards.map((item, index) => `<article><div class="public-income-rank">${index + 1}</div><p>${escapeHtml(item.short)}</p><h4>${escapeHtml(item.name)}</h4><strong>${formatBillions(item.value)}</strong><span>${columnShare(item.value, resources.perceived)} del total recaudado</span><small>${formatCents(item.value)}</small></article>`).join("");
+}
 function executionAssessment(values, period) {
   const actual = executionPercent(values.accrued, values.current);
   if (actual === null || !period) return { actual, expected: null, status: "unknown" };
@@ -845,7 +875,7 @@ async function init() {
     resourceData = (await Promise.all(RESOURCE_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     fundData = (await Promise.all(FUND_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     financingData = (await Promise.all(FINANCING_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
-    fillFilters(); fillResourceFilters(); fillFundFilters(); render(); renderResources(false); renderFunds(false); renderGuideDirectory();
+    fillFilters(); fillResourceFilters(); fillFundFilters(); render(); renderResources(false); renderFunds(false); renderPublicSummary(); renderGuideDirectory();
     const latestLoadedPeriod = [...periods(), ...resourcePeriods(), ...fundPeriods()].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1);
     $("#updated-period").textContent = latestLoadedPeriod ? updateDateFormat.format(date({ fecha_corte: latestLoadedPeriod })) : "Sin datos";
     $("#period-filter").addEventListener("click", (event) => {
