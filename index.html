@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261014-2" />
+    <link rel="stylesheet" href="styles.css?v=20261014-3" />
   </head>
   <body>
     <header class="site-header">
@@ -121,7 +121,7 @@
             <p class="eyebrow">Alertas y movimientos</p>
             <h2 id="ranking-title">Principales variaciones</h2>
           </div>
-          <label class="compact-label">Analizar por
+          <label class="compact-label ranking-dimension-control"><span>Analizar por</span>
             <select id="ranking-dimension">
               <option value="jurisdiction">Secretaría</option>
               <option value="program">Programa</option>
@@ -186,7 +186,7 @@
       <section class="financing-analysis" aria-labelledby="financing-title">
         <div class="lab-heading"><p class="eyebrow">Origen de los fondos</p><h2 id="financing-title">¿Cómo se financia el gasto?</h2><p id="financing-context">Composición y nivel de ejecución del gasto municipal según su fuente de financiamiento.</p></div>
         <div class="financing-grid">
-          <article class="panel financing-card"><div><p class="eyebrow">Composición</p><h3>Participación en el crédito vigente</h3><p class="insight-description">Qué proporción del presupuesto actualizado corresponde a cada fuente.</p></div><div class="financing-composition"><div class="financing-donut"><canvas id="financing-composition-chart"></canvas></div><div class="financing-legend-wrap"><div class="financing-legend-heading"><span>Fuente</span><strong>% del total</strong></div><ul id="financing-composition-legend" class="resource-origin-legend"></ul></div></div></article>
+          <article class="panel financing-card"><div><p class="eyebrow">Composición</p><h3>Participación en el crédito vigente</h3><p class="insight-description">Qué proporción del presupuesto actualizado corresponde a cada fuente.</p></div><div class="financing-composition"><div class="financing-donut"><canvas id="financing-composition-chart"></canvas></div><div class="financing-legend-wrap"><div class="financing-legend-heading"><span></span><span>Fuente</span><span>Monto</span><strong>% del total</strong></div><ul id="financing-composition-legend" class="resource-origin-legend"></ul></div></div></article>
           <article class="panel financing-card"><div><p class="eyebrow">Ejecución</p><h3>Porcentaje ejecutado por fuente</h3><p id="financing-execution-note" class="insight-description"></p></div><div class="financing-bars"><canvas id="financing-execution-chart"></canvas></div></article>
         </div>
         <p id="financing-quality-note" class="note"></p>
@@ -379,6 +379,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261014-2"></script>
+    <script src="app.js?v=20261014-3"></script>
   </body>
 </html>
