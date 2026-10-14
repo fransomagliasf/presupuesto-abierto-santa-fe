@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261013-6" />
+    <link rel="stylesheet" href="styles.css?v=20261014-1" />
   </head>
   <body>
     <header class="site-header">
@@ -132,10 +132,18 @@
         </div>
         <p id="ranking-context" class="note"></p>
         <div class="ranking-grid">
-          <article class="ranking-card ranking-under"><h3>Menor ejecución</h3><p>Mayor distancia por debajo del ritmo esperado.</p><ol id="ranking-under"></ol></article>
-          <article class="ranking-card ranking-over"><h3>Mayor ejecución</h3><p>Porcentaje ejecutado más alto.</p><ol id="ranking-over"></ol></article>
-          <article class="ranking-card ranking-defunded"><h3>Más desfinanciados</h3><p>Mayor caída entre crédito aprobado y vigente.</p><ol id="ranking-defunded"></ol></article>
-          <article class="ranking-card ranking-funded"><h3>Más financiados</h3><p>Mayor aumento entre crédito aprobado y vigente.</p><ol id="ranking-funded"></ol></article>
+          <article class="ranking-chart-card">
+            <div><h3>Ejecución</h3><p>Los tres porcentajes más altos y los tres más bajos.</p></div>
+            <div class="ranking-chart-key"><span class="key-executed"></span>Ejecutado <span class="key-gap"></span>Brecha al ritmo esperado <span class="key-rest"></span>Resto hasta 100%</div>
+            <div class="ranking-chart-groups"><span>↑ Primer bloque: mayor ejecución</span><span>↓ Segundo bloque: menor ejecución</span></div>
+            <div class="ranking-chart"><canvas id="ranking-execution-chart"></canvas><p id="ranking-execution-empty" class="ranking-empty" hidden></p></div>
+          </article>
+          <article class="ranking-chart-card">
+            <div><h3>Financiamiento</h3><p>Los tres mayores aumentos y las tres mayores reducciones. El porcentaje compara el crédito vigente con el aprobado.</p></div>
+            <div class="ranking-chart-key"><span class="key-funded"></span>Más financiado <span class="key-defunded"></span>Más desfinanciado</div>
+            <div class="ranking-chart-groups"><span>↑ Primer bloque: más financiados</span><span>↓ Segundo bloque: más desfinanciados</span></div>
+            <div class="ranking-chart"><canvas id="ranking-funding-chart"></canvas><p id="ranking-funding-empty" class="ranking-empty" hidden></p></div>
+          </article>
         </div>
       </section>
 
@@ -370,6 +378,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261013-6"></script>
+    <script src="app.js?v=20261014-1"></script>
   </body>
 </html>

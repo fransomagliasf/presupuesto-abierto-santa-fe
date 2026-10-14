@@ -23,7 +23,7 @@ const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "
 const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dateFormat = new Intl.DateTimeFormat("es-AR", { month: "short", year: "numeric", timeZone: "UTC" });
 const updateDateFormat = new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", timeZone: "UTC" });
-let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = true, bridgeFocusPeriod = null, budgetChart = null, contributionChart = null, tableSort = { key: "name", direction: "asc" };
+let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = true, bridgeFocusPeriod = null, budgetChart = null, rankingExecutionChart = null, rankingFundingChart = null, contributionChart = null, tableSort = { key: "name", direction: "asc" };
 let resourceData = [], resourceSelectedPeriods = new Set(), resourceSelectedMajors = new Set(), resourceSelectedDetails = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceGrowthDimension = "major", resourceShowValues = true, resourceChart = null, resourceGrowthChart = null, resourceOriginChart = null, resourceConcentrationChart = null;
 let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Set(), fundActiveChart = "flow", fundRankingMetric = "perceived", fundShowValues = true, fundChart = null, fundOriginChart = null;
 let financingData = [], financingCompositionChart = null, financingExecutionChart = null;
@@ -177,7 +177,54 @@ const barValueLabelsPlugin = {
     if (!showBarValues || !["bar", "current"].includes(activeChart)) return;
     const meta = chart.getDatasetMeta(0), dataset = chart.data.datasets[0], values = dataset.displayValues || dataset.data, context = chart.ctx;
     context.save(); context.font = "700 11px system-ui, sans-serif"; context.textAlign = "center";
-    meta.data.forEach((bar, index) => { const value = values[index]; context.fillStyle = value >= 0 ? "#187347" : "#a93642"; context.textBaseline = value >= 0 ? "bottom" : "top"; context.fillText(formatAxisAmount(value), bar.x, bar.y + (value >= 0 ? -7 : 7)); });
+    meta.data.forEach((bar, index) => {
+      const value = values[index], label = formatAxisAmount(value), height = 17, halfWidth = context.measureText(label).width / 2 + 5;
+      let y = bar.y + (value >= 0 ? -12 : 12); y = Math.max(chart.chartArea.top + height / 2, Math.min(chart.chartArea.bottom - height / 2, y));
+      const x = Math.max(chart.chartArea.left + halfWidth, Math.min(chart.chartArea.right - halfWidth, bar.x));
+      context.fillStyle = "rgba(255,255,255,.9)"; context.beginPath(); context.roundRect(x - halfWidth, y - height / 2, halfWidth * 2, height, 4); context.fill();
+      context.fillStyle = value >= 0 ? "#187347" : "#a93642"; context.textBaseline = "middle"; context.fillText(label, x, y);
+    });
+    context.restore();
+  },
+};
+const rankingExpectedLinePlugin = {
+  id: "rankingExpectedLine",
+  afterDatasetsDraw(chart, _args, options) {
+    if (!Number.isFinite(options?.value)) return;
+    const x = chart.scales.x.getPixelForValue(options.value), context = chart.ctx; context.save(); context.strokeStyle = "#9a6b00"; context.lineWidth = 2; context.setLineDash([5, 5]); context.beginPath(); context.moveTo(x, chart.chartArea.top); context.lineTo(x, chart.chartArea.bottom); context.stroke(); context.restore();
+  },
+};
+const rankingGroupDividerPlugin = {
+  id: "rankingGroupDivider",
+  afterDraw(chart, _args, options) {
+    const split = Number(options?.split || 0), bars = chart.getDatasetMeta(0).data;
+    if (!split || split >= bars.length) return;
+    const y = (bars[split - 1].y + bars[split].y) / 2, context = chart.ctx; context.save(); context.strokeStyle = "#aeb9c6"; context.lineWidth = 1; context.setLineDash([4, 4]); context.beginPath(); context.moveTo(chart.chartArea.left, y); context.lineTo(chart.chartArea.right, y); context.stroke(); context.restore();
+  },
+};
+const rankingPercentLabelsPlugin = {
+  id: "rankingPercentLabels",
+  afterDatasetsDraw(chart, _args, options) {
+    const values = options?.values || [], meta = chart.getDatasetMeta(0), context = chart.ctx; context.save(); context.font = "800 12px system-ui, sans-serif"; context.textBaseline = "middle";
+    meta.data.forEach((bar, index) => {
+      const label = formatPercent(values[index]), width = context.measureText(label).width + 10, anchor = Math.max(chart.chartArea.left, Math.min(chart.chartArea.right, bar.x));
+      let x = anchor - width - 4, fill = "#fff", text = "#173b5d";
+      if (bar.x - bar.base >= width + 12) { x = anchor - width - 5; fill = "rgba(12,74,45,.82)"; text = "#fff"; }
+      else { x = Math.min(chart.chartArea.right - width, anchor + 5); }
+      context.fillStyle = fill; context.beginPath(); context.roundRect(x, bar.y - 10, width, 20, 5); context.fill(); context.fillStyle = text; context.textAlign = "center"; context.fillText(label, x + width / 2, bar.y);
+    });
+    context.restore();
+  },
+};
+const rankingFundingLabelsPlugin = {
+  id: "rankingFundingLabels",
+  afterDatasetsDraw(chart, _args, options) {
+    const values = options?.values || [], meta = chart.getDatasetMeta(0), context = chart.ctx; context.save(); context.font = "800 12px system-ui, sans-serif"; context.textBaseline = "middle";
+    meta.data.forEach((bar, index) => {
+      const value = values[index], label = `${value > 0 ? "+" : ""}${formatPercent(value)}`, width = context.measureText(label).width + 12, positive = value >= 0;
+      let x = positive ? bar.x + 6 : bar.x - width - 6; x = Math.max(chart.chartArea.left, Math.min(chart.chartArea.right - width, x));
+      context.fillStyle = "rgba(255,255,255,.92)"; context.beginPath(); context.roundRect(x, bar.y - 10, width, 20, 5); context.fill(); context.fillStyle = positive ? "#187347" : "#a93642"; context.textAlign = "center"; context.fillText(label, x + width / 2, bar.y);
+    });
     context.restore();
   },
 };
@@ -309,22 +356,41 @@ function rankingGroups(rows, dimension, period) {
     return { label, primary: dimension === "program" ? first.jurisdiccion_nombre : label, secondary: dimension === "program" ? first.programa_nombre : ({ jurisdiction: "Secretaría", source: "Fuente de financiamiento", object: "Objeto del gasto" })[dimension], values, execution, expected, modification: values.current - values.approved, shortfall: execution === null ? null : expected - execution };
   });
 }
-function rankingList(items, kind, emptyMessage) {
-  if (!items.length) return `<li class="ranking-empty">${escapeHtml(emptyMessage)}</li>`;
-  return items.slice(0, 3).map((item, index) => { const execution = kind === "execution", amount = execution ? item.values.accrued : Math.abs(item.modification), percent = execution ? item.execution : item.values.current ? Math.abs(item.modification) / item.values.current * 100 : null, sign = execution ? "" : item.modification > 0 ? "+" : "−"; return `<li><div class="ranking-name"><span class="ranking-order">${index + 1}</span><div><strong title="${escapeHtml(item.primary)}">${escapeHtml(item.primary)}</strong><small title="${escapeHtml(item.secondary || "")}">${escapeHtml(item.secondary || "")}</small></div></div><div class="ranking-value"><strong title="${sign}${formatCents(amount)}">${sign}${formatAxisAmount(amount)}</strong><span>${formatPercent(percent)}</span><small>del crédito vigente</small></div></li>`; }).join("");
+function rankingDisplayLabel(item, dimension, rows) {
+  if (dimension !== "program") return item.label;
+  const jurisdictions = unique(rows.map((row) => row.jurisdiccion_nombre));
+  return jurisdictions.length === 1 ? item.secondary : `${item.primary} · ${item.secondary}`;
+}
+function rankingTickLabel(label, maxLength = 27) {
+  if (label.length <= maxLength) return label;
+  const words = label.split(/\s+/), lines = [""];
+  words.forEach((word) => { const line = lines.at(-1), next = line ? `${line} ${word}` : word; if (next.length > maxLength && lines.length < 2) lines.push(word); else lines[lines.length - 1] = next; });
+  if (lines[1]?.length > maxLength) lines[1] = `${lines[1].slice(0, maxLength - 1)}…`;
+  return lines;
+}
+function rankingExtremes(sorted, topCount = 3, bottomCount = 3) {
+  const top = sorted.slice(0, topCount), used = new Set(top.map((item) => item.label)), bottom = [...sorted].reverse().filter((item) => !used.has(item.label)).slice(0, bottomCount).reverse();
+  return { items: [...top, ...bottom], topLength: top.length, bottomLength: bottom.length };
 }
 function renderRankings(rows, latestPeriod) {
   const dimension = $("#ranking-dimension").value, groups = rankingGroups(rows, dimension, latestPeriod);
-  const under = groups.filter((item) => item.execution !== null && item.shortfall > 0).sort((a, b) => b.shortfall - a.shortfall);
-  const defunded = groups.filter((item) => item.modification < 0).sort((a, b) => a.modification - b.modification);
-  const funded = groups.filter((item) => item.modification > 0).sort((a, b) => b.modification - a.modification);
-  const over = groups.filter((item) => item.execution !== null).sort((a, b) => b.execution - a.execution);
-  $("#ranking-under").innerHTML = rankingList(under, "execution", "Sin grupos con crédito vigente");
-  $("#ranking-defunded").innerHTML = rankingList(defunded, "modification", "Sin reducciones de crédito");
-  $("#ranking-funded").innerHTML = rankingList(funded, "modification", "Sin aumentos de crédito");
-  $("#ranking-over").innerHTML = rankingList(over, "execution", "Sin grupos con crédito vigente");
+  const execution = rankingExtremes(groups.filter((item) => item.execution !== null).sort((a, b) => b.execution - a.execution));
+  const funded = groups.filter((item) => item.modification > 0).sort((a, b) => b.modification - a.modification).slice(0, 3), defunded = groups.filter((item) => item.modification < 0).sort((a, b) => a.modification - b.modification).slice(0, 3);
+  const fundingItems = [...funded, ...defunded], expected = latestPeriod ? Number(latestPeriod.split("/")[1]) * 100 / 12 : 0;
+  const executionCanvas = $("#ranking-execution-chart"), executionEmpty = $("#ranking-execution-empty"), fundingCanvas = $("#ranking-funding-chart"), fundingEmpty = $("#ranking-funding-empty");
+  if (rankingExecutionChart) rankingExecutionChart.destroy(); if (rankingFundingChart) rankingFundingChart.destroy(); rankingExecutionChart = null; rankingFundingChart = null;
+  executionCanvas.hidden = !execution.items.length; executionEmpty.hidden = Boolean(execution.items.length); executionEmpty.textContent = "Sin grupos con crédito vigente para comparar.";
+  fundingCanvas.hidden = !fundingItems.length; fundingEmpty.hidden = Boolean(fundingItems.length); fundingEmpty.textContent = "No se registran aumentos ni reducciones para esta selección.";
+  if (typeof Chart !== "undefined" && execution.items.length) {
+    const actual = execution.items.map((item) => item.execution), executed = actual.map((value) => Math.max(0, Math.min(100, value))), gap = executed.map((value) => Math.max(0, Math.min(100, expected) - value)), rest = executed.map((value, index) => Math.max(0, 100 - value - gap[index]));
+    rankingExecutionChart = new Chart(executionCanvas, { type: "bar", plugins: [rankingExpectedLinePlugin, rankingPercentLabelsPlugin, rankingGroupDividerPlugin], data: { labels: execution.items.map((item) => rankingTickLabel(rankingDisplayLabel(item, dimension, rows))), datasets: [{ label: "Ejecutado", data: executed, backgroundColor: "#26905f", borderRadius: 4, stack: "total" }, { label: "Brecha al esperado", data: gap, backgroundColor: "#c74c56", stack: "total" }, { label: "Resto", data: rest, backgroundColor: "#e5eaf0", borderRadius: 4, stack: "total" }] }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, animation: { duration: 300 }, layout: { padding: { right: 10 } }, plugins: { legend: { display: false }, rankingExpectedLine: { value: expected }, rankingPercentLabels: { values: actual }, rankingGroupDivider: { split: execution.topLength }, tooltip: { filter: (item) => item.datasetIndex === 0, callbacks: { label: (context) => `Ejecutado: ${formatPercent(actual[context.dataIndex])}`, afterLabel: () => `Ritmo esperado: ${formatPercent(expected)}` } } }, scales: { x: { stacked: true, min: 0, max: 100, ticks: { callback: (value) => `${value}%` }, grid: { color: "#e2e7ed" } }, y: { stacked: true, grid: { display: false }, ticks: { color: "#34445c", font: { size: 10, weight: "600" } } } } } });
+  }
+  if (typeof Chart !== "undefined" && fundingItems.length) {
+    const rates = fundingItems.map((item) => item.values.approved ? item.modification / item.values.approved * 100 : 0), largest = Math.max(...rates.map(Math.abs), 1), step = Math.max(5, niceStep(largest / 3)), limit = Math.ceil(largest / step) * step;
+    rankingFundingChart = new Chart(fundingCanvas, { type: "bar", plugins: [rankingFundingLabelsPlugin, rankingGroupDividerPlugin], data: { labels: fundingItems.map((item) => rankingTickLabel(rankingDisplayLabel(item, dimension, rows))), datasets: [{ data: rates, backgroundColor: rates.map((value) => value >= 0 ? "#26905f" : "#c74c56"), borderRadius: 4, maxBarThickness: 28 }] }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, animation: { duration: 300 }, layout: { padding: { left: 42, right: 42 } }, plugins: { legend: { display: false }, rankingFundingLabels: { values: rates }, rankingGroupDivider: { split: funded.length }, tooltip: { callbacks: { label: (context) => { const item = fundingItems[context.dataIndex]; return [`Variación: ${item.modification >= 0 ? "+" : "−"}${formatCents(Math.abs(item.modification))}`, `${context.parsed.x >= 0 ? "+" : ""}${formatPercent(context.parsed.x)} frente al crédito aprobado`]; } } } }, scales: { x: { min: -limit, max: limit, ticks: { stepSize: step, callback: (value) => `${value}%` }, grid: { color: (context) => context.tick.value === 0 ? "#60708a" : "#e2e7ed", lineWidth: (context) => context.tick.value === 0 ? 2 : 1 } }, y: { grid: { display: false }, ticks: { color: "#34445c", font: { size: 10, weight: "600" } } } } } });
+  }
   const dimensionName = { jurisdiction: "secretaría", program: "programa", source: "fuente", object: "objeto del gasto" }[dimension];
-  $("#ranking-context").textContent = latestPeriod ? `Top 3 por ${dimensionName} para ${labelPeriod(latestPeriod)}, dentro de los filtros seleccionados.` : "Seleccioná al menos un período para calcular los rankings.";
+  $("#ranking-context").textContent = latestPeriod ? `Tres valores superiores e inferiores por ${dimensionName} para ${labelPeriod(latestPeriod)}, dentro de los filtros seleccionados. La línea punteada marca el ritmo de ejecución esperado (${formatPercent(expected)}).` : "Seleccioná al menos un período para calcular las comparaciones.";
 }
 function groupedRows(rows, labelForRow) {
   const groups = new Map(); rows.forEach((row) => { const label = labelForRow(row), group = groups.get(label) || []; group.push(row); groups.set(label, group); }); return groups;
@@ -448,7 +514,7 @@ function resetFilters() {
 }
 function downloadConfig(view) {
   const configs = {
-    expenses: { title: "Ejecución de gastos", context: "#summary-context", period: selectedPeriodSequence().at(-1), metrics: [["Crédito vigente", "#metric-current", "#metric-current-change"], ["Disponible", "#metric-available", "#metric-available-change"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"]], charts: [{ id: "main", label: "Gráfico principal", description: "Puente presupuestario, crédito vigente o porcentaje ejecutado.", canvas: "#budget-chart", title: () => $("#chart-title").textContent }, { id: "financing-composition", label: "Composición por fuente", description: "Participación de cada fuente en el crédito vigente.", canvas: "#financing-composition-chart", title: () => "Participación en el crédito vigente", compact: true }, { id: "financing-execution", label: "Ejecución por fuente", description: "Porcentaje ejecutado de cada origen de fondos.", canvas: "#financing-execution-chart", title: () => "Porcentaje ejecutado por fuente" }, { id: "contribution", label: "Contribución a las modificaciones", description: "Rubros que explican los cambios del crédito.", canvas: "#contribution-chart", title: () => "Contribución a las modificaciones" }] },
+    expenses: { title: "Ejecución de gastos", context: "#summary-context", period: selectedPeriodSequence().at(-1), metrics: [["Crédito vigente", "#metric-current", "#metric-current-change"], ["Disponible", "#metric-available", "#metric-available-change"], ["% ejecutado", "#metric-execution", "#metric-execution-benchmark"]], charts: [{ id: "ranking-execution", label: "Comparador de ejecución", description: "Tres mayores y tres menores porcentajes de ejecución.", canvas: "#ranking-execution-chart", title: () => "Mayores y menores niveles de ejecución" }, { id: "ranking-funding", label: "Comparador de financiamiento", description: "Tres mayores aumentos y tres mayores reducciones de crédito.", canvas: "#ranking-funding-chart", title: () => "Más financiados y más desfinanciados" }, { id: "main", label: "Gráfico principal", description: "Puente presupuestario, crédito vigente o porcentaje ejecutado.", canvas: "#budget-chart", title: () => $("#chart-title").textContent }, { id: "financing-composition", label: "Composición por fuente", description: "Participación de cada fuente en el crédito vigente.", canvas: "#financing-composition-chart", title: () => "Participación en el crédito vigente", compact: true }, { id: "financing-execution", label: "Ejecución por fuente", description: "Porcentaje ejecutado de cada origen de fondos.", canvas: "#financing-execution-chart", title: () => "Porcentaje ejecutado por fuente" }, { id: "contribution", label: "Contribución a las modificaciones", description: "Rubros que explican los cambios del crédito.", canvas: "#contribution-chart", title: () => "Contribución a las modificaciones" }] },
     resources: { title: "Ejecución de recursos", context: "#resource-summary-context", period: [...resourceSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), metrics: [["Recurso vigente", "#resource-metric-current", "#resource-current-note"], ["Recurso percibido", "#resource-metric-perceived", "#resource-perceived-note"], ["% recaudado", "#resource-metric-rate", "#resource-rate-note"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de recaudación, ingresos, modificaciones o recurso vigente.", canvas: "#resource-chart", title: () => $("#resource-chart-title").textContent }, { id: "growth", label: "Ingresos del mes", description: "Rubros que explican la variación mensual.", canvas: "#resource-growth-chart", title: () => "Rubros que explican los ingresos del mes" }, { id: "origin", label: "Procedencia de los recursos", description: "Composición del recurso percibido.", canvas: "#resource-origin-chart", title: () => "Procedencia del recurso percibido", compact: true }, { id: "concentration", label: "Concentración de la recaudación", description: "Participación de las cinco categorías principales y otros conceptos.", canvas: "#resource-concentration-chart", title: () => "Principales conceptos recaudadores", compact: true }] },
     funds: { title: "Fondos Especiales", context: "#fund-summary-context", period: [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1), metrics: [["Recurso vigente", "#fund-metric-current", "#fund-current-note"], ["Recurso percibido", "#fund-metric-perceived", "#fund-perceived-note"], ["Gasto comprometido", "#fund-metric-committed", "#fund-committed-note"], ["Gasto pagado", "#fund-metric-paid", "#fund-paid-note"], ["Percibido menos pagado", "#fund-metric-balance", "#fund-balance-note"]], charts: [{ id: "main", label: "Gráfico principal", description: "Visualización activa de flujo, acumulado u origen.", canvas: "#fund-chart", title: () => $("#fund-chart-title").textContent }, { id: "origin", label: "Participación por origen", description: "Composición de los recursos percibidos.", canvas: "#fund-origin-chart", title: () => "Participación por origen", compact: true }] },
   };
@@ -459,8 +525,7 @@ function openDownloadDialog(view) {
   activeDownloadView = view; const config = downloadConfig(view), dialog = $("#download-dialog");
   $("#download-dialog-title").textContent = `Crear resumen · ${config.title}`; $("#download-error").hidden = true;
   const chartOptions = config.charts.map((chart) => { const available = canvasAvailable(chart.canvas); return `<label><input type="checkbox" value="${chart.id}" ${available ? "" : "disabled"}><span>${escapeHtml(chart.label)}</span><small>${escapeHtml(available ? chart.description : "No disponible para la selección actual.")}</small></label>`; }).join("");
-  const rankingOption = view === "expenses" ? '<label><input type="checkbox" value="rankings"><span>Tarjetas de principales variaciones</span><small>Incluye los cuatro rankings con sus tres resultados.</small></label>' : "";
-  $("#download-options").innerHTML = `<label><input type="checkbox" value="summary" checked><span>Tarjetas del resumen</span><small>Indicadores, período y filtros aplicados.</small></label>${rankingOption}${chartOptions}`;
+  $("#download-options").innerHTML = `<label><input type="checkbox" value="summary" checked><span>Tarjetas del resumen</span><small>Indicadores, período y filtros aplicados.</small></label>${chartOptions}`;
   dialog.showModal();
 }
 function wrapCanvasText(context, text, x, y, maxWidth, lineHeight, maxLines = 2) {
@@ -468,22 +533,15 @@ function wrapCanvasText(context, text, x, y, maxWidth, lineHeight, maxLines = 2)
   for (const word of words) { const next = line ? `${line} ${word}` : word; if (context.measureText(next).width > maxWidth && line) { context.fillText(line, x, y + lines * lineHeight); lines += 1; line = word; if (lines === maxLines - 1) break; } else line = next; }
   if (line && lines < maxLines) context.fillText(line, x, y + lines * lineHeight, maxWidth);
 }
-function drawRankingExport(context, x, y, width, height, title, selector) {
-  context.fillStyle = "#fff"; context.beginPath(); context.roundRect(x, y, width, height, 14); context.fill();
-  context.textAlign = "left"; context.fillStyle = "#15233b"; context.font = "700 18px system-ui, sans-serif"; context.fillText(title, x + 18, y + 30);
-  const rows = [...document.querySelectorAll(`${selector} li:not(.ranking-empty)`)].slice(0, 3);
-  rows.forEach((row, index) => { const rowY = y + 58 + index * 42, primary = row.querySelector(".ranking-name strong")?.textContent || "", secondary = row.querySelector(".ranking-name small")?.textContent || "", amount = row.querySelector(".ranking-value strong")?.textContent || "", percent = row.querySelector(".ranking-value > span")?.textContent || ""; context.fillStyle = "#f5f8fc"; context.beginPath(); context.roundRect(x + 14, rowY - 17, width - 28, 36, 7); context.fill(); context.fillStyle = "#273750"; context.font = "700 11px system-ui, sans-serif"; context.textAlign = "left"; context.fillText(primary, x + 25, rowY - 1, width * .58); context.fillStyle = "#7a8798"; context.font = "400 9px system-ui, sans-serif"; context.fillText(secondary, x + 25, rowY + 12, width * .58); context.fillStyle = "#173b5d"; context.font = "700 10px system-ui, sans-serif"; context.textAlign = "right"; context.fillText(amount, x + width - 25, rowY - 1); context.fillStyle = "#1264a3"; context.fillText(percent, x + width - 25, rowY + 12); });
-}
 function exportDashboardImage(view, selectedItems) {
-  const config = downloadConfig(view), includeSummary = selectedItems.includes("summary"), includeRankings = view === "expenses" && selectedItems.includes("rankings"), charts = config.charts.filter((chart) => selectedItems.includes(chart.id) && canvasAvailable(chart.canvas)).map((chart) => ({ ...chart, exportHeight: chart.compact ? 330 : 455 }));
-  const margin = 64, gap = 18, cardHeight = 150, summaryHeight = includeSummary ? 52 + Math.ceil(config.metrics.length / 3) * (cardHeight + gap) : 0, rankingCardHeight = 205, rankingsHeight = includeRankings ? 52 + rankingCardHeight * 2 + gap : 0, chartsHeight = charts.reduce((total, chart) => total + chart.exportHeight, 0);
-  const canvas = document.createElement("canvas"), context = canvas.getContext("2d"); canvas.width = 1200; canvas.height = 230 + summaryHeight + rankingsHeight + chartsHeight + 76;
+  const config = downloadConfig(view), includeSummary = selectedItems.includes("summary"), charts = config.charts.filter((chart) => selectedItems.includes(chart.id) && canvasAvailable(chart.canvas)).map((chart) => ({ ...chart, exportHeight: chart.compact ? 330 : 455 }));
+  const margin = 64, gap = 18, cardHeight = 150, summaryHeight = includeSummary ? 52 + Math.ceil(config.metrics.length / 3) * (cardHeight + gap) : 0, chartsHeight = charts.reduce((total, chart) => total + chart.exportHeight, 0);
+  const canvas = document.createElement("canvas"), context = canvas.getContext("2d"); canvas.width = 1200; canvas.height = 230 + summaryHeight + chartsHeight + 76;
   context.fillStyle = "#f3f6fa"; context.fillRect(0, 0, canvas.width, canvas.height); const gradient = context.createLinearGradient(0, 0, canvas.width, 0); gradient.addColorStop(0, "#0b365b"); gradient.addColorStop(1, "#1264a3"); context.fillStyle = gradient; context.fillRect(0, 0, canvas.width, 210);
   context.fillStyle = "#bfdef5"; context.font = "700 18px system-ui, sans-serif"; context.fillText("MUNICIPALIDAD DE SANTA FE", margin, 42); context.fillStyle = "#fff"; context.font = "700 40px system-ui, sans-serif"; context.fillText(config.title, margin, 92);
   context.fillStyle = "#d8e9f7"; context.font = "400 16px system-ui, sans-serif"; wrapCanvasText(context, $(config.context).textContent, margin, 128, canvas.width - margin * 2, 24, 3); context.font = "600 15px system-ui, sans-serif"; context.fillText(updatedLabel(config.period), margin, 188);
   let y = 238;
   if (includeSummary) { context.textAlign = "left"; context.fillStyle = "#15233b"; context.font = "700 24px system-ui, sans-serif"; context.fillText("Indicadores principales", margin, y + 24); y += 52; const cardWidth = (canvas.width - margin * 2 - gap * 2) / 3; config.metrics.forEach(([label, valueSelector, noteSelector], index) => { const col = index % 3, row = Math.floor(index / 3), x = margin + col * (cardWidth + gap), cardY = y + row * (cardHeight + gap), centerX = x + cardWidth / 2; context.fillStyle = "#fff"; context.beginPath(); context.roundRect(x, cardY, cardWidth, cardHeight, 14); context.fill(); context.textAlign = "center"; context.fillStyle = "#60708a"; context.font = "600 17px system-ui, sans-serif"; context.fillText(label, centerX, cardY + 36); context.fillStyle = "#15233b"; context.font = "700 27px system-ui, sans-serif"; context.fillText($(valueSelector).textContent, centerX, cardY + 82, cardWidth - 40); context.fillStyle = "#60708a"; context.font = "400 13px system-ui, sans-serif"; wrapCanvasText(context, $(noteSelector).textContent, centerX, cardY + 114, cardWidth - 40, 17, 2); }); y += Math.ceil(config.metrics.length / 3) * (cardHeight + gap); }
-  if (includeRankings) { context.textAlign = "left"; context.fillStyle = "#15233b"; context.font = "700 24px system-ui, sans-serif"; context.fillText("Principales variaciones", margin, y + 24); y += 52; const rankingWidth = (canvas.width - margin * 2 - gap) / 2, cards = [["Menor ejecución", "#ranking-under"], ["Mayor ejecución", "#ranking-over"], ["Más desfinanciados", "#ranking-defunded"], ["Más financiados", "#ranking-funded"]]; cards.forEach(([title, selector], index) => { const col = index % 2, row = Math.floor(index / 2); drawRankingExport(context, margin + col * (rankingWidth + gap), y + row * (rankingCardHeight + gap), rankingWidth, rankingCardHeight, title, selector); }); y += rankingCardHeight * 2 + gap; }
   charts.forEach((chart) => { const source = $(chart.canvas), chartHeight = chart.exportHeight, panelWidth = canvas.width - margin * 2; context.fillStyle = "#fff"; context.beginPath(); context.roundRect(margin, y, panelWidth, chartHeight - gap, 14); context.fill(); context.fillStyle = "#15233b"; context.font = "700 22px system-ui, sans-serif"; context.textAlign = "center"; context.fillText(chart.title(), canvas.width / 2, y + 38); const maxWidth = panelWidth - 48, maxHeight = chartHeight - 88, ratio = source.width / source.height, targetWidth = chart.compact ? Math.min(maxWidth, maxHeight * ratio) : maxWidth, targetHeight = chart.compact ? Math.min(maxHeight, targetWidth / ratio) : maxHeight, targetX = (canvas.width - targetWidth) / 2; context.drawImage(source, targetX, y + 58, targetWidth, targetHeight); y += chartHeight; });
   context.textAlign = "left"; context.fillStyle = "#60708a"; context.font = "400 14px system-ui, sans-serif"; context.fillText("Fuente: Portal de Transparencia de la Municipalidad de Santa Fe", margin, canvas.height - 32);
   canvas.toBlob((blob) => { if (!blob) return; const url = URL.createObjectURL(blob), anchor = document.createElement("a"), filePeriod = (config.period || "santa-fe").replaceAll("/", "-"); anchor.href = url; anchor.download = `presupuesto-${view}-${filePeriod}.png`; anchor.click(); URL.revokeObjectURL(url); }, "image/png");
