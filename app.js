@@ -75,12 +75,15 @@ function renderPagination(selector, state, type, total) {
   $(selector).innerHTML = `<span>${state.start + 1}–${Math.min(state.start + state.pageSize, total)} de ${total}</span>${state.pages > 1 ? `<button type="button" data-pagination="${type}" data-page="${state.page - 1}" ${state.page === 1 ? "disabled" : ""} aria-label="Página anterior">‹</button>${pageButtons}<button type="button" data-pagination="${type}" data-page="${state.page + 1}" ${state.page === state.pages ? "disabled" : ""} aria-label="Página siguiente">›</button>` : ""}`;
 }
 function periods() { return unique(data.map((row) => row.fecha_corte)).sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })); }
+function periodYearMarkup(year, yearPeriods, yearAttribute, periodAttribute) {
+  return `<section class="period-year"><div class="period-year-heading"><button class="period-year-expander" type="button" data-period-year-toggle aria-expanded="false"><span aria-hidden="true">›</span><strong>${year}</strong><small>${yearPeriods.length} meses cargados</small></button><button class="small-action" type="button" ${yearAttribute}="${year}">Todo el año</button></div><div class="month-list" hidden>${yearPeriods.map((period) => `<button type="button" class="month-option active" ${periodAttribute}="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period).split(" ")[0])}</button>`).join("")}</div></section>`;
+}
 
 function fillFilters() {
   selectedPeriods = new Set(periods());
   const byYear = new Map();
   periods().forEach((period) => { const year = period.split("/")[2]; byYear.set(year, [...(byYear.get(year) || []), period]); });
-  $("#period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => `<section class="period-year"><div class="period-year-heading"><strong>${year}</strong><button class="small-action" type="button" data-year="${year}">Todo el año</button></div><div class="month-list">${yearPeriods.map((period) => `<button type="button" class="month-option active" data-period="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period).split(" ")[0])}</button>`).join("")}</div></section>`).join("");
+  $("#period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => periodYearMarkup(year, yearPeriods, "data-year", "data-period")).join("");
   populateSelect("#jurisdiction-filter", unique(data.map((r) => r.jurisdiccion_nombre)), "Todas las secretarías");
   fillExpenseDependentFilters();
 }
@@ -181,7 +184,7 @@ function renderBudgetSize(rows, latestPeriod) {
   $("#budget-size-legend").innerHTML = items.map((item) => `<li><i style="background:${item.color}"></i><span>${escapeHtml(item.label)}</span><strong>${formatCents(item.value)}</strong><small>${columnShare(item.value, total)}</small></li>`).join("");
   canvas.hidden = !items.length; empty.hidden = Boolean(items.length); if (!items.length) { empty.textContent = "No hay datos para esta selección."; return; }
   if (typeof Chart === "undefined") { canvas.hidden = true; empty.hidden = false; empty.textContent = "No se pudo cargar la biblioteca de gráficos."; return; }
-  budgetSizeChart = new Chart(canvas, { type: "bar", data: { labels: ["Crédito vigente"], datasets: items.map((item) => ({ label: item.label, data: [item.value], rawValue: item.value, backgroundColor: item.color, borderColor: "#fff", borderWidth: 1, borderRadius: 3, barThickness: 42 })) }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, interaction: { mode: "nearest", intersect: true }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${context.dataset.label}: ${formatCents(context.dataset.rawValue)} (${columnShare(context.dataset.rawValue, total)})` } } }, scales: { x: { stacked: true, beginAtZero: true, grid: { color: "#e4e9ef" }, ticks: { callback: formatAxisAmount } }, y: { stacked: true, display: false } } } });
+  budgetSizeChart = new Chart(canvas, { type: "bar", data: { labels: ["Crédito vigente"], datasets: items.map((item) => ({ label: item.label, data: [total ? item.value / total * 100 : 0], rawValue: item.value, backgroundColor: item.color, borderColor: "#fff", borderWidth: 1, borderRadius: 3, barThickness: 42 })) }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, interaction: { mode: "nearest", intersect: true }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${context.dataset.label}: ${formatCents(context.dataset.rawValue)} (${formatPercent(context.parsed.x)})` } } }, scales: { x: { stacked: true, min: 0, max: 100, grid: { color: "#e4e9ef" }, ticks: { stepSize: 20, callback: (value) => `${value}%` } }, y: { stacked: true, display: false } } } });
 }
 const barValueLabelsPlugin = {
   id: "barValueLabels",
@@ -471,7 +474,7 @@ function renderPublicSummary() {
 
   const secretaryGroups = new Map(); expenseRows.forEach((row) => { const group = secretaryGroups.get(row.jurisdiccion_nombre) || []; group.push(row); secretaryGroups.set(row.jurisdiccion_nombre, group); });
   const secretaries = [...secretaryGroups.entries()].map(([name, rows]) => ({ name, values: totals(rows) })).sort((a, b) => b.values.current - a.values.current);
-  $("#public-expense-table").innerHTML = secretaries.map((item) => { const approvedShare = budget.approved ? item.values.approved / budget.approved * 100 : null, currentShare = budget.current ? item.values.current / budget.current * 100 : null, difference = approvedShare === null || currentShare === null ? null : Math.round((currentShare - approvedShare) * 10) / 10, differenceClass = difference > 0 ? "positive" : difference < 0 ? "negative" : ""; return `<tr><td>${escapeHtml(item.name)}</td><td class="number">${formatPercent(approvedShare)}</td><td class="number"><strong>${formatPercent(currentShare)}</strong></td><td class="number ${differenceClass}">${difference === null ? "—" : `${difference > 0 ? "+" : difference < 0 ? "−" : ""}${Math.abs(difference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`}</td></tr>`; }).join("");
+  $("#public-expense-table").innerHTML = secretaries.map((item) => { const approvedShare = budget.approved ? item.values.approved / budget.approved * 100 : null, currentShare = budget.current ? item.values.current / budget.current * 100 : null, difference = approvedShare === null || currentShare === null ? null : Math.round((currentShare - approvedShare) * 10) / 10, differenceClass = difference > 0 ? "positive" : difference < 0 ? "negative" : ""; return `<tr><td>${escapeHtml(item.name)}</td><td class="number">${formatPercent(approvedShare)}</td><td class="number"><strong>${formatPercent(currentShare)}</strong></td><td class="number ${differenceClass}">${difference === null || difference === 0 ? "—" : `${difference > 0 ? "+" : "−"}${Math.abs(difference).toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`}</td></tr>`; }).join("");
   const leadingSecretaries = secretaries.slice(0, 3), leadingShare = leadingSecretaries.reduce((total, item) => total + item.values.current, 0);
   $("#public-expense-explanation").innerHTML = leadingSecretaries.length ? `<ol>${leadingSecretaries.map((item, index) => `<li><span>${index + 1}</span><p><strong>${escapeHtml(item.name)}</strong><small>${columnShare(item.values.current, budget.current)} del crédito vigente</small></p></li>`).join("")}</ol><p>En conjunto, estas tres áreas concentran el <strong>${columnShare(leadingShare, budget.current)}</strong> del presupuesto vigente.</p>` : "<p>No hay datos de gastos disponibles.</p>";
 
@@ -552,6 +555,8 @@ function guideDirectoryEntries() {
 }
 function renderGuideDirectory() {
   const entries = guideDirectoryEntries(), pageState = paginate(entries, guideTablePage, 10); guideTablePage = pageState.page;
+  const programCount = entries.reduce((total, item) => total + item.programs.length, 0), referencePeriod = periods().at(-1);
+  $("#guide-secretary-count").textContent = entries.length.toLocaleString("es-AR"); $("#guide-program-count").textContent = programCount.toLocaleString("es-AR"); $("#guide-reference-period").textContent = referencePeriod ? `Estructura observada en el informe de ${labelPeriod(referencePeriod)}.` : "Sin período de referencia disponible.";
   $("#guide-directory-table").innerHTML = pageState.items.map((item) => { const open = guideExpandedSecretaries.has(item.code), programs = open ? `<tr class="guide-program-row"><td colspan="3"><ul class="guide-programs">${item.programs.map((program) => `<li><span class="guide-code">${escapeHtml(program.code)}</span>${escapeHtml(program.name)}</li>`).join("")}</ul></td></tr>` : ""; return `<tr class="guide-directory-row"><td><button class="expand-row" type="button" data-guide-secretary="${escapeHtml(item.code)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(item.name)}</button></td><td><span class="guide-code">${escapeHtml(item.code)}</span></td><td>${item.programs.length.toLocaleString("es-AR")} programas</td></tr>${programs}`; }).join("");
   renderPagination("#guide-pagination", pageState, "guide", entries.length);
 }
@@ -637,7 +642,7 @@ function fillResourceFilters() {
   resourceSelectedPeriods = new Set(resourcePeriods());
   const byYear = new Map();
   resourcePeriods().forEach((period) => { const year = period.split("/")[2]; byYear.set(year, [...(byYear.get(year) || []), period]); });
-  $("#resource-period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => `<section class="period-year"><div class="period-year-heading"><strong>${year}</strong><button class="small-action" type="button" data-resource-year="${year}">Todo el año</button></div><div class="month-list">${yearPeriods.map((period) => `<button type="button" class="month-option active" data-resource-period="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period).split(" ")[0])}</button>`).join("")}</div></section>`).join("");
+  $("#resource-period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => periodYearMarkup(year, yearPeriods, "data-resource-year", "data-resource-period")).join("");
   renderResourceOptionButtons();
 }
 function resourceFilteredRows(includeAllPeriods = false) {
@@ -819,7 +824,7 @@ function fillFundNameFilter() {
 function fillFundFilters() {
   fundSelectedPeriods = new Set(fundPeriods()); const byYear = new Map();
   fundPeriods().forEach((period) => { const year = period.split("/")[2]; byYear.set(year, [...(byYear.get(year) || []), period]); });
-  $("#fund-period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => `<section class="period-year"><div class="period-year-heading"><strong>${year}</strong><button class="small-action" type="button" data-fund-year="${year}">Todo el año</button></div><div class="month-list">${yearPeriods.map((period) => `<button type="button" class="month-option active" data-fund-period="${period}" aria-pressed="true">${escapeHtml(labelPeriod(period).split(" ")[0])}</button>`).join("")}</div></section>`).join("");
+  $("#fund-period-filter").innerHTML = [...byYear.entries()].map(([year, yearPeriods]) => periodYearMarkup(year, yearPeriods, "data-fund-year", "data-fund-period")).join("");
   const origins = unique(fundData.map((row) => row.origen_codigo)).map((code) => { const row = fundData.find((item) => item.origen_codigo === code); return { value: code, label: row.origen_nombre }; }); populateSelectOptions("#fund-origin-filter", origins, "Todos los niveles"); fillFundNameFilter();
 }
 function fundFilteredRows(includeAllPeriods = false) {
@@ -897,6 +902,7 @@ async function init() {
     fundData = (await Promise.all(FUND_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     financingData = (await Promise.all(FINANCING_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     fillFilters(); fillResourceFilters(); fillFundFilters(); render(); renderResources(false); renderFunds(false); renderPublicSummary(); renderGuideDirectory();
+    document.querySelectorAll("[data-period-year-toggle]").forEach((button) => button.addEventListener("click", () => { const months = button.closest(".period-year").querySelector(".month-list"), expanded = months.hidden; months.hidden = !expanded; button.classList.toggle("expanded", expanded); button.setAttribute("aria-expanded", String(expanded)); }));
     const latestLoadedPeriod = [...periods(), ...resourcePeriods(), ...fundPeriods()].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1);
     $("#updated-period").textContent = latestLoadedPeriod ? updateDateFormat.format(date({ fecha_corte: latestLoadedPeriod })) : "Sin datos";
     $("#period-filter").addEventListener("click", (event) => {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261016-1" />
+    <link rel="stylesheet" href="styles.css?v=20261016-2" />
   </head>
   <body>
     <header class="site-header">
@@ -320,6 +320,8 @@
             </section>
             <aside id="resource-quality-note" class="resource-quality" role="note"></aside>
 
+            <article class="panel resource-insight-card resource-concentration-card resource-overview-card"><p class="eyebrow">Magnitud y composición</p><h3>Principales conceptos recaudadores</h3><p id="resource-concentration-note" class="insight-description"></p><div class="resource-concentration-chart"><canvas id="resource-concentration-chart"></canvas></div></article>
+
             <section class="resource-chart-layout">
             <article class="panel resource-chart-panel">
               <div class="section-heading"><div><p class="eyebrow">Evolución</p><h2 id="resource-chart-title">Recaudación y ritmo esperado</h2></div><div id="resource-chart-legend" class="legend"></div></div>
@@ -350,7 +352,6 @@
             <article class="panel resource-insight-card resource-growth-card"><p class="eyebrow">Variación mensual</p><h3>Qué explica los ingresos del mes</h3><div class="metric-switch resource-growth-switch" role="tablist" aria-label="Nivel de detalle del gráfico"><button class="active" type="button" data-resource-growth="major" aria-selected="true">Por rubro</button><button type="button" data-resource-growth="detail" aria-selected="false">Por detalle</button></div><p id="resource-growth-note" class="insight-description"></p><div class="resource-mini-chart"><canvas id="resource-growth-chart"></canvas></div></article>
             <article class="panel resource-insight-card resource-origin-card"><p class="eyebrow">Composición</p><h3>Procedencia del recurso percibido</h3><p class="insight-description">Participación sobre el total acumulado del último período seleccionado.</p><div class="resource-origin-layout"><div class="resource-donut-chart"><canvas id="resource-origin-chart"></canvas></div><ul id="resource-origin-legend" class="resource-origin-legend"></ul></div></article>
             <article class="panel resource-insight-card resource-pace-card"><p class="eyebrow">Ritmo anual</p><h3>Recaudación frente a lo esperado</h3><p id="resource-pace-note" class="insight-description"></p><div class="pace-columns"><div><strong>Más atrasados</strong><ol id="resource-pace-behind" class="resource-ranking-list"></ol></div><div><strong>Más adelantados</strong><ol id="resource-pace-ahead" class="resource-ranking-list"></ol></div></div></article>
-            <article class="panel resource-insight-card resource-concentration-card"><p class="eyebrow">Concentración</p><h3>Principales conceptos recaudadores</h3><p id="resource-concentration-note" class="insight-description"></p><div class="resource-concentration-chart"><canvas id="resource-concentration-chart"></canvas></div></article>
           </div>
         </section>
       </section>
@@ -377,6 +378,8 @@
               <article class="metric fund-metric fund-balance"><div class="metric-heading"><p>Percibido menos pagado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Balance de caja</strong>Diferencia simple entre lo percibido y lo pagado. Puede ser negativa cuando se utilizan saldos acumulados de ejercicios anteriores.</span></span></div><strong id="fund-metric-balance">—</strong><small id="fund-balance-note">—</small></article>
             </section>
 
+            <article class="panel fund-insight-card fund-overview-card"><p class="eyebrow">Magnitud y composición</p><h3>Participación por origen</h3><p class="insight-description">Distribución del recurso percibido acumulado.</p><div class="fund-origin-layout"><div class="fund-donut-chart"><canvas id="fund-origin-chart"></canvas></div><ul id="fund-origin-legend" class="resource-origin-legend"></ul></div></article>
+
             <section class="panel fund-chart-panel">
               <div class="section-heading"><div><p class="eyebrow">Evolución</p><h2 id="fund-chart-title">Ingresos y pagos de cada mes</h2></div><div id="fund-chart-legend" class="legend"></div></div>
               <div class="chart-controls"><div class="chart-tabs fund-chart-tabs" role="tablist" aria-label="Tipo de gráfico de fondos especiales">
@@ -398,9 +401,8 @@
         </section>
 
         <section class="fund-insights" aria-labelledby="fund-insights-title">
-          <div class="lab-heading"><p class="eyebrow">Diagnóstico avanzado</p><h2 id="fund-insights-title">Composición y movimientos destacados</h2><p>Lecturas de mayor detalle que también responden a los filtros seleccionados.</p></div>
+          <div class="lab-heading"><p class="eyebrow">Diagnóstico avanzado</p><h2 id="fund-insights-title">Fondos con mayor movimiento</h2><p>Una lectura de mayor detalle que también responde a los filtros seleccionados.</p></div>
           <div class="fund-insight-grid">
-            <article class="panel fund-insight-card"><p class="eyebrow">Composición</p><h3>Participación por origen</h3><p class="insight-description">Distribución del recurso percibido acumulado.</p><div class="fund-origin-layout"><div class="fund-donut-chart"><canvas id="fund-origin-chart"></canvas></div><ul id="fund-origin-legend" class="resource-origin-legend"></ul></div></article>
             <article class="panel fund-insight-card fund-ranking-card"><p class="eyebrow">Principales fondos</p><h3 id="fund-ranking-title">Mayor recurso percibido</h3><div class="metric-switch fund-ranking-switch" role="tablist" aria-label="Métrica del ranking de fondos"><button class="active" type="button" data-fund-ranking="perceived" aria-selected="true">Mayor recurso percibido</button><button type="button" data-fund-ranking="accrued" aria-selected="false">Mayor recurso devengado</button></div><p id="fund-ranking-note" class="insight-description"></p><div class="fund-ranking-columns" aria-hidden="true"><span>Fondo especial</span><span>Monto</span><span>Participación</span></div><ol id="fund-top-list" class="fund-ranking-list"></ol></article>
           </div>
         </section>
@@ -410,10 +412,14 @@
       <section id="page-guide" class="page-view landing-panel" hidden>
         <p class="eyebrow">Guía inicial</p>
         <h2>¿Cómo leer el presupuesto?</h2>
-        <p>El presupuesto muestra cuánto se autorizó gastar, cómo cambió esa autorización durante el año y cuánto del crédito disponible ya se utilizó.</p>
-        <section class="guide-concept">
-          <div class="guide-steps" aria-label="Recorrido básico del presupuesto"><article><span>1</span><div><strong>Crédito aprobado</strong><p>Es el monto autorizado al comenzar el ejercicio y funciona como punto de partida.</p></div></article><article><span>2</span><div><strong>Crédito vigente</strong><p>Incluye ampliaciones y reducciones realizadas después de la aprobación.</p></div></article><article><span>3</span><div><strong>Devengado</strong><p>Registra obligaciones reconocidas por bienes, servicios u obras ya recibidos.</p></div></article><article><span>4</span><div><strong>Porcentaje ejecutado</strong><p>Surge de dividir el devengado por el crédito vigente y multiplicarlo por 100.</p></div></article></div>
-          <article class="guide-copy"><p class="eyebrow">La idea central</p><h3>Del permiso para gastar a la ejecución</h3><p>El crédito aprobado es el punto de partida. Durante el año puede aumentar o reducirse y convertirse en crédito vigente. El devengado registra cuánto de ese permiso ya se transformó en una obligación concreta.</p><p>Comparar estos conceptos permite distinguir una baja ejecución de una reducción presupuestaria y entender mejor qué cambió.</p></article>
+        <p class="guide-intro">El presupuesto no es solamente una cifra: es un plan anual de ingresos y gastos que se modifica y ejecuta durante el año. Este recorrido explica qué mirar y en qué orden.</p>
+        <section class="guide-chapters" aria-label="Recorrido para comprender el presupuesto">
+          <article class="guide-chapter"><span class="guide-number">1</span><div><p class="eyebrow">Punto de partida</p><h3>¿Qué es el presupuesto y qué es el resultado financiero?</h3><p>El presupuesto municipal estima cuánto dinero ingresará y autoriza en qué podrá gastarse. Permite financiar servicios, obras, salarios, transferencias y otras políticas públicas.</p><p>En este sitio mostramos un <strong>resultado financiero parcial</strong> restando lo efectivamente pagado a lo efectivamente percibido. Si es positivo, los ingresos cobrados superan los pagos realizados; si es negativo, ocurre lo contrario. No equivale por sí solo al superávit o déficit definitivo del ejercicio.</p></div></article>
+          <article class="guide-chapter"><span class="guide-number">2</span><div><p class="eyebrow">La estructura</p><h3>¿Cómo se compone?</h3><p>Los <strong>gastos</strong> se organizan por secretaría, programa, objeto y fuente de financiamiento. Los <strong>recursos</strong> se agrupan por rubros y conceptos según su origen. Los Fondos Especiales vinculan recursos afectados con gastos destinados a una finalidad específica.</p><div class="guide-flow" aria-label="Estructura básica"><span>Municipalidad</span><b>→</b><span>Secretarías</span><b>→</b><span>Programas</span><b>→</b><span>Partidas</span></div></div></article>
+          <article class="guide-chapter guide-chapter-wide"><span class="guide-number">3</span><div><p class="eyebrow">El recorrido del dinero</p><h3>Aprobado, vigente, devengado, percibido y pagado</h3><div class="guide-glossary"><div><strong>Aprobado</strong><p>Monto inicial autorizado por el presupuesto.</p></div><div><strong>Vigente</strong><p>Aprobado más ampliaciones y menos reducciones.</p></div><div><strong>Devengado</strong><p>Obligación reconocida porque el bien, servicio u obra ya fue recibido.</p></div><div><strong>Percibido</strong><p>Recurso que efectivamente ingresó a las cuentas municipales.</p></div><div><strong>Pagado</strong><p>Gasto cuyo desembolso ya fue realizado.</p></div><div><strong>% ejecutado</strong><p>Devengado ÷ crédito vigente × 100. Mide avance, no calidad del gasto.</p></div></div></div></article>
+          <article class="guide-chapter"><span class="guide-number">4</span><div><p class="eyebrow">Santa Fe en números</p><h3>El presupuesto municipal cargado</h3><p>La estructura del último informe disponible contiene <strong id="guide-secretary-count">—</strong> secretarías o jurisdicciones y <strong id="guide-program-count">—</strong> programas. El directorio inferior permite conocer cómo se agrupan y conservar sus códigos oficiales para futuras comparaciones.</p><p id="guide-reference-period" class="guide-muted"></p></div></article>
+          <article class="guide-chapter"><span class="guide-number">5</span><div><p class="eyebrow">El cierre anual</p><h3>¿Qué es la Cuenta de Inversión?</h3><p>Es la rendición que muestra cómo terminó el ejercicio: cuánto se recaudó, cuánto se gastó y cómo se ejecutaron las autorizaciones presupuestarias. Complementa los informes mensuales y permite comparar el presupuesto aprobado con el resultado acumulado al cierre.</p><p>Por eso diciembre no debe interpretarse como un informe mensual más: la Cuenta de Inversión es el documento de cierre y control del año.</p></div></article>
+          <article class="guide-chapter guide-caution"><span class="guide-number">6</span><div><p class="eyebrow">Antes de concluir</p><h3>Tres cuidados para interpretar los datos</h3><ul><li>Una ejecución baja en un mes puede responder al calendario de una obra o contratación.</li><li>Un aumento del crédito no implica automáticamente más gasto: primero modifica la autorización.</li><li>Para comparar años conviene usar el mismo mes y considerar inflación, cambios de estructura y partidas extraordinarias.</li></ul></div></article>
         </section>
         <section class="guide-directory" aria-labelledby="guide-directory-title">
           <div><p class="eyebrow">Estructura municipal</p><h3 id="guide-directory-title">Secretarías y programas</h3><p>Directorio de referencia del presupuesto 2026. Desplegá una secretaría para conocer sus programas. Se incluyen los códigos oficiales para facilitar futuras comparaciones, sin mostrar importes.</p></div>
@@ -439,6 +445,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261016-1"></script>
+    <script src="app.js?v=20261016-2"></script>
   </body>
 </html>
