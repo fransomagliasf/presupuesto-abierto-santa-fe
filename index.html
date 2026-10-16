@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261014-5" />
+    <link rel="stylesheet" href="styles.css?v=20261016-1" />
   </head>
   <body>
     <header class="site-header">
@@ -160,10 +160,24 @@
         </div>
       </section>
 
+      <section class="panel budget-size-panel" aria-labelledby="budget-size-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Magnitud del presupuesto</p>
+            <h2 id="budget-size-title">¿Cómo se compone el crédito vigente?</h2>
+          </div>
+          <p id="budget-size-context" class="legend"></p>
+        </div>
+        <p id="budget-size-note" class="insight-description"></p>
+        <div class="budget-size-chart"><canvas id="budget-size-chart"></canvas><p id="budget-size-empty" class="ranking-empty" hidden></p></div>
+        <div class="budget-size-legend-heading" aria-hidden="true"><span></span><span>Área analizada</span><span>Monto</span><strong>% del total</strong></div>
+        <ul id="budget-size-legend" class="budget-size-legend"></ul>
+      </section>
+
       <section class="panel ranking-panel" aria-labelledby="ranking-title">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Alertas y movimientos</p>
+            <p class="eyebrow">Comparación</p>
             <h2 id="ranking-title">Principales variaciones</h2>
           </div>
           <label class="compact-label ranking-dimension-control"><span>Analizar por</span>
@@ -237,11 +251,11 @@
         <p id="financing-quality-note" class="note"></p>
       </section>
 
-      <section class="panel">
+      <section class="panel expense-detail-panel">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Detalle</p>
-            <h2 id="table-title">Partidas con mayor devengado</h2>
+            <h2 id="table-title">Detalle del presupuesto seleccionado</h2>
           </div>
           <label class="compact-label">Desagregar por
             <select id="detail-breakdown-filter">
@@ -252,13 +266,14 @@
           </label>
         </div>
         <div class="table-wrap">
-          <table>
+          <table class="expense-detail-table">
             <thead>
               <tr>
                 <th><button class="sort-header" type="button" data-sort="name">Secretaría / jurisdicción <span></span></button></th>
                 <th><button class="sort-header" type="button" data-sort="breakdown">Desagregación <span></span></button></th>
                 <th class="number"><button class="sort-header" type="button" data-sort="approved">Crédito aprobado <span></span></button></th>
                 <th class="number"><button class="sort-header" type="button" data-sort="current">Crédito vigente <span></span></button></th>
+                <th class="number"><button class="sort-header" type="button" data-sort="modification">Modificación <span></span></button></th>
                 <th class="number"><button class="sort-header active" type="button" data-sort="accrued">Devengado <span>↓</span></button></th>
                 <th class="number"><button class="sort-header" type="button" data-sort="available">Disponible <span></span></button></th>
                 <th class="number"><button class="sort-header" type="button" data-sort="execution">% ejecutado <span></span></button> <span class="info-help" tabindex="0" aria-label="Información sobre cálculo y colores">i<span class="info-card"><strong>Cómo se interpreta</strong><span><b class="key-execution">Ejecutado</b> = devengado ÷ crédito vigente × 100.</span><span><b class="key-expected">Esperado</b> = mes de corte ÷ 12 × 100.</span><span class="scale-line"><i class="scale-dot red"></i><b>Rojo:</b> más de 10 puntos por debajo.</span><span class="scale-line"><i class="scale-dot yellow"></i><b>Amarillo:</b> entre 5 y 10 puntos de desvío.</span><span class="scale-line"><i class="scale-dot green"></i><b>Verde:</b> dentro de ±5 puntos.</span><span class="scale-line"><i class="scale-dot blue"></i><b>Azul:</b> al menos 10 puntos por encima.</span><small>Es una referencia temporal, no una evaluación de la calidad del gasto.</small></span></span></th>
@@ -272,7 +287,7 @@
       </section>
 
       <section class="insights-lab" aria-labelledby="insights-title">
-        <div class="lab-heading"><p class="eyebrow">Laboratorio</p><h2 id="insights-title">Nuevas formas de analizar los datos</h2><p>Prototipos vinculados a los filtros actuales para evaluar qué visualizaciones conviene profundizar.</p></div>
+        <div class="lab-heading"><p class="eyebrow">Diagnóstico avanzado</p><h2 id="insights-title">Ritmo, modificaciones y alertas</h2><p>Lecturas más detalladas para identificar desvíos y explicar los cambios del presupuesto.</p></div>
         <div class="insights-grid">
           <article class="panel insight-card insight-wide"><div class="insight-card-heading"><div><p class="eyebrow">Ritmo de ejecución</p><h3>Mapa de calor por programa y mes</h3></div><button id="toggle-heatmap" class="small-action" type="button" aria-expanded="false">Ver todos</button></div><p class="insight-description">Compara cada programa con el ritmo esperado para el mes.</p><div id="execution-heatmap" class="heatmap-wrap"></div></article>
           <article class="panel insight-card"><p class="eyebrow">Origen del cambio</p><h3>Contribución a las modificaciones</h3><p id="contribution-note" class="insight-description"></p><div class="mini-chart"><canvas id="contribution-chart"></canvas></div></article>
@@ -295,7 +310,7 @@
 
           <div class="resource-primary">
             <section class="resource-heading">
-              <div><p class="eyebrow">Ingresos municipales</p><h2>Resumen de recursos</h2><p id="resource-summary-context" class="note"></p></div>
+              <div><p class="eyebrow">Indicadores</p><h2>Resumen de recursos</h2><p id="resource-summary-context" class="note"></p></div>
               <div class="view-heading-actions"><button class="download-button" type="button" data-download-view="resources">Crear resumen</button></div>
             </section>
             <section class="resource-metric-grid" aria-label="Indicadores de recursos">
@@ -330,11 +345,11 @@
         </section>
 
         <section class="resource-insights" aria-labelledby="resource-insights-title">
-          <div class="lab-heading"><p class="eyebrow">Lecturas complementarias</p><h2 id="resource-insights-title">¿Qué explica la recaudación?</h2><p>Paneles exploratorios vinculados a los períodos, rubros y detalles seleccionados.</p></div>
+          <div class="lab-heading"><p class="eyebrow">Diagnóstico avanzado</p><h2 id="resource-insights-title">Composición, ritmo y variaciones</h2><p>Lecturas de mayor detalle vinculadas a los períodos, rubros y conceptos seleccionados.</p></div>
           <div class="resource-insight-grid">
-            <article class="panel resource-insight-card"><p class="eyebrow">Variación mensual</p><h3>Qué explica los ingresos del mes</h3><div class="metric-switch resource-growth-switch" role="tablist" aria-label="Nivel de detalle del gráfico"><button class="active" type="button" data-resource-growth="major" aria-selected="true">Por rubro</button><button type="button" data-resource-growth="detail" aria-selected="false">Por detalle</button></div><p id="resource-growth-note" class="insight-description"></p><div class="resource-mini-chart"><canvas id="resource-growth-chart"></canvas></div></article>
-            <article class="panel resource-insight-card"><p class="eyebrow">Composición</p><h3>Procedencia del recurso percibido</h3><p class="insight-description">Participación sobre el total acumulado del último período seleccionado.</p><div class="resource-origin-layout"><div class="resource-donut-chart"><canvas id="resource-origin-chart"></canvas></div><ul id="resource-origin-legend" class="resource-origin-legend"></ul></div></article>
-            <article class="panel resource-insight-card"><p class="eyebrow">Ritmo anual</p><h3>Recaudación frente a lo esperado</h3><p id="resource-pace-note" class="insight-description"></p><div class="pace-columns"><div><strong>Más atrasados</strong><ol id="resource-pace-behind" class="resource-ranking-list"></ol></div><div><strong>Más adelantados</strong><ol id="resource-pace-ahead" class="resource-ranking-list"></ol></div></div></article>
+            <article class="panel resource-insight-card resource-growth-card"><p class="eyebrow">Variación mensual</p><h3>Qué explica los ingresos del mes</h3><div class="metric-switch resource-growth-switch" role="tablist" aria-label="Nivel de detalle del gráfico"><button class="active" type="button" data-resource-growth="major" aria-selected="true">Por rubro</button><button type="button" data-resource-growth="detail" aria-selected="false">Por detalle</button></div><p id="resource-growth-note" class="insight-description"></p><div class="resource-mini-chart"><canvas id="resource-growth-chart"></canvas></div></article>
+            <article class="panel resource-insight-card resource-origin-card"><p class="eyebrow">Composición</p><h3>Procedencia del recurso percibido</h3><p class="insight-description">Participación sobre el total acumulado del último período seleccionado.</p><div class="resource-origin-layout"><div class="resource-donut-chart"><canvas id="resource-origin-chart"></canvas></div><ul id="resource-origin-legend" class="resource-origin-legend"></ul></div></article>
+            <article class="panel resource-insight-card resource-pace-card"><p class="eyebrow">Ritmo anual</p><h3>Recaudación frente a lo esperado</h3><p id="resource-pace-note" class="insight-description"></p><div class="pace-columns"><div><strong>Más atrasados</strong><ol id="resource-pace-behind" class="resource-ranking-list"></ol></div><div><strong>Más adelantados</strong><ol id="resource-pace-ahead" class="resource-ranking-list"></ol></div></div></article>
             <article class="panel resource-insight-card resource-concentration-card"><p class="eyebrow">Concentración</p><h3>Principales conceptos recaudadores</h3><p id="resource-concentration-note" class="insight-description"></p><div class="resource-concentration-chart"><canvas id="resource-concentration-chart"></canvas></div></article>
           </div>
         </section>
@@ -353,7 +368,7 @@
           </aside>
 
           <div class="fund-primary">
-            <section class="fund-heading"><div><p class="eyebrow">Recursos afectados</p><h2>Resumen de Fondos Especiales</h2><p id="fund-summary-context" class="note"></p></div><div class="view-heading-actions"><button class="download-button" type="button" data-download-view="funds">Crear resumen</button></div></section>
+            <section class="fund-heading"><div><p class="eyebrow">Indicadores</p><h2>Resumen de Fondos Especiales</h2><p id="fund-summary-context" class="note"></p></div><div class="view-heading-actions"><button class="download-button" type="button" data-download-view="funds">Crear resumen</button></div></section>
             <section class="fund-metric-grid" aria-label="Indicadores de fondos especiales">
               <article class="metric fund-metric"><div class="metric-heading"><p>Recurso vigente</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso vigente</strong>Monto disponible o previsto para los recursos afectados del fondo.</span></span></div><strong id="fund-metric-current">—</strong><small id="fund-current-note">—</small></article>
               <article class="metric fund-metric"><div class="metric-heading"><p>Recurso percibido</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Recurso percibido</strong>Ingresos afectados que efectivamente se cobraron.</span></span></div><strong id="fund-metric-perceived">—</strong><small id="fund-perceived-note">—</small></article>
@@ -383,7 +398,7 @@
         </section>
 
         <section class="fund-insights" aria-labelledby="fund-insights-title">
-          <div class="lab-heading"><p class="eyebrow">Lecturas complementarias</p><h2 id="fund-insights-title">Composición y movimientos destacados</h2><p>Estas lecturas también responden a los filtros seleccionados.</p></div>
+          <div class="lab-heading"><p class="eyebrow">Diagnóstico avanzado</p><h2 id="fund-insights-title">Composición y movimientos destacados</h2><p>Lecturas de mayor detalle que también responden a los filtros seleccionados.</p></div>
           <div class="fund-insight-grid">
             <article class="panel fund-insight-card"><p class="eyebrow">Composición</p><h3>Participación por origen</h3><p class="insight-description">Distribución del recurso percibido acumulado.</p><div class="fund-origin-layout"><div class="fund-donut-chart"><canvas id="fund-origin-chart"></canvas></div><ul id="fund-origin-legend" class="resource-origin-legend"></ul></div></article>
             <article class="panel fund-insight-card fund-ranking-card"><p class="eyebrow">Principales fondos</p><h3 id="fund-ranking-title">Mayor recurso percibido</h3><div class="metric-switch fund-ranking-switch" role="tablist" aria-label="Métrica del ranking de fondos"><button class="active" type="button" data-fund-ranking="perceived" aria-selected="true">Mayor recurso percibido</button><button type="button" data-fund-ranking="accrued" aria-selected="false">Mayor recurso devengado</button></div><p id="fund-ranking-note" class="insight-description"></p><div class="fund-ranking-columns" aria-hidden="true"><span>Fondo especial</span><span>Monto</span><span>Participación</span></div><ol id="fund-top-list" class="fund-ranking-list"></ol></article>
@@ -424,6 +439,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261014-5"></script>
+    <script src="app.js?v=20261016-1"></script>
   </body>
 </html>
