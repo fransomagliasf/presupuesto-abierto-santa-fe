@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261019-1" />
+    <link rel="stylesheet" href="styles.css?v=20261019-2" />
   </head>
   <body>
     <header class="site-header">
@@ -113,6 +113,7 @@
                 <label>Secretaría / jurisdicción
                   <select id="jurisdiction-filter"></select>
                 </label>
+                <button id="jurisdiction-description-button" class="description-trigger" type="button" hidden><span aria-hidden="true">i</span> ¿De qué trata?</button>
               </div>
               <section id="program-panel" class="program-panel" aria-labelledby="program-title" hidden>
               <div class="program-heading">
@@ -429,6 +430,15 @@
       </section>
     </main>
 
+    <dialog id="description-dialog" class="description-dialog" aria-labelledby="description-dialog-title">
+      <form method="dialog">
+        <button class="dialog-close" type="submit" value="cancel" aria-label="Cerrar descripción">×</button>
+      </form>
+      <div class="description-dialog-heading"><p id="description-dialog-kind" class="eyebrow">Información institucional</p><h2 id="description-dialog-title">¿De qué trata?</h2><p id="description-dialog-context"></p></div>
+      <div id="description-dialog-body" class="description-dialog-body"></div>
+      <p id="description-dialog-source" class="description-source"></p>
+    </dialog>
+
     <dialog id="download-dialog" class="download-dialog">
       <form method="dialog">
         <div class="download-dialog-heading"><div><p class="eyebrow">Exportar</p><h2 id="download-dialog-title">Crear resumen</h2></div><button class="dialog-close" type="submit" value="cancel" aria-label="Cerrar">×</button></div>
@@ -445,6 +455,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261019-1"></script>
+    <script src="app.js?v=20261019-2"></script>
   </body>
 </html>
