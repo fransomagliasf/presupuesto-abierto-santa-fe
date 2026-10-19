@@ -13,11 +13,6 @@ const FUND_DATA_FILES = [
   "data/processed/fondos_especiales_2026-04-30.csv", "data/processed/fondos_especiales_2026-05-31.csv", "data/processed/fondos_especiales_2026-06-30.csv",
   "data/processed/fondos_especiales_2026-07-31.csv", "data/processed/fondos_especiales_2026-08-31.csv", "data/processed/fondos_especiales_2026-09-30.csv",
 ];
-const FINANCING_DATA_FILES = [
-  "data/processed/gastos_por_fuente_2026-01-31.csv", "data/processed/gastos_por_fuente_2026-02-28.csv", "data/processed/gastos_por_fuente_2026-03-31.csv",
-  "data/processed/gastos_por_fuente_2026-04-30.csv", "data/processed/gastos_por_fuente_2026-05-31.csv", "data/processed/gastos_por_fuente_2026-06-30.csv",
-  "data/processed/gastos_por_fuente_2026-07-31.csv", "data/processed/gastos_por_fuente_2026-08-31.csv", "data/processed/gastos_por_fuente_2026-09-30.csv",
-];
 const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -26,7 +21,7 @@ const updateDateFormat = new Intl.DateTimeFormat("es-AR", { month: "long", year:
 let data = [], selectedPeriods = new Set(), selectedPrograms = new Set(), expandedSecretaries = new Set(), activeChart = "bar", showBarValues = true, bridgeFocusPeriod = null, budgetChart = null, budgetSizeChart = null, rankingExecutionChart = null, rankingFundingChart = null, contributionChart = null, tableSort = { key: "name", direction: "asc" };
 let resourceData = [], resourceSelectedPeriods = new Set(), resourceSelectedMajors = new Set(), resourceSelectedDetails = new Set(), resourceExpandedMajors = new Set(), resourceActiveChart = "collection", resourceGrowthDimension = "major", resourceShowValues = true, resourceChart = null, resourceGrowthChart = null, resourceOriginChart = null, resourceConcentrationChart = null;
 let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Set(), fundActiveChart = "flow", fundRankingMetric = "perceived", fundShowValues = true, fundChart = null, fundOriginChart = null;
-let financingData = [], financingCompositionChart = null, financingExecutionChart = null;
+let financingCompositionChart = null, financingExecutionChart = null;
 const TABLE_PAGE_SIZE = 5;
 let expenseTablePage = 1, resourceTablePage = 1, fundTablePage = 1, guideTablePage = 1, guideExpandedSecretaries = new Set(), activeDownloadView = "expenses";
 let heatmapExpanded = false;
@@ -546,7 +541,7 @@ function renderTable(rows) {
 function render() {
   const rows = filteredRows(), periodsSelected = selectedPeriodSequence(), latestPeriod = periodsSelected.at(-1), previousPeriod = periodsSelected.at(-2);
   const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod);
-  renderMetrics(latestRows, latestPeriod, previousPeriod); renderBudgetSize(latestRows, latestPeriod); renderRankings(latestRows, latestPeriod); renderChart(rows); renderTable(rows); renderInsights(rows, latestRows, latestPeriod); renderFinancingAnalysis();
+  renderMetrics(latestRows, latestPeriod, previousPeriod); renderBudgetSize(latestRows, latestPeriod); renderRankings(latestRows, latestPeriod); renderChart(rows); renderTable(rows); renderInsights(rows, latestRows, latestPeriod); renderFinancingAnalysis(latestRows, latestPeriod);
 }
 function guideDirectoryEntries() {
   const latestPeriod = periods().at(-1), rows = data.filter((row) => row.fecha_corte === latestPeriod), groups = new Map();
@@ -561,19 +556,20 @@ function renderGuideDirectory() {
   renderPagination("#guide-pagination", pageState, "guide", entries.length);
 }
 function financingLabel(code) { return ({ "110": "Tesoro Municipal", "131": "Origen municipal", "132": "Origen provincial", "133": "Origen nacional", "150": "Crédito interno" })[code] || code; }
-function renderFinancingAnalysis() {
+function renderFinancingAnalysis(rows, latestPeriod) {
   if (financingCompositionChart) { financingCompositionChart.destroy(); financingCompositionChart = null; }
   if (financingExecutionChart) { financingExecutionChart.destroy(); financingExecutionChart = null; }
-  const availablePeriods = unique(financingData.map((row) => row.fecha_corte)).filter((period) => selectedPeriods.has(period)).sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })), latestPeriod = availablePeriods.at(-1);
-  const rows = latestPeriod ? financingData.filter((row) => row.fecha_corte === latestPeriod) : [], compositionCanvas = $("#financing-composition-chart"), executionCanvas = $("#financing-execution-chart");
+  const compositionCanvas = $("#financing-composition-chart"), executionCanvas = $("#financing-execution-chart");
   if (!rows.length) { compositionCanvas.hidden = true; executionCanvas.hidden = true; $("#financing-composition-legend").innerHTML = '<li class="ranking-empty">No hay datos para los períodos seleccionados.</li>'; $("#financing-execution-note").textContent = "Seleccioná al menos un período disponible."; $("#financing-quality-note").textContent = ""; return; }
-  const colors = { "110": "#1264a3", "131": "#008a81", "132": "#438dcc", "133": "#7b3fc6", "150": "#d59a13" }, totalCurrent = sum(rows, "credito_vigente_centavos");
-  const items = rows.map((row) => ({ code: row.fuente_codigo, label: financingLabel(row.fuente_codigo), current: cents(row, "credito_vigente_centavos"), accrued: cents(row, "devengado_centavos"), color: colors[row.fuente_codigo] || "#8c99a9" })).sort((a, b) => b.current - a.current);
-  $("#financing-context").textContent = `Composición y ejecución acumulada a ${labelPeriod(latestPeriod)} para el total de la Municipalidad.`;
+  const colors = { "110": "#1264a3", "131": "#008a81", "132": "#438dcc", "133": "#7b3fc6", "150": "#d59a13" }, groups = new Map();
+  rows.forEach((row) => { const code = row.fuente_financiamiento_codigo, item = groups.get(code) || { code, label: financingLabel(code), current: 0, accrued: 0, color: colors[code] || "#8c99a9" }; item.current += cents(row, "credito_vigente_centavos"); item.accrued += cents(row, "devengado_centavos"); groups.set(code, item); });
+  const items = [...groups.values()].filter((item) => item.current !== 0 || item.accrued !== 0).sort((a, b) => b.current - a.current), totalCurrent = items.reduce((total, item) => total + item.current, 0), details = selectionDetails(latestPeriod, null), contextParts = [details.jurisdiction, `Programas: ${details.programs}`];
+  if (details.source) contextParts.push(`Fuente: ${details.source}`); if (details.object) contextParts.push(`Objeto: ${details.object}`);
+  $("#financing-context").textContent = `Composición y ejecución acumulada a ${labelPeriod(latestPeriod)} · ${contextParts.join(" · ")}.`;
   $("#financing-composition-legend").innerHTML = items.map((item) => `<li><i style="background:${item.color}"></i><span>${escapeHtml(item.label)}</span><span class="financing-amount">${formatCents(item.current)}</span><strong>${columnShare(item.current, totalCurrent)}</strong></li>`).join("");
   const expected = Number(latestPeriod.split("/")[1]) * 100 / 12, rates = items.map((item) => executionPercent(item.accrued, item.current) || 0);
   $("#financing-execution-note").textContent = `Referencia lineal a ${labelPeriod(latestPeriod)}: ${formatPercent(expected)}.`;
-  $("#financing-quality-note").textContent = "Este panel responde al período seleccionado y muestra el total municipal. Los totales de crédito aprobado, vigente y devengado coinciden exactamente con los informes por objeto en los nueve meses cargados.";
+  $("#financing-quality-note").textContent = "Este panel responde a los filtros de período, secretaría, programa, fuente y objeto. Se calcula desde el detalle por objeto, cuyos totales municipales coinciden con los informes publicados por fuente de financiamiento.";
   compositionCanvas.hidden = false; executionCanvas.hidden = false;
   if (typeof Chart === "undefined") return;
   financingCompositionChart = new Chart(compositionCanvas, { type: "doughnut", data: { labels: items.map((item) => item.label), datasets: [{ data: items.map((item) => item.current), backgroundColor: items.map((item) => item.color), borderColor: "#fff", borderWidth: 3, hoverOffset: 5 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: "62%", plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.label}: ${formatCents(context.parsed)} (${columnShare(context.parsed, totalCurrent)})` } } } } });
@@ -900,7 +896,6 @@ async function init() {
     data = (await Promise.all(DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     resourceData = (await Promise.all(RESOURCE_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     fundData = (await Promise.all(FUND_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
-    financingData = (await Promise.all(FINANCING_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     fillFilters(); fillResourceFilters(); fillFundFilters(); render(); renderResources(false); renderFunds(false); renderPublicSummary(); renderGuideDirectory();
     document.querySelectorAll("[data-period-year-toggle]").forEach((button) => button.addEventListener("click", () => { const months = button.closest(".period-year").querySelector(".month-list"), expanded = months.hidden; months.hidden = !expanded; button.classList.toggle("expanded", expanded); button.setAttribute("aria-expanded", String(expanded)); }));
     const latestLoadedPeriod = [...periods(), ...resourcePeriods(), ...fundPeriods()].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1);
