@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261019-3" />
+    <link rel="stylesheet" href="styles.css?v=20261021-1" />
   </head>
   <body>
     <header class="site-header">
@@ -23,11 +23,11 @@
         </div>
       </div>
       <nav class="header-tabs" aria-label="Secciones principales">
-        <button type="button" data-page="summary" aria-selected="false">Resumen</button>
-        <button class="active" type="button" data-page="tracking" aria-selected="true">Seguimiento mensual</button>
+        <button class="active" type="button" data-page="summary" aria-selected="true">Resumen</button>
+        <button type="button" data-page="tracking" aria-selected="false">Seguimiento mensual</button>
         <button type="button" data-page="guide" aria-selected="false">¿Cómo leer el presupuesto?</button>
       </nav>
-      <nav id="header-tracking-tabs" class="tracking-tabs header-tracking-tabs" role="tablist" aria-label="Tipo de seguimiento mensual">
+      <nav id="header-tracking-tabs" class="tracking-tabs header-tracking-tabs" role="tablist" aria-label="Tipo de seguimiento mensual" hidden>
         <button class="active" type="button" role="tab" data-tracking="expenses" aria-controls="tracking-expenses" aria-selected="true"><span>Gastos</span></button>
         <button type="button" role="tab" data-tracking="resources" aria-controls="tracking-resources" aria-selected="false"><span>Recursos</span></button>
         <button type="button" role="tab" data-tracking="funds" aria-controls="tracking-funds" aria-selected="false"><span>Fondos Especiales</span></button>
@@ -35,59 +35,46 @@
     </header>
 
     <main>
-      <section id="page-summary" class="page-view public-summary-page" hidden>
+      <section id="page-summary" class="page-view public-summary-page">
         <header class="public-summary-hero">
-          <div><p class="eyebrow">Vista general</p><h2>El presupuesto municipal, en pocas palabras</h2><p>Una lectura simple de cuánto puede gastar la ciudad, cómo se distribuye ese presupuesto y cuáles son sus principales ingresos.</p></div>
+          <div><p class="eyebrow">Presupuesto abierto</p><h2>Entender las cuentas de la ciudad puede ser simple</h2><p>La Municipalidad publica la ejecución del presupuesto una vez por mes. Acá resumimos los últimos datos disponibles con palabras claras para mostrar cuánto se presupuestó, cuánto ingresó y cómo se distribuye.</p><button class="public-guide-link" type="button" data-page-target="guide">Aprender a leer el presupuesto <span aria-hidden="true">→</span></button></div>
           <p id="public-summary-period" class="public-summary-period">Último cierre disponible</p>
         </header>
 
-        <section class="public-summary-section public-financial-section" aria-labelledby="public-financial-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Primera impresión</p><h2 id="public-financial-title">Situación financiera hasta el último cierre</h2></div><p>Una comparación directa entre el dinero ingresado y los pagos realizados durante el año.</p></div>
-          <article class="public-financial-strip">
-            <div class="public-financial-paid"><span>Todo lo pagado</span><strong id="public-total-paid">—</strong><small>Gastos efectivamente pagados</small></div>
-            <div class="public-financial-collected"><span>Todo lo recaudado</span><strong id="public-total-collected">—</strong><small>Recursos efectivamente percibidos</small></div>
-            <div class="public-financial-result"><span>Resultado financiero parcial</span><strong id="public-financial-result">—</strong><small id="public-financial-result-note">Percibido menos pagado</small></div>
+        <section class="public-summary-section public-overview-section" aria-labelledby="public-budget-title">
+          <div class="public-section-heading"><div><p class="eyebrow">La ciudad en números</p><h2 id="public-budget-title">El presupuesto municipal, de un vistazo</h2></div><p>El presupuesto prevé gastos e ingresos por el mismo total. Por eso mostramos una sola vez esos montos y destacamos qué cambió durante el año.</p></div>
+          <article class="public-overview-strip" aria-label="Principales números del presupuesto municipal">
+            <div><span>Presupuesto inicial</span><strong id="public-budget-approved">—</strong><small>Aprobado al comenzar el año</small></div>
+            <div><span>Presupuesto actualizado</span><strong id="public-budget-current">—</strong><small>Incluye los cambios posteriores</small></div>
+            <div><span>Aumento</span><strong id="public-budget-change">—</strong><small id="public-budget-change-note">—</small></div>
+            <div><span>Pagado hasta ahora</span><strong id="public-total-paid">—</strong><small>Dinero que ya salió</small></div>
+            <div><span>Recaudado hasta ahora</span><strong id="public-total-collected">—</strong><small>Dinero que ya ingresó</small></div>
+            <div><span>Avance de recaudación</span><strong id="public-resource-rate">—</strong><small id="public-resource-rate-note">Sobre lo previsto actualmente</small></div>
           </article>
-          <p class="public-financial-note">Es una fotografía parcial al mes informado. Un resultado positivo o negativo no equivale al cierre definitivo del ejercicio.</p>
-        </section>
-
-        <section class="public-summary-section" aria-labelledby="public-budget-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Panorama general</p><h2 id="public-budget-title">Presupuesto de gastos</h2></div></div>
-          <div class="public-story-layout">
-            <article class="public-metric-strip" aria-label="Indicadores generales del presupuesto de gastos">
-              <div><span>Presupuesto aprobado</span><strong id="public-budget-approved">—</strong></div>
-              <div><span>Presupuesto vigente</span><strong id="public-budget-current">—</strong></div>
-              <div><span>Aumento del presupuesto</span><strong id="public-budget-change">—</strong><small id="public-budget-change-note">—</small></div>
-            </article>
-            <aside class="public-explainer"><p class="eyebrow">¿Qué significa?</p><h3>Del presupuesto inicial al presupuesto actualizado</h3><p>El <strong>aprobado</strong> es el monto autorizado al comenzar el año. El <strong>vigente</strong> incorpora las ampliaciones y reducciones realizadas después.</p><p id="public-budget-explanation"></p></aside>
+          <div class="public-overview-help">
+            <p><strong>Inicial y actualizado:</strong> permiten ver si el presupuesto creció o se redujo desde su aprobación.</p>
+            <p><strong>Pagado y recaudado:</strong> son movimientos efectivamente realizados hasta el mes informado, no proyecciones para todo el año.</p>
+            <p><strong>Avance de recaudación:</strong> indica qué porcentaje de los ingresos previstos ya entró a las cuentas municipales.</p>
           </div>
         </section>
 
         <section class="public-summary-section" aria-labelledby="public-expenses-title">
           <div class="public-section-heading"><div><p class="eyebrow">Sector 1 · Gastos</p><h2 id="public-expenses-title">¿Cómo se distribuye el presupuesto?</h2></div><p>Cada porcentaje muestra qué parte del total municipal corresponde a cada secretaría o jurisdicción.</p></div>
           <div class="public-expense-layout">
-            <article class="panel public-table-card"><div class="table-wrap"><table><thead><tr><th>Nombre</th><th class="number">% aprobado</th><th class="number">% vigente</th><th class="number">% diferencia</th></tr></thead><tbody id="public-expense-table"></tbody></table></div></article>
-            <aside class="panel public-ranking-copy"><p class="eyebrow">Lectura rápida</p><h3>Las áreas con mayor presupuesto</h3><div id="public-expense-explanation"></div><p class="public-method-note">El orden se calcula sobre el crédito vigente del último cierre disponible.</p></aside>
+            <article class="panel public-table-card"><div class="table-wrap"><table><thead><tr><th>Secretaría o área</th><th class="number">% inicial</th><th class="number">% actualizado</th><th class="number">Cambio en el total</th></tr></thead><tbody id="public-expense-table"></tbody></table></div></article>
+            <aside class="panel public-ranking-copy"><p class="eyebrow">Para entender la tabla</p><h3>¿Qué nos cuenta esta distribución?</h3><div id="public-expense-explanation"></div><button class="public-inline-link" type="button" data-page-target="guide">¿Qué significa crédito vigente? <span aria-hidden="true">→</span></button><p class="public-method-note">El orden se calcula sobre el presupuesto actualizado del último cierre disponible.</p></aside>
           </div>
         </section>
 
         <section class="public-summary-section" aria-labelledby="public-resources-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Sector 2 · Recursos</p><h2 id="public-resources-title">¿Cuánto prevé recaudar la ciudad?</h2></div></div>
-          <div class="public-story-layout">
-            <article class="public-metric-strip public-resource-strip" aria-label="Indicadores generales de recursos">
-              <div><span>Recursos aprobados</span><strong id="public-resource-approved">—</strong></div>
-              <div><span>Recurso vigente</span><strong id="public-resource-current">—</strong></div>
-              <div><span>Porcentaje recaudado</span><strong id="public-resource-rate">—</strong><small id="public-resource-rate-note">—</small></div>
-            </article>
-            <aside class="public-explainer public-resource-explainer"><p class="eyebrow">¿Cómo se lee?</p><h3>Previsión y recaudación efectiva</h3><p>El recurso vigente es la estimación actualizada de ingresos. El porcentaje recaudado muestra cuánto de esa previsión ya ingresó efectivamente.</p><p id="public-resource-explanation"></p></aside>
-          </div>
-          <div class="public-section-heading public-income-heading"><div><p class="eyebrow">Ingresos destacados</p><h3>¿Qué recursos explican una parte importante de la recaudación?</h3></div><p>Ordenados de mayor a menor según lo efectivamente percibido.</p></div>
+          <div class="public-section-heading public-income-heading"><div><p class="eyebrow">De dónde viene el dinero</p><h2 id="public-resources-title">Cinco ingresos clave para la ciudad</h2></div><p>Estos valores muestran dinero efectivamente recaudado, no lo que todavía se espera cobrar.</p></div>
           <div id="public-resource-cards" class="public-resource-cards"></div>
           <article id="public-resource-highlight-summary" class="public-highlight-summary"></article>
+          <div class="public-section-actions"><button class="public-inline-link" type="button" data-tracking-target="resources">Explorar todos los recursos <span aria-hidden="true">→</span></button><button class="public-inline-link public-inline-link-secondary" type="button" data-page-target="guide">Entender cómo se registran los ingresos <span aria-hidden="true">→</span></button></div>
         </section>
       </section>
 
-      <section id="page-tracking" class="page-view">
+      <section id="page-tracking" class="page-view" hidden>
       <section id="tracking-expenses" class="tracking-view" role="tabpanel">
       <div id="dashboard-layout" class="dashboard-layout filter-layout">
       <aside id="filter-sidebar" class="panel filter-sidebar collapsible-filter-panel" aria-labelledby="filters-title">
@@ -455,6 +442,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261019-3"></script>
+    <script src="app.js?v=20261021-1"></script>
   </body>
 </html>
