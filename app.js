@@ -2,16 +2,19 @@ const DATA_FILES = [
   "data/processed/gastos_por_objeto_2026-01-31.csv", "data/processed/gastos_por_objeto_2026-02-28.csv", "data/processed/gastos_por_objeto_2026-03-31.csv",
   "data/processed/gastos_por_objeto_2026-04-30.csv", "data/processed/gastos_por_objeto_2026-05-31.csv", "data/processed/gastos_por_objeto_2026-06-30.csv",
   "data/processed/gastos_por_objeto_2026-07-31.csv", "data/processed/gastos_por_objeto_2026-08-31.csv", "data/processed/gastos_por_objeto_2026-09-30.csv",
+  "data/processed/gastos_por_objeto_2026-10-31.csv",
 ];
 const RESOURCE_DATA_FILES = [
   "data/processed/recursos_por_rubro_2026-01-31.csv", "data/processed/recursos_por_rubro_2026-02-28.csv", "data/processed/recursos_por_rubro_2026-03-31.csv",
   "data/processed/recursos_por_rubro_2026-04-30.csv", "data/processed/recursos_por_rubro_2026-05-31.csv", "data/processed/recursos_por_rubro_2026-06-30.csv",
   "data/processed/recursos_por_rubro_2026-07-31.csv", "data/processed/recursos_por_rubro_2026-08-31.csv", "data/processed/recursos_por_rubro_2026-09-30.csv",
+  "data/processed/recursos_por_rubro_2026-10-31.csv",
 ];
 const FUND_DATA_FILES = [
   "data/processed/fondos_especiales_2026-01-31.csv", "data/processed/fondos_especiales_2026-02-28.csv", "data/processed/fondos_especiales_2026-03-31.csv",
   "data/processed/fondos_especiales_2026-04-30.csv", "data/processed/fondos_especiales_2026-05-31.csv", "data/processed/fondos_especiales_2026-06-30.csv",
   "data/processed/fondos_especiales_2026-07-31.csv", "data/processed/fondos_especiales_2026-08-31.csv", "data/processed/fondos_especiales_2026-09-30.csv",
+  "data/processed/fondos_especiales_2026-10-31.csv",
 ];
 const DESCRIPTION_DATA_FILE = "data/processed/presupuesto_descripciones_2026.json";
 const $ = (selector) => document.querySelector(selector);

@@ -60,7 +60,7 @@ Cada fila pasa tres controles exactos:
 3. Devengado − percibido = diferencia informada.
 
 El extractor también compara la suma de los conceptos con el `TOTAL GENERAL`
-impreso. En los nueve informes de enero a septiembre de 2026 las filas pasan
+impreso. En los diez informes de enero a octubre de 2026 las filas pasan
 los controles, pero el total impreso de devengado y percibido supera el detalle
 en `$ 200.721,46`. Esa diferencia del documento fuente queda registrada en
 `total_general_reconcilia` y `diferencias_total_general_centavos`; no se altera
@@ -86,7 +86,7 @@ El extractor controla exactamente que:
 4. La suma de los fondos coincide con cada total de origen y con el total
    general impreso.
 
-Los nueve cierres de enero a septiembre de 2026 pasan todos los controles. El
+Los diez cierres de enero a octubre de 2026 pasan todos los controles. El
 fondo `35.1.01.51` cambia a una denominación abreviada desde junio; se conserva
 el texto publicado y la aplicación lo unifica por código.
 
