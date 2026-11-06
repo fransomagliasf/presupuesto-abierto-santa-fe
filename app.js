@@ -17,6 +17,7 @@ const FUND_DATA_FILES = [
   "data/processed/fondos_especiales_2026-10-31.csv",
 ];
 const DESCRIPTION_DATA_FILE = "data/processed/presupuesto_descripciones_2026.json";
+const BUDGET_FUNCTION_DATA_FILE = "data/processed/presupuesto_finalidad_funcion_2024_2026.csv";
 const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -27,6 +28,7 @@ let resourceData = [], resourceSelectedPeriods = new Set(), resourceSelectedMajo
 let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Set(), fundActiveChart = "flow", fundRankingMetric = "perceived", fundShowValues = true, fundChart = null, fundOriginChart = null;
 let financingCompositionChart = null, financingExecutionChart = null;
 let descriptionData = { source: "Presupuesto 2026 de la Municipalidad de Santa Fe", policies: [], programs: [] };
+let budgetFunctionData = [], selectedBudgetFunction = "310", budgetFunctionChart = null, budgetCompositionChart = null, budgetTableExpanded = false;
 const TABLE_PAGE_SIZE = 5;
 let expenseTablePage = 1, resourceTablePage = 1, fundTablePage = 1, guideTablePage = 1, guideExpandedSecretaries = new Set(), activeDownloadView = "expenses";
 let heatmapExpanded = false;
@@ -895,14 +897,66 @@ function resetFundFilters() { fundSelectedPeriods = new Set(fundPeriods()); fund
 function setupFilterPanelToggle(buttonSelector, bodySelector, layoutSelector, name) {
   $(buttonSelector).addEventListener("click", () => { const body = $(bodySelector), button = $(buttonSelector), collapsed = !body.hidden; body.hidden = collapsed; $(layoutSelector).classList.toggle("filters-collapsed", collapsed); button.textContent = collapsed ? "›" : "‹"; button.setAttribute("aria-expanded", String(!collapsed)); button.setAttribute("aria-label", collapsed ? `Desplegar ${name}` : `Plegar ${name}`); });
 }
+function budgetYears() { return unique(budgetFunctionData.map((row) => row.anio)).sort((a, b) => Number(a) - Number(b)); }
+function budgetTotalsByYear() { return new Map(budgetYears().map((year) => [year, sum(budgetFunctionData.filter((row) => row.anio === year), "monto_centavos")])); }
+function budgetShare(value) { return `${value.toLocaleString("es-AR", { minimumFractionDigits: value > 0 && value < 1 ? 2 : 1, maximumFractionDigits: 2 })}%`; }
+function budgetPointChange(value) { return Math.abs(value) < .005 ? "Sin cambios" : `${value > 0 ? "+" : "−"}${Math.abs(value).toLocaleString("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 2 })} puntos`; }
+function budgetChangeClass(value) { return Math.abs(value) < .005 ? "" : value > 0 ? "positive" : "negative"; }
+function budgetFunctionOptions() {
+  const groups = new Map();
+  budgetFunctionData.forEach((row) => { const group = groups.get(row.finalidad_nombre) || new Map(); group.set(row.funcion_codigo, row.funcion_nombre); groups.set(row.finalidad_nombre, group); });
+  return [...groups.entries()].map(([finality, functions]) => ({ finality, functions: [...functions.entries()].map(([code, name]) => ({ code, name })).sort((a, b) => a.name.localeCompare(b.name, "es")) })).sort((a, b) => a.finality.localeCompare(b.finality, "es"));
+}
+function fillBudgetFunctionFilter() {
+  $("#budget-function-filter").innerHTML = budgetFunctionOptions().map((group) => `<optgroup label="${escapeHtml(group.finality)}">${group.functions.map((item) => `<option value="${item.code}" ${item.code === selectedBudgetFunction ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}</optgroup>`).join("");
+}
+function budgetFunctionValues(code) {
+  const totalsByYear = budgetTotalsByYear();
+  return budgetYears().map((year) => { const row = budgetFunctionData.find((item) => item.anio === year && item.funcion_codigo === code), value = row ? cents(row, "monto_centavos") : 0, total = totalsByYear.get(year) || 0; return { year, row, value, total, share: total ? value / total * 100 : 0 }; });
+}
+function renderBudgetYearCards() {
+  const totals = budgetTotalsByYear(), years = budgetYears();
+  $("#budget-year-cards").innerHTML = years.map((year, index) => { const total = totals.get(year), previous = index ? totals.get(years[index - 1]) : null, change = previous ? (total / previous - 1) * 100 : null; return `<article><span>Presupuesto ${year}</span><strong>${formatBillions(total)}</strong><small>${change === null ? "Año base de la comparación" : `${change >= 0 ? "+" : "−"}${formatPercent(Math.abs(change))} nominal frente a ${years[index - 1]}`}</small></article>`; }).join("");
+}
+const budgetShareLabelsPlugin = { id: "budgetShareLabels", afterDatasetsDraw(chart) { const meta = chart.getDatasetMeta(0), context = chart.ctx; context.save(); context.fillStyle = "#173b5d"; context.font = "800 12px system-ui, sans-serif"; context.textAlign = "center"; context.textBaseline = "bottom"; meta.data.forEach((bar, index) => context.fillText(budgetShare(chart.data.datasets[0].data[index]), bar.x, Math.max(chart.chartArea.top + 13, bar.y - 8))); context.restore(); } };
+function renderBudgetFunction(renderGraph = true) {
+  const values = budgetFunctionValues(selectedBudgetFunction), selectedRow = budgetFunctionData.find((row) => row.funcion_codigo === selectedBudgetFunction), name = selectedRow?.funcion_nombre || "Función seleccionada", first = values[0], last = values.at(-1), shareChange = last.share - first.share, nominalChange = first.value ? (last.value / first.value - 1) * 100 : null;
+  $("#budget-function-title").textContent = `Evolución de ${name}`;
+  $("#budget-function-cards").innerHTML = values.map((item) => `<article><span>${item.year}</span><strong>${budgetShare(item.share)}</strong><small>${item.row ? formatBillions(item.value) : "Sin partida individual"}</small></article>`).join("");
+  const direction = Math.abs(shareChange) < .005 ? "se mantuvo estable" : shareChange > 0 ? "aumentó" : "disminuyó";
+  $("#budget-function-reading-title").textContent = `${name}: 2024 frente a 2026`;
+  $("#budget-function-reading").innerHTML = `<p>Su participación ${direction}: pasó de <strong>${budgetShare(first.share)}</strong> en ${first.year} a <strong>${budgetShare(last.share)}</strong> en ${last.year}.</p><p>Esto representa <strong class="${budgetChangeClass(shareChange)}">${budgetPointChange(shareChange)}</strong> sobre el total municipal.</p><p>El monto pasó de <strong>${formatBillions(first.value)}</strong> a <strong>${formatBillions(last.value)}</strong>${nominalChange === null ? "" : `, un cambio nominal de <strong>${nominalChange >= 0 ? "+" : "−"}${formatPercent(Math.abs(nominalChange))}</strong>`}.</p>`;
+  if (!renderGraph || typeof Chart === "undefined") return;
+  if (budgetFunctionChart) budgetFunctionChart.destroy();
+  const maxShare = Math.max(...values.map((item) => item.share), 1), chartMax = Math.ceil(maxShare * 1.35 * 10) / 10;
+  budgetFunctionChart = new Chart($("#budget-function-chart"), { type: "bar", plugins: [budgetShareLabelsPlugin], data: { labels: values.map((item) => item.year), datasets: [{ data: values.map((item) => item.share), rawValues: values.map((item) => item.value), backgroundColor: ["#8ab5d4", "#438dcc", "#1264a3"], borderRadius: 7, maxBarThickness: 74 }] }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 24 } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${budgetShare(context.parsed.y)} del total · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } }, y: { beginAtZero: true, max: chartMax, border: { display: false }, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%`, color: "#60708a" } } } } });
+}
+function budgetFinalityValues() {
+  const years = budgetYears(), totals = budgetTotalsByYear(), finalities = [...new Map(budgetFunctionData.map((row) => [row.finalidad_codigo, row.finalidad_nombre])).entries()].sort(([a], [b]) => a.localeCompare(b, "es", { numeric: true }));
+  return { years, finalities: finalities.map(([code, name]) => ({ code, name, values: years.map((year) => { const value = sum(budgetFunctionData.filter((row) => row.anio === year && row.finalidad_codigo === code), "monto_centavos"); return { value, share: totals.get(year) ? value / totals.get(year) * 100 : 0 }; }) })) };
+}
+function renderBudgetComposition(renderGraph = true) {
+  const { years, finalities } = budgetFinalityValues(), colors = ["#1264a3", "#008a81", "#7b3fc6", "#e0a71b", "#c45059", "#8c99a9"];
+  $("#budget-composition-legend").innerHTML = finalities.map((item, index) => `<li><i style="background:${colors[index]}"></i><span>${escapeHtml(item.name)}</span></li>`).join("");
+  if (!renderGraph || typeof Chart === "undefined") return;
+  if (budgetCompositionChart) budgetCompositionChart.destroy();
+  budgetCompositionChart = new Chart($("#budget-composition-chart"), { type: "bar", data: { labels: years, datasets: finalities.map((item, index) => ({ label: item.name, data: item.values.map((value) => value.share), rawValues: item.values.map((value) => value.value), backgroundColor: colors[index], borderColor: "#fff", borderWidth: 1, borderRadius: 2, barThickness: 38 })) }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${context.dataset.label}: ${budgetShare(context.parsed.x)} · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { stacked: true, min: 0, max: 100, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` } }, y: { stacked: true, grid: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } } } } });
+}
+function renderBudgetFunctionsTable() {
+  const years = budgetYears(), totals = budgetTotalsByYear(), functions = [...new Map(budgetFunctionData.map((row) => [row.funcion_codigo, { code: row.funcion_codigo, name: row.funcion_nombre, finality: row.finalidad_nombre }])).values()].map((item) => { const values = years.map((year) => { const row = budgetFunctionData.find((entry) => entry.anio === year && entry.funcion_codigo === item.code), value = row ? cents(row, "monto_centavos") : 0; return { row, value, share: totals.get(year) ? value / totals.get(year) * 100 : 0 }; }); return { ...item, values, change: values.at(-1).share - values[0].share }; }).sort((a, b) => b.values.at(-1).share - a.values.at(-1).share), visible = budgetTableExpanded ? functions : functions.slice(0, 10);
+  $("#budget-functions-table").innerHTML = visible.map((item) => `<tr><td><strong>${escapeHtml(item.name)}</strong></td><td>${escapeHtml(item.finality)}</td>${item.values.map((value) => `<td class="number"><strong>${value.row ? budgetShare(value.share) : "—"}</strong><small>${value.row ? formatBillions(value.value) : "Sin partida"}</small></td>`).join("")}<td class="number ${budgetChangeClass(item.change)}">${budgetPointChange(item.change)}</td></tr>`).join("");
+  $("#toggle-budget-functions").hidden = functions.length <= 10; $("#toggle-budget-functions").setAttribute("aria-expanded", String(budgetTableExpanded)); $("#toggle-budget-functions").innerHTML = budgetTableExpanded ? 'Ver solo las 10 principales <span aria-hidden="true">↑</span>' : 'Ver todas las funciones <span aria-hidden="true">↓</span>';
+}
+function renderBudgets(renderGraphs = true) { renderBudgetYearCards(); renderBudgetFunction(renderGraphs); renderBudgetComposition(renderGraphs); renderBudgetFunctionsTable(); }
 async function init() {
   try {
     if (typeof Chart !== "undefined") Chart.defaults.devicePixelRatio = 2;
     data = (await Promise.all(DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     resourceData = (await Promise.all(RESOURCE_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     fundData = (await Promise.all(FUND_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
+    budgetFunctionData = await fetch(BUDGET_FUNCTION_DATA_FILE).then((response) => { if (!response.ok) throw new Error(BUDGET_FUNCTION_DATA_FILE); return response.text(); }).then(parseCSV);
     descriptionData = await fetch(DESCRIPTION_DATA_FILE).then((response) => { if (!response.ok) throw new Error(DESCRIPTION_DATA_FILE); return response.json(); });
-    fillFilters(); fillResourceFilters(); fillFundFilters(); render(); renderResources(false); renderFunds(false); renderPublicSummary(); renderGuideDirectory();
+    fillFilters(); fillResourceFilters(); fillFundFilters(); fillBudgetFunctionFilter(); render(); renderResources(false); renderFunds(false); renderBudgets(false); renderPublicSummary(); renderGuideDirectory();
     document.querySelectorAll("[data-period-year-toggle]").forEach((button) => button.addEventListener("click", () => { const months = button.closest(".period-year").querySelector(".month-list"), expanded = months.hidden; months.hidden = !expanded; button.classList.toggle("expanded", expanded); button.setAttribute("aria-expanded", String(expanded)); }));
     const latestLoadedPeriod = [...periods(), ...resourcePeriods(), ...fundPeriods()].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1);
     $("#updated-period").textContent = latestLoadedPeriod ? updateDateFormat.format(date({ fecha_corte: latestLoadedPeriod })) : "Sin datos";
@@ -936,9 +990,11 @@ async function init() {
     $("#show-bar-values").addEventListener("change", (event) => { showBarValues = event.target.checked; renderChart(filteredRows()); });
     const moveBridgeFocus = (direction) => { const available = aggregatePeriods(filteredRows(true)).map((value) => value.period), index = available.indexOf(bridgeFocusPeriod), nextIndex = Math.min(Math.max(index + direction, 0), available.length - 1); if (available[nextIndex]) { bridgeFocusPeriod = available[nextIndex]; renderChart(filteredRows()); } };
     $("#bridge-previous").addEventListener("click", () => moveBridgeFocus(-1)); $("#bridge-next").addEventListener("click", () => moveBridgeFocus(1));
-    document.querySelectorAll(".header-tabs [data-page]").forEach((button) => button.addEventListener("click", () => { const page = button.dataset.page; document.querySelectorAll(".page-view").forEach((view) => { view.hidden = view.id !== `page-${page}`; }); $("#header-tracking-tabs").hidden = page !== "tracking"; document.querySelectorAll(".header-tabs [data-page]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); if (page === "tracking") requestAnimationFrame(() => { const tracking = document.querySelector(".tracking-tabs [data-tracking].active")?.dataset.tracking; if (tracking === "resources") renderResources(); else if (tracking === "funds") renderFunds(); else render(); }); window.scrollTo({ top: 0, behavior: "smooth" }); }));
+    document.querySelectorAll(".header-tabs [data-page]").forEach((button) => button.addEventListener("click", () => { const page = button.dataset.page; document.querySelectorAll(".page-view").forEach((view) => { view.hidden = view.id !== `page-${page}`; }); $("#header-tracking-tabs").hidden = page !== "tracking"; document.querySelectorAll(".header-tabs [data-page]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); if (page === "tracking") requestAnimationFrame(() => { const tracking = document.querySelector(".tracking-tabs [data-tracking].active")?.dataset.tracking; if (tracking === "resources") renderResources(); else if (tracking === "funds") renderFunds(); else render(); }); else if (page === "budgets") requestAnimationFrame(() => renderBudgets()); window.scrollTo({ top: 0, behavior: "smooth" }); }));
     document.querySelectorAll("[data-page-target]").forEach((button) => button.addEventListener("click", () => document.querySelector(`.header-tabs [data-page="${button.dataset.pageTarget}"]`)?.click()));
     document.querySelectorAll("[data-tracking-target]").forEach((button) => button.addEventListener("click", () => { document.querySelector('.header-tabs [data-page="tracking"]')?.click(); document.querySelector(`.tracking-tabs [data-tracking="${button.dataset.trackingTarget}"]`)?.click(); }));
+    $("#budget-function-filter").addEventListener("change", (event) => { selectedBudgetFunction = event.target.value; renderBudgetFunction(); });
+    $("#toggle-budget-functions").addEventListener("click", () => { budgetTableExpanded = !budgetTableExpanded; renderBudgetFunctionsTable(); });
     document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((button) => button.addEventListener("click", () => { const tracking = button.dataset.tracking; document.querySelectorAll(".tracking-view").forEach((view) => { view.hidden = view.id !== `tracking-${tracking}`; }); document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); if (tracking === "resources") requestAnimationFrame(() => renderResources()); if (tracking === "funds") requestAnimationFrame(() => renderFunds()); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });
     document.querySelectorAll(".sort-header").forEach((button) => button.addEventListener("click", () => { const key = button.dataset.sort; expenseTablePage = 1; if (tableSort.key === key) tableSort.direction = tableSort.direction === "asc" ? "desc" : "asc"; else { tableSort.key = key; tableSort.direction = key === "name" || key === "breakdown" ? "asc" : "desc"; } renderTable(filteredRows()); }));

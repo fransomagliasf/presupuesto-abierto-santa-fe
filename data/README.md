@@ -93,3 +93,22 @@ el texto publicado y la aplicación lo unifica por código.
 ```sh
 python3 scripts/extract_fondos_especiales.py INFORME.pdf data/processed/fondos_especiales_YYYY-MM-DD.csv
 ```
+
+## Presupuesto por finalidad y función
+
+El archivo `presupuesto_finalidad_funcion_2024_2026.csv` reúne las funciones
+de gasto publicadas en los presupuestos municipales 2024, 2025 y en el
+Proyecto de Presupuesto 2026. Los importes se conservan como texto original y
+como centavos enteros. No se duplican subtotales de finalidad: la aplicación
+los calcula sumando sus funciones.
+
+La suma de las funciones concilia exactamente con el total impreso de cada
+documento:
+
+- 2024: `$ 108.064.744.537,00`.
+- 2025: `$ 225.046.038.799,00`.
+- 2026: `$ 295.881.415.299,00`.
+
+En el documento 2024 un sello se superpone a las tres funciones de Servicios
+económicos. Los importes fueron verificados visualmente y su suma coincide con
+el subtotal impreso: `$ 1.891.097.079,00`.
