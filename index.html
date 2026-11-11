@@ -81,10 +81,16 @@
           <button class="public-guide-link" type="button" data-page-target="guide">¿Cómo leer estos datos? <span aria-hidden="true">→</span></button>
         </header>
 
-        <section class="budgets-section" aria-labelledby="budget-years-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Tamaño del presupuesto</p><h2 id="budget-years-title">Ocho presupuestos, en números</h2></div><p>Los montos son nominales: muestran pesos de cada año y no descuentan inflación.</p></div>
-          <div id="budget-year-cards" class="budget-year-cards"></div>
+        <section class="budgets-section panel budget-years-panel" aria-labelledby="budget-years-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Tamaño del presupuesto</p><h2 id="budget-years-title">Ocho presupuestos, en números</h2></div><p>Las barras muestran el monto nominal de cada año. La línea indica cuánto aumentó frente al presupuesto anterior.</p></div>
+          <div class="budget-years-chart" tabindex="0" aria-label="Gráfico desplazable con los presupuestos de 2019 a 2026">
+            <div class="budget-years-chart-inner"><canvas id="budget-years-chart"></canvas></div>
+          </div>
+          <div class="budget-years-legend" aria-label="Referencias del gráfico"><span><i class="budget-years-bar-key"></i>Presupuesto nominal</span><span><i class="budget-years-line-key"></i>Aumento frente al año anterior</span></div>
+          <p class="budget-chart-mobile-note">Deslizá el gráfico para ver todos los años.</p>
         </section>
+
+        <div class="budget-analysis-divider" role="separator"><span>Análisis por función</span></div>
 
         <section class="budgets-section panel budget-function-panel" aria-labelledby="budget-function-title">
           <div class="budget-function-heading">
@@ -93,7 +99,6 @@
               <select id="budget-function-filter" aria-label="Función presupuestaria a comparar"></select>
             </label>
           </div>
-          <div id="budget-function-cards" class="budget-function-cards"></div>
           <div class="budget-function-layout">
             <div class="budget-function-chart"><canvas id="budget-function-chart"></canvas></div>
             <aside class="budget-reading-card"><p class="eyebrow">Lectura rápida</p><h3 id="budget-function-reading-title">¿Qué cambió?</h3><div id="budget-function-reading"></div><p class="budget-inflation-note">La variación en pesos es nominal. Para analizar poder de compra habría que incorporar inflación.</p></aside>
