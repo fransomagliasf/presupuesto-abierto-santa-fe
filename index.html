@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261106-2" />
+    <link rel="stylesheet" href="styles.css?v=20261111-1" />
   </head>
   <body>
     <header class="site-header">
@@ -112,7 +112,10 @@
         </section>
 
         <section class="budgets-section panel budget-functions-table-panel" aria-labelledby="budget-functions-table-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Detalle comparado</p><h2 id="budget-functions-table-title">Funciones con mayor participación</h2></div><p>El cambio se expresa en puntos porcentuales entre 2019 y 2026; si falta alguno de esos extremos se indica que no es comparable.</p></div>
+          <div class="public-section-heading"><div><p class="eyebrow">Detalle comparado</p><h2 id="budget-functions-table-title">Funciones con mayor participación</h2></div><p>El cambio compara la participación de 2026 con 2024; si falta alguno de esos años se indica que no es comparable.</p></div>
+          <div class="budget-functions-filter-row">
+            <label class="budget-finality-filter"><span>Filtrar por finalidad</span><select id="budget-finality-filter" aria-label="Filtrar funciones por finalidad"><option value="">Todas las finalidades</option></select></label>
+          </div>
           <div class="table-wrap"><table class="budget-functions-table"><thead><tr id="budget-functions-head"></tr></thead><tbody id="budget-functions-table"></tbody></table></div>
           <button id="toggle-budget-functions" class="public-inline-link" type="button" aria-expanded="false">Ver todas las funciones <span aria-hidden="true">↓</span></button>
           <p class="budget-source-note">Fuente: presupuestos municipales 2019–2025 y Proyecto de Presupuesto 2026, cuadros “Presupuesto de gastos por finalidad y función”.</p>
@@ -487,6 +490,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261106-2"></script>
+    <script src="app.js?v=20261111-1"></script>
   </body>
 </html>

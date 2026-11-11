@@ -28,7 +28,7 @@ let resourceData = [], resourceSelectedPeriods = new Set(), resourceSelectedMajo
 let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Set(), fundActiveChart = "flow", fundRankingMetric = "perceived", fundShowValues = true, fundChart = null, fundOriginChart = null;
 let financingCompositionChart = null, financingExecutionChart = null;
 let descriptionData = { source: "Presupuesto 2026 de la Municipalidad de Santa Fe", policies: [], programs: [] };
-let budgetFunctionData = [], selectedBudgetFunction = "310", budgetYearsChart = null, budgetFunctionChart = null, budgetCompositionChart = null, budgetTableExpanded = false;
+let budgetFunctionData = [], selectedBudgetFunction = "310", selectedBudgetTableFinality = "", budgetYearsChart = null, budgetFunctionChart = null, budgetCompositionChart = null, budgetTableExpanded = false;
 const TABLE_PAGE_SIZE = 5;
 let expenseTablePage = 1, resourceTablePage = 1, fundTablePage = 1, guideTablePage = 1, guideExpandedSecretaries = new Set(), activeDownloadView = "expenses";
 let heatmapExpanded = false;
@@ -910,6 +910,11 @@ function budgetFunctionOptions() {
 function fillBudgetFunctionFilter() {
   $("#budget-function-filter").innerHTML = budgetFunctionOptions().map((group) => `<optgroup label="${escapeHtml(group.finality)}">${group.functions.map((item) => `<option value="${item.code}" ${item.code === selectedBudgetFunction ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}</optgroup>`).join("");
 }
+function fillBudgetFinalityFilter() {
+  const finalities = unique(budgetFunctionData.map((row) => row.finalidad_nombre)).sort((a, b) => a.localeCompare(b, "es"));
+  $("#budget-finality-filter").innerHTML = `<option value="">Todas las finalidades</option>${finalities.map((finality) => `<option value="${escapeHtml(finality)}">${escapeHtml(finality)}</option>`).join("")}`;
+  if (finalities.includes(selectedBudgetTableFinality)) $("#budget-finality-filter").value = selectedBudgetTableFinality;
+}
 function budgetFunctionValues(code) {
   const totalsByYear = budgetTotalsByYear();
   return budgetYears().map((year) => { const row = budgetFunctionData.find((item) => item.anio === year && item.funcion_codigo === code), value = row ? cents(row, "monto_centavos") : 0, total = totalsByYear.get(year) || 0; return { year, row, value, total, share: row && total ? value / total * 100 : null }; });
@@ -935,13 +940,33 @@ const budgetYearLabelsPlugin = {
     context.restore();
   },
 };
+const budgetManagementBandsPlugin = {
+  id: "budgetManagementBands",
+  beforeDraw(chart) {
+    const labels = chart.data.labels || [], xScale = chart.scales.x;
+    if (!xScale || labels.length < 8) return;
+    const context = chart.ctx, { top, bottom, left, right } = chart.chartArea, centers = labels.map((_, index) => xScale.getPixelForTick(index)), boundaryAfter = (index) => (centers[index] + centers[index + 1]) / 2, headerTop = top - 44;
+    const bands = [
+      { label: "Corral", start: left, end: boundaryAfter(0), fill: "rgba(198, 92, 98, .11)", color: "#9b4b51" },
+      { label: "Jatón", start: boundaryAfter(0), end: boundaryAfter(4), fill: "rgba(235, 148, 72, .11)", color: "#a85e22" },
+      { label: "Poletti", start: boundaryAfter(4), end: right, fill: "rgba(247, 213, 92, .14)", color: "#8d7110" },
+    ];
+    context.save();
+    bands.forEach((band) => { context.fillStyle = band.fill; context.fillRect(band.start, headerTop, band.end - band.start, bottom - headerTop); });
+    context.setLineDash([5, 5]); context.lineWidth = 1.5;
+    [boundaryAfter(0), boundaryAfter(4)].forEach((x, index) => { context.strokeStyle = index ? "rgba(166, 126, 36, .7)" : "rgba(166, 91, 72, .7)"; context.beginPath(); context.moveTo(x, headerTop); context.lineTo(x, bottom); context.stroke(); });
+    context.setLineDash([]); context.font = "850 11px system-ui, sans-serif"; context.textAlign = "center"; context.textBaseline = "middle";
+    bands.forEach((band) => { context.fillStyle = band.color; context.fillText(band.label, (band.start + band.end) / 2, top - 25); });
+    context.restore();
+  },
+};
 function renderBudgetYearsChart(renderGraph = true) {
   if (budgetYearsChart) { budgetYearsChart.destroy(); budgetYearsChart = null; }
   if (!renderGraph || typeof Chart === "undefined") return;
   const totalsByYear = budgetTotalsByYear(), years = budgetYears(), totals = years.map((year) => totalsByYear.get(year)), changes = totals.map((total, index) => index && totals[index - 1] ? (total / totals[index - 1] - 1) * 100 : null);
   budgetYearsChart = new Chart($("#budget-years-chart"), {
     type: "bar",
-    plugins: [budgetYearLabelsPlugin],
+    plugins: [budgetManagementBandsPlugin, budgetYearLabelsPlugin],
     data: {
       labels: years,
       datasets: [
@@ -950,7 +975,7 @@ function renderBudgetYearsChart(renderGraph = true) {
       ],
     },
     options: {
-      responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { top: 26 } },
+      responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { top: 58 } },
       plugins: {
         legend: { display: false },
         tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, callbacks: { label: (context) => context.dataset.yAxisID === "growth" ? `Aumento frente a ${years[context.dataIndex - 1]}: ${context.parsed.y >= 0 ? "+" : "−"}${formatPercent(Math.abs(context.parsed.y))}` : `Presupuesto: ${formatCents(context.parsed.y)}` } },
@@ -987,9 +1012,9 @@ function renderBudgetComposition(renderGraph = true) {
   budgetCompositionChart = new Chart($("#budget-composition-chart"), { type: "bar", data: { labels: years, datasets: finalities.map((item, index) => ({ label: item.name, data: item.values.map((value) => value.share), rawValues: item.values.map((value) => value.value), backgroundColor: colors[index], borderColor: "#fff", borderWidth: 1, borderRadius: 2, barThickness: 38 })) }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${context.dataset.label}: ${budgetShare(context.parsed.x)} · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { stacked: true, min: 0, max: 100, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` } }, y: { stacked: true, grid: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } } } } });
 }
 function renderBudgetFunctionsTable() {
-  const years = budgetYears(), totals = budgetTotalsByYear(), functions = [...new Map(budgetFunctionData.map((row) => [row.funcion_codigo, { code: row.funcion_codigo, name: row.funcion_nombre, finality: row.finalidad_nombre }])).values()].map((item) => { const values = years.map((year) => { const row = budgetFunctionData.find((entry) => entry.anio === year && entry.funcion_codigo === item.code), value = row ? cents(row, "monto_centavos") : 0; return { row, value, share: row && totals.get(year) ? value / totals.get(year) * 100 : null }; }); return { ...item, values, change: values[0].row && values.at(-1).row ? values.at(-1).share - values[0].share : null }; }).sort((a, b) => (b.values.at(-1).share ?? -1) - (a.values.at(-1).share ?? -1)), visible = budgetTableExpanded ? functions : functions.slice(0, 10);
-  $("#budget-functions-head").innerHTML = `<th>Función</th><th>Finalidad</th>${years.map((year) => `<th class="number">${year}</th>`).join("")}<th class="number">Cambio</th>`;
-  $("#budget-functions-table").innerHTML = visible.map((item) => `<tr><td><strong>${escapeHtml(item.name)}</strong></td><td>${escapeHtml(item.finality)}</td>${item.values.map((value) => `<td class="number"><strong>${value.row ? budgetShare(value.share) : "—"}</strong><small>${value.row ? formatAxisAmount(value.value) : "Sin partida"}</small></td>`).join("")}<td class="number ${budgetChangeClass(item.change)}">${budgetPointChange(item.change)}</td></tr>`).join("");
+  const years = budgetYears(), totals = budgetTotalsByYear(), baselineIndex = years.indexOf("2024"), allFunctions = [...new Map(budgetFunctionData.map((row) => [row.funcion_codigo, { code: row.funcion_codigo, name: row.funcion_nombre, finality: row.finalidad_nombre }])).values()].map((item) => { const values = years.map((year) => { const row = budgetFunctionData.find((entry) => entry.anio === year && entry.funcion_codigo === item.code), value = row ? cents(row, "monto_centavos") : 0; return { row, value, share: row && totals.get(year) ? value / totals.get(year) * 100 : null }; }), baseline = values[baselineIndex], latest = values.at(-1); return { ...item, values, change: baseline?.row && latest.row ? latest.share - baseline.share : null }; }).sort((a, b) => (b.values.at(-1).share ?? -1) - (a.values.at(-1).share ?? -1)), functions = selectedBudgetTableFinality ? allFunctions.filter((item) => item.finality === selectedBudgetTableFinality) : allFunctions, visible = budgetTableExpanded ? functions : functions.slice(0, 10);
+  $("#budget-functions-head").innerHTML = `<th>Finalidad</th><th>Función</th>${years.map((year) => `<th class="number">${year}</th>`).join("")}<th class="number">Cambio vs. 2024</th>`;
+  $("#budget-functions-table").innerHTML = visible.map((item) => `<tr><td>${escapeHtml(item.finality)}</td><td><strong>${escapeHtml(item.name)}</strong></td>${item.values.map((value) => `<td class="number"><strong>${value.row ? budgetShare(value.share) : "—"}</strong><small>${value.row ? formatAxisAmount(value.value) : "Sin partida"}</small></td>`).join("")}<td class="number ${budgetChangeClass(item.change)}">${budgetPointChange(item.change)}</td></tr>`).join("");
   $("#toggle-budget-functions").hidden = functions.length <= 10; $("#toggle-budget-functions").setAttribute("aria-expanded", String(budgetTableExpanded)); $("#toggle-budget-functions").innerHTML = budgetTableExpanded ? 'Ver solo las 10 principales <span aria-hidden="true">↑</span>' : 'Ver todas las funciones <span aria-hidden="true">↓</span>';
 }
 function renderBudgets(renderGraphs = true) { renderBudgetYearsChart(renderGraphs); renderBudgetFunction(renderGraphs); renderBudgetComposition(renderGraphs); renderBudgetFunctionsTable(); }
@@ -1001,7 +1026,7 @@ async function init() {
     fundData = (await Promise.all(FUND_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     budgetFunctionData = await fetch(BUDGET_FUNCTION_DATA_FILE).then((response) => { if (!response.ok) throw new Error(BUDGET_FUNCTION_DATA_FILE); return response.text(); }).then(parseCSV);
     descriptionData = await fetch(DESCRIPTION_DATA_FILE).then((response) => { if (!response.ok) throw new Error(DESCRIPTION_DATA_FILE); return response.json(); });
-    fillFilters(); fillResourceFilters(); fillFundFilters(); fillBudgetFunctionFilter(); render(); renderResources(false); renderFunds(false); renderBudgets(false); renderPublicSummary(); renderGuideDirectory();
+    fillFilters(); fillResourceFilters(); fillFundFilters(); fillBudgetFunctionFilter(); fillBudgetFinalityFilter(); render(); renderResources(false); renderFunds(false); renderBudgets(false); renderPublicSummary(); renderGuideDirectory();
     document.querySelectorAll("[data-period-year-toggle]").forEach((button) => button.addEventListener("click", () => { const months = button.closest(".period-year").querySelector(".month-list"), expanded = months.hidden; months.hidden = !expanded; button.classList.toggle("expanded", expanded); button.setAttribute("aria-expanded", String(expanded)); }));
     const latestLoadedPeriod = [...periods(), ...resourcePeriods(), ...fundPeriods()].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })).at(-1);
     $("#updated-period").textContent = latestLoadedPeriod ? updateDateFormat.format(date({ fecha_corte: latestLoadedPeriod })) : "Sin datos";
@@ -1039,6 +1064,7 @@ async function init() {
     document.querySelectorAll("[data-page-target]").forEach((button) => button.addEventListener("click", () => document.querySelector(`.header-tabs [data-page="${button.dataset.pageTarget}"]`)?.click()));
     document.querySelectorAll("[data-tracking-target]").forEach((button) => button.addEventListener("click", () => { document.querySelector('.header-tabs [data-page="tracking"]')?.click(); document.querySelector(`.tracking-tabs [data-tracking="${button.dataset.trackingTarget}"]`)?.click(); }));
     $("#budget-function-filter").addEventListener("change", (event) => { selectedBudgetFunction = event.target.value; renderBudgetFunction(); });
+    $("#budget-finality-filter").addEventListener("change", (event) => { selectedBudgetTableFinality = event.target.value; budgetTableExpanded = false; renderBudgetFunctionsTable(); });
     $("#toggle-budget-functions").addEventListener("click", () => { budgetTableExpanded = !budgetTableExpanded; renderBudgetFunctionsTable(); });
     document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((button) => button.addEventListener("click", () => { const tracking = button.dataset.tracking; document.querySelectorAll(".tracking-view").forEach((view) => { view.hidden = view.id !== `tracking-${tracking}`; }); document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); if (tracking === "resources") requestAnimationFrame(() => renderResources()); if (tracking === "funds") requestAnimationFrame(() => renderFunds()); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });

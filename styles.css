@@ -372,6 +372,7 @@ table.expense-detail-table tbody td.number { text-align: center; }.expense-detai
 @media (max-width: 900px) { .budgets-hero, .budget-function-heading { display: block; }.budgets-hero .public-guide-link, .budget-function-select { margin-top: 1rem; }.budget-function-layout { grid-template-columns: 1fr; }.budget-composition-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 650px) { .budgets-page { gap: 1.5rem; }.budget-year-cards, .budget-function-cards { grid-template-columns: 1fr; }.budget-year-cards strong { font-size: 1.7rem; }.budget-composition-chart { height: 275px; }.budget-composition-legend { grid-template-columns: 1fr; }.budget-functions-table { min-width: 780px; } }
 .budget-functions-table-panel > .public-inline-link { justify-self: start; }
+.budget-functions-table-panel > .public-inline-link[hidden] { display: none; }
 .budget-year-cards, .budget-function-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }.budget-composition-chart { height: 410px; }.budget-functions-table { min-width: 1350px; }
 @media (max-width: 1000px) { .budget-year-cards, .budget-function-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 650px) { .budget-year-cards, .budget-function-cards { grid-template-columns: 1fr; }.budget-composition-chart { height: 430px; } }
@@ -391,6 +392,11 @@ table.expense-detail-table tbody td.number { text-align: center; }.expense-detai
 .budget-analysis-divider::after { background: linear-gradient(90deg, #aebdca, transparent); }
 .budget-analysis-divider span { padding: .45rem .8rem; border: 1px solid #cbd7e1; border-radius: 999px; background: #f7fafc; }
 .budget-function-panel { border-top: 4px solid #177a8a; }
+.budget-functions-filter-row { display: flex; justify-content: flex-end; padding-top: .15rem; border-top: 1px solid #e0e6ed; }
+.budget-finality-filter { width: min(360px, 100%); }
+.budget-finality-filter span { display: block; margin-bottom: .35rem; color: #526176; font-size: .72rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
+.budget-functions-table td:first-child { color: var(--muted); font-size: .76rem; }
+.budget-functions-table td:nth-child(2) { color: #33415a; font-size: inherit; }
 @media (max-width: 650px) { .budget-years-chart { height: 350px; padding-inline: 0; }.budget-years-chart-inner { min-width: 720px; }.budget-years-legend { gap: .45rem 1rem; font-size: .68rem; }.budget-chart-mobile-note { display: block; }.budget-analysis-divider { gap: .5rem; }.budget-analysis-divider span { padding-inline: .6rem; white-space: nowrap; } }
 
 /* Descripciones institucionales del Presupuesto 2026 */
