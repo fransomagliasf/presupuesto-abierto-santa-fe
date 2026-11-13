@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261113-3" />
+    <link rel="stylesheet" href="styles.css?v=20261113-4" />
   </head>
   <body>
     <header class="site-header">
@@ -288,6 +288,15 @@
         <p id="financing-quality-note" class="note"></p>
       </section>
 
+      <section class="panel project-annual-breakdown" aria-labelledby="project-annual-title">
+        <div class="section-heading"><div><p class="eyebrow">Proyecto de Presupuesto 2027</p><h2 id="project-annual-title">Composición anual del proyecto</h2><p>Clasificaciones globales publicadas en el Mensaje 22. Son montos previstos, no ejecución.</p></div><p class="budget-project-legend"><i class="budget-project-key"></i>Datos del proyecto 2027</p></div>
+        <div class="project-annual-grid">
+          <article><h3>Gasto por objeto</h3><ul id="project-object-list" class="project-annual-list"></ul></article>
+          <article><h3>Gasto por fuente de financiamiento</h3><ul id="project-source-list" class="project-annual-list"></ul></article>
+        </div>
+        <p class="note">Ambas clasificaciones concilian exactamente con el total del proyecto: $ 411.831.393.777. No se cruzan entre sí ni con secretarías o programas.</p>
+      </section>
+
       <section class="panel expense-detail-panel">
         <div class="section-heading">
           <div>
@@ -314,6 +323,7 @@
                 <th class="number"><button class="sort-header active" type="button" data-sort="accrued">Devengado <span>↓</span></button></th>
                 <th class="number"><button class="sort-header" type="button" data-sort="available">Disponible <span></span></button></th>
                 <th class="number"><button class="sort-header" type="button" data-sort="execution">% ejecutado <span></span></button> <span class="info-help" tabindex="0" aria-label="Información sobre cálculo y colores">i<span class="info-card"><strong>Cómo se interpreta</strong><span><b class="key-execution">Ejecutado</b> = devengado ÷ crédito vigente × 100.</span><span><b class="key-expected">Esperado</b> = mes de corte ÷ 12 × 100.</span><span class="scale-line"><i class="scale-dot red"></i><b>Rojo:</b> más de 10 puntos por debajo.</span><span class="scale-line"><i class="scale-dot yellow"></i><b>Amarillo:</b> entre 5 y 10 puntos de desvío.</span><span class="scale-line"><i class="scale-dot green"></i><b>Verde:</b> dentro de ±5 puntos.</span><span class="scale-line"><i class="scale-dot blue"></i><b>Azul:</b> al menos 10 puntos por encima.</span><small>Es una referencia temporal, no una evaluación de la calidad del gasto.</small></span></span></th>
+                <th class="number project-budget-column">Proyecto 2027<small>Presupuesto anual</small></th>
               </tr>
             </thead>
             <tbody id="detail-table"></tbody>
@@ -378,7 +388,7 @@
 
         <section class="panel resource-composition">
           <div class="section-heading"><div><p class="eyebrow">Composición</p><h2>Recursos por rubro</h2></div><p class="legend">Seleccioná la flecha para ver los conceptos</p></div>
-          <div class="table-wrap"><table><thead><tr><th>Rubro</th><th>Detalle</th><th class="number">Estimado</th><th class="number">Vigente</th><th class="number">Devengado</th><th class="number">Percibido</th><th class="number">% recaudado</th></tr></thead><tbody id="resource-detail-table"></tbody></table></div>
+          <div class="table-wrap"><table class="resource-detail-table"><thead><tr><th>Rubro</th><th>Detalle</th><th class="number">Estimado</th><th class="number">Vigente</th><th class="number">Devengado</th><th class="number">Percibido</th><th class="number">% recaudado</th><th class="number project-budget-column">Proyecto 2027<small>Estimación anual</small></th></tr></thead><tbody id="resource-detail-table"></tbody></table></div>
           <nav id="resource-pagination" class="table-pagination" aria-label="Páginas de la tabla de recursos"></nav>
           <p id="resource-table-note" class="note"></p>
         </section>
@@ -414,6 +424,11 @@
               <article class="metric fund-metric"><div class="metric-heading"><p>Gasto pagado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Gasto pagado</strong>Salidas de dinero efectivamente realizadas con cargo a los fondos.</span></span></div><strong id="fund-metric-paid">—</strong><small id="fund-paid-note">—</small></article>
               <article class="metric fund-metric fund-balance"><div class="metric-heading"><p>Percibido menos pagado</p><span class="metric-help" tabindex="0">i<span class="metric-info"><strong>Balance de caja</strong>Diferencia simple entre lo percibido y lo pagado. Puede ser negativa cuando se utilizan saldos acumulados de ejercicios anteriores.</span></span></div><strong id="fund-metric-balance">—</strong><small id="fund-balance-note">—</small></article>
             </section>
+
+            <aside class="panel fund-project-scope" role="note">
+              <div><p class="eyebrow">Proyecto de Presupuesto 2027</p><h3><i class="budget-project-key" aria-hidden="true"></i> Alcance disponible para fondos</h3><p>El Mensaje 22 no incluye el Estado de Fondos Especiales ni gastos proyectados por fondo. Por eso no agregamos una barra 2027 a ingresos, pagos o saldos: sería una comparación incompleta. Sí identificamos abajo los conceptos de recursos cuyo código coincide exactamente.</p></div>
+              <div id="fund-project-matches" class="fund-project-matches"></div>
+            </aside>
 
             <article class="panel fund-insight-card fund-overview-card"><p class="eyebrow">Magnitud y composición</p><h3>Participación por origen</h3><p class="insight-description">Distribución del recurso percibido acumulado.</p><div class="fund-origin-layout"><div class="fund-donut-chart"><canvas id="fund-origin-chart"></canvas></div><ul id="fund-origin-legend" class="resource-origin-legend"></ul></div></article>
 
@@ -491,6 +506,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261113-3"></script>
+    <script src="app.js?v=20261113-4"></script>
   </body>
 </html>

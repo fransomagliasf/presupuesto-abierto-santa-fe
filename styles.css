@@ -387,6 +387,7 @@ table.expense-detail-table tbody td.number { text-align: center; }.expense-detai
 .budget-years-bar-key { border: 1px solid #0b4f82; background: rgba(18, 100, 163, .84); }
 .budget-years-line-key { border: 3px solid #b77c00; background: #fff; }
 .budget-project-key { border: 1px solid #b79a43; background: repeating-linear-gradient(135deg, rgb(255 248 216 / 22%) 0 6px, rgb(166 128 19 / 38%) 6px 7px, transparent 7px 12px); }
+.legend .legend-project { border: 1px solid #b79a43; border-radius: 2px; background: repeating-linear-gradient(135deg, rgb(255 248 216 / 22%) 0 5px, rgb(166 128 19 / 38%) 5px 6px, transparent 6px 10px); }
 .budget-project-legend { display: flex; gap: .5rem; align-items: center; justify-content: center; margin-top: .7rem; color: #5b4b17; font-size: .72rem; font-weight: 750; }
 .budget-project-legend i { display: inline-block; width: 1.1rem; height: .8rem; flex: none; border-radius: 3px; }
 .budget-chart-mobile-note { display: none; margin: -.35rem 0 0; color: #60708a; font-size: .72rem; font-weight: 700; text-align: center; }
@@ -404,6 +405,37 @@ table.expense-detail-table tbody td.number { text-align: center; }.expense-detai
 .budget-functions-table th.budget-project-column, .budget-functions-table td.budget-project-column { background: repeating-linear-gradient(135deg, rgb(255 248 216 / 18%) 0 7px, rgb(197 164 53 / 24%) 7px 8px, transparent 8px 14px); }
 .budget-functions-table th.budget-project-column { color: #5b4b17; }
 .budget-functions-table th.budget-project-column small { display: block; margin-top: .18rem; font-size: .58rem; letter-spacing: .04em; text-transform: uppercase; }
+.project-budget-column { background: repeating-linear-gradient(135deg, rgb(255 248 216 / 18%) 0 7px, rgb(197 164 53 / 24%) 7px 8px, transparent 8px 14px); }
+th.project-budget-column { color: #5b4b17; }
+th.project-budget-column small { display: block; margin-top: .18rem; font-size: .58rem; letter-spacing: .04em; text-transform: uppercase; }
+.fund-project-scope { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(270px, .75fr); gap: 1.25rem; align-items: start; margin-bottom: 1.25rem; border-color: #dfd2a4; background: linear-gradient(105deg, rgb(255 251 232 / 68%), #fff 55%); }
+.fund-project-scope h3 { display: flex; gap: .5rem; align-items: center; margin-bottom: .45rem; }
+.fund-project-scope h3 .budget-project-key { display: inline-block; width: 1.1rem; height: .8rem; flex: none; border-radius: 3px; }
+.fund-project-scope p:last-child { margin: 0; color: #5f6d80; font-size: .82rem; line-height: 1.55; }
+.fund-project-matches { padding: .8rem; border: 1px solid #eadfb9; border-radius: 9px; background: rgb(255 255 255 / 78%); }
+.fund-project-matches > strong, .fund-project-matches > small { display: block; }
+.fund-project-matches > strong { color: #5b4b17; font-size: .78rem; }
+.fund-project-matches > small { margin-top: .55rem; color: #6c7685; font-size: .68rem; line-height: 1.4; }
+.fund-project-matches ul { display: grid; gap: .35rem; margin: .55rem 0 0; padding: 0; list-style: none; }
+.fund-project-matches li { display: flex; gap: .8rem; justify-content: space-between; padding-top: .35rem; border-top: 1px solid #f0ead5; color: #4d5a6d; font-size: .7rem; }
+.fund-project-matches li span { min-width: 0; }
+.fund-project-matches li b { flex: none; color: #33415a; font-variant-numeric: tabular-nums; }
+.project-annual-breakdown { margin-bottom: 1.5rem; border-color: #dfd2a4; background: linear-gradient(120deg, rgb(255 251 232 / 45%), #fff 45%); }
+.project-annual-breakdown .section-heading { align-items: center; }
+.project-annual-breakdown .section-heading p { margin-bottom: 0; }
+.project-annual-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; margin-top: 1.15rem; }
+.project-annual-grid article { min-width: 0; padding: 1rem; border: 1px solid #eadfb9; border-radius: 10px; background: rgb(255 255 255 / 82%); }
+.project-annual-grid h3 { margin: 0 0 .7rem; font-size: .9rem; }
+.project-annual-list { display: grid; gap: .4rem; margin: 0; padding: 0; list-style: none; }
+.project-annual-list li { display: grid; grid-template-columns: .75rem minmax(0, 1fr) auto 45px; gap: .55rem; align-items: center; padding-top: .4rem; border-top: 1px solid #edf0f4; font-size: .72rem; }
+.project-annual-list li:first-child { padding-top: 0; border-top: 0; }
+.project-annual-list i { width: .7rem; height: .7rem; border-radius: 2px; }
+.project-annual-list span { min-width: 0; color: #46556d; }
+.project-annual-list strong, .project-annual-list small { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.project-annual-list strong { color: #33415a; font-size: .7rem; }
+.project-annual-list small { color: #6d7888; }
+@media (max-width: 760px) { .fund-project-scope { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .project-annual-grid { grid-template-columns: 1fr; } .project-annual-breakdown .section-heading { display: block; } .project-annual-breakdown .budget-project-legend { justify-content: flex-start; } }
 .budget-sort-header { width: 100%; justify-content: flex-end; text-align: right; }
 .budget-sort-label { min-width: 0; }
 .budget-sort-direction { flex: none; }

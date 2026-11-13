@@ -1,0 +1,1545 @@
+{
+  "meta": {
+    "anio": 2027,
+    "tipo": "Proyecto de Presupuesto",
+    "fuente": "Mensaje 22 Presupuesto 2027.pdf",
+    "total_centavos": 41183139377700,
+    "paginas": {
+      "recursos": "6–8",
+      "objetos": "10",
+      "fuentes": "11",
+      "programas": "21–33"
+    },
+    "limitaciones": [
+      "El proyecto anual no informa ejecución, devengado, pagado ni percibido para 2027.",
+      "No contiene el Estado de Ejecución de Fondos Especiales ni gasto proyectado por fondo.",
+      "Las fuentes y los objetos del gasto se publican como totales generales, sin cruce por programa."
+    ]
+  },
+  "programas": [
+    {
+      "jurisdiccion_codigo": "1110147000",
+      "jurisdiccion_nombre": "Intendencia Municipal",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Administración de las Políticas del Ejecutivo Municipal",
+      "monto_texto": "991.482.590,00",
+      "monto_centavos": 99148259000,
+      "pagina_fuente": 21
+    },
+    {
+      "jurisdiccion_codigo": "1110149000",
+      "jurisdiccion_nombre": "Fiscalía Municipal",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Fiscalía Municipal",
+      "monto_texto": "1.996.687.069,00",
+      "monto_centavos": 199668706900,
+      "pagina_fuente": 21
+    },
+    {
+      "jurisdiccion_codigo": "1110150000",
+      "jurisdiccion_nombre": "Sindicatura General Municipal",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Sindicatura General Municipal",
+      "monto_texto": "603.607.483,00",
+      "monto_centavos": 60360748300,
+      "pagina_fuente": 21
+    },
+    {
+      "jurisdiccion_codigo": "1110151000",
+      "jurisdiccion_nombre": "Servicios de la Deuda",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Pago de Intereses",
+      "monto_texto": "4.289.322.833,00",
+      "monto_centavos": 428932283300,
+      "pagina_fuente": 21
+    },
+    {
+      "jurisdiccion_codigo": "1110151000",
+      "jurisdiccion_nombre": "Servicios de la Deuda",
+      "programa_codigo": "92.00.00",
+      "programa_nombre": "Cancelación de Deuda",
+      "monto_texto": "47.354.543.799,00",
+      "monto_centavos": 4735454379900,
+      "pagina_fuente": 21
+    },
+    {
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Administración de Gastos Indirectos",
+      "monto_texto": "5.274.030.646,00",
+      "monto_centavos": 527403064600,
+      "pagina_fuente": 22
+    },
+    {
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa de Insumos para la Prestación de Servicios a la Comunidad",
+      "monto_texto": "6.723.534.401,00",
+      "monto_centavos": 672353440100,
+      "pagina_fuente": 22
+    },
+    {
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "programa_codigo": "92.00.00",
+      "programa_nombre": "Erogaciones Figurativas SA.FE.TUR",
+      "monto_texto": "102.560.526,00",
+      "monto_centavos": 10256052600,
+      "pagina_fuente": 22
+    },
+    {
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "programa_codigo": "93.00.00",
+      "programa_nombre": "Erogaciones Figurativas Tribunal de Cuentas Municipal",
+      "monto_texto": "3.686.275.906,00",
+      "monto_centavos": 368627590600,
+      "pagina_fuente": 22
+    },
+    {
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "programa_codigo": "94.00.00",
+      "programa_nombre": "Erogaciones Figurativas Honorable Concejo Municipal",
+      "monto_texto": "24.076.530.417,00",
+      "monto_centavos": 2407653041700,
+      "pagina_fuente": 22
+    },
+    {
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "programa_codigo": "95.00.00",
+      "programa_nombre": "Erogaciones Figurativas Caja Municipal de Jubilaciones y Pensiones",
+      "monto_texto": "2.823.721.935,00",
+      "monto_centavos": 282372193500,
+      "pagina_fuente": 22
+    },
+    {
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "programa_codigo": "96.00.00",
+      "programa_nombre": "Erogaciones Figurativas Ente Autárquico Municipal Mercado Norte",
+      "monto_texto": "110.906.016,00",
+      "monto_centavos": 11090601600,
+      "pagina_fuente": 22
+    },
+    {
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "programa_codigo": "97.00.00",
+      "programa_nombre": "Erogaciones Figurativas Agencia de Cooperación, Inversiones y Comercio Exterior",
+      "pagina_fuente": 22,
+      "monto_texto": "478.985.075,00",
+      "monto_centavos": 47898507500
+    },
+    {
+      "jurisdiccion_codigo": "1110153000",
+      "jurisdiccion_nombre": "Órg Control del Sistema Transporte Público",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Órgano de Control del Sistema Transporte Público",
+      "monto_texto": "244.765.933,00",
+      "monto_centavos": 24476593300,
+      "pagina_fuente": 22
+    },
+    {
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Secretaría General",
+      "monto_texto": "2.712.989.923,00",
+      "monto_centavos": 271298992300,
+      "pagina_fuente": 23
+    },
+    {
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Descentralización Municipal",
+      "monto_texto": "1.388.149.630,00",
+      "monto_centavos": 138814963000,
+      "pagina_fuente": 23
+    },
+    {
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Santa Fe Barrio",
+      "monto_texto": "2.348.330.125,00",
+      "monto_centavos": 234833012500,
+      "pagina_fuente": 23
+    },
+    {
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Atención Ciudadana",
+      "monto_texto": "32.010.791,00",
+      "monto_centavos": 3201079100,
+      "pagina_fuente": 23
+    },
+    {
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "programa_codigo": "19.00.00",
+      "programa_nombre": "Programa Urbanos Estratégicos",
+      "monto_texto": "57.151.095,00",
+      "monto_centavos": 5715109500,
+      "pagina_fuente": 23
+    },
+    {
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "programa_codigo": "20.00.00",
+      "programa_nombre": "Municipio Digital",
+      "monto_texto": "3.270.214.986,00",
+      "monto_centavos": 327021498600,
+      "pagina_fuente": 23
+    },
+    {
+      "jurisdiccion_codigo": "1110155000",
+      "jurisdiccion_nombre": "Justicia Mun. Administrativa de Faltas",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Justicia Municipal Administrativa de Faltas",
+      "monto_texto": "3.090.439.988,00",
+      "monto_centavos": 309043998800,
+      "pagina_fuente": 23
+    },
+    {
+      "jurisdiccion_codigo": "1110167000",
+      "jurisdiccion_nombre": "Hábitat Santa Fe Capital",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Hábitat Santa Fe Capital",
+      "monto_texto": "1.145.960.453,00",
+      "monto_centavos": 114596045300,
+      "pagina_fuente": 23
+    },
+    {
+      "jurisdiccion_codigo": "1110167000",
+      "jurisdiccion_nombre": "Hábitat Santa Fe Capital",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa de Regularización Dominial",
+      "monto_texto": "6.671.054,00",
+      "monto_centavos": 667105400,
+      "pagina_fuente": 23
+    },
+    {
+      "jurisdiccion_codigo": "1110167000",
+      "jurisdiccion_nombre": "Hábitat Santa Fe Capital",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa de Mejoramiento Urbano Integral",
+      "monto_texto": "266.256.941,00",
+      "monto_centavos": 26625694100,
+      "pagina_fuente": 24
+    },
+    {
+      "jurisdiccion_codigo": "1110167000",
+      "jurisdiccion_nombre": "Hábitat Santa Fe Capital",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa Vivienda",
+      "monto_texto": "19.026.809,00",
+      "monto_centavos": 1902680900,
+      "pagina_fuente": 24
+    },
+    {
+      "jurisdiccion_codigo": "1110172000",
+      "jurisdiccion_nombre": "Sec. Gobierno, Control, Movilidad y Seg. Ciudadana",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Sec. Gobierno, Control, Movilidad y Seg. Ciudadana",
+      "monto_texto": "5.352.588.343,00",
+      "monto_centavos": 535258834300,
+      "pagina_fuente": 24
+    },
+    {
+      "jurisdiccion_codigo": "1110172000",
+      "jurisdiccion_nombre": "Sec. Gobierno, Control, Movilidad y Seg. Ciudadana",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa de la Función Pública",
+      "monto_texto": "2.356.004.785,00",
+      "monto_centavos": 235600478500,
+      "pagina_fuente": 24
+    },
+    {
+      "jurisdiccion_codigo": "1110172000",
+      "jurisdiccion_nombre": "Sec. Gobierno, Control, Movilidad y Seg. Ciudadana",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa de Prevención",
+      "monto_texto": "14.248.318.242,00",
+      "monto_centavos": 1424831824200,
+      "pagina_fuente": 24
+    },
+    {
+      "jurisdiccion_codigo": "1110172000",
+      "jurisdiccion_nombre": "Sec. Gobierno, Control, Movilidad y Seg. Ciudadana",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa de Control",
+      "monto_texto": "5.278.644.958,00",
+      "monto_centavos": 527864495800,
+      "pagina_fuente": 24
+    },
+    {
+      "jurisdiccion_codigo": "1110172000",
+      "jurisdiccion_nombre": "Sec. Gobierno, Control, Movilidad y Seg. Ciudadana",
+      "programa_codigo": "19.00.00",
+      "programa_nombre": "Programa de Movilidad",
+      "monto_texto": "24.600.726.032,00",
+      "monto_centavos": 2460072603200,
+      "pagina_fuente": 24
+    },
+    {
+      "jurisdiccion_codigo": "1110173000",
+      "jurisdiccion_nombre": "Secretaría de Hacienda y Finanzas",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Secretaría de Hacienda y Finanzas",
+      "monto_texto": "7.838.285.141,00",
+      "monto_centavos": 783828514100,
+      "pagina_fuente": 24
+    },
+    {
+      "jurisdiccion_codigo": "1110173000",
+      "jurisdiccion_nombre": "Secretaría de Hacienda y Finanzas",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa de Administración Tributaria, Gasto Público y Estrategia Fiscal",
+      "monto_texto": "4.597.089.407,00",
+      "monto_centavos": 459708940700,
+      "pagina_fuente": 24
+    },
+    {
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "monto_texto": "3.740.708.990,00",
+      "monto_centavos": 374070899000,
+      "pagina_fuente": 25
+    },
+    {
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa de Planeamiento Urbano",
+      "monto_texto": "733.132.920,00",
+      "monto_centavos": 73313292000,
+      "pagina_fuente": 25
+    },
+    {
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa de Desarrollo de Proyectos Urbanos",
+      "monto_texto": "1.436.911.761,00",
+      "monto_centavos": 143691176100,
+      "pagina_fuente": 25
+    },
+    {
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa de Actualización de Edificaciones Privadas",
+      "monto_texto": "1.539.477.406,00",
+      "monto_centavos": 153947740600,
+      "pagina_fuente": 25
+    },
+    {
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "programa_codigo": "19.00.00",
+      "programa_nombre": "Programa de Administración Catastral",
+      "monto_texto": "1.540.265.632,00",
+      "monto_centavos": 154026563200,
+      "pagina_fuente": 25
+    },
+    {
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "programa_codigo": "20.00.00",
+      "programa_nombre": "Programa Gestión Operativa de Recursos Hídricos",
+      "monto_texto": "11.599.722.319,00",
+      "monto_centavos": 1159972231900,
+      "pagina_fuente": 25
+    },
+    {
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "programa_codigo": "21.00.00",
+      "programa_nombre": "Programa Planeamiento Hídrico",
+      "monto_texto": "67.867.617,00",
+      "monto_centavos": 6786761700,
+      "pagina_fuente": 25
+    },
+    {
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "programa_codigo": "22.00.00",
+      "programa_nombre": "Programa Gestión Edilicia Municipal",
+      "monto_texto": "1.919.431.901,00",
+      "monto_centavos": 191943190100,
+      "pagina_fuente": 25
+    },
+    {
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "programa_codigo": "23.00.00",
+      "programa_nombre": "Programa de Obras Públicas",
+      "monto_texto": "6.974.759.449,00",
+      "monto_centavos": 697475944900,
+      "pagina_fuente": 25
+    },
+    {
+      "jurisdiccion_codigo": "1110175000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Empleo",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Secretaría de Producción y Empleo",
+      "monto_texto": "1.693.140.944,00",
+      "monto_centavos": 169314094400,
+      "pagina_fuente": 26
+    },
+    {
+      "jurisdiccion_codigo": "1110175000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Empleo",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa de Desarrollo Económico",
+      "monto_texto": "458.330.071,00",
+      "monto_centavos": 45833007100,
+      "pagina_fuente": 26
+    },
+    {
+      "jurisdiccion_codigo": "1110175000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Empleo",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa de Seguridad Alimentaria y Habilitaciones",
+      "monto_texto": "1.900.613.018,00",
+      "monto_centavos": 190061301800,
+      "pagina_fuente": 26
+    },
+    {
+      "jurisdiccion_codigo": "1110175000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Empleo",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa de Promoción Turística",
+      "monto_texto": "1.206.452.737,00",
+      "monto_centavos": 120645273700,
+      "pagina_fuente": 26
+    },
+    {
+      "jurisdiccion_codigo": "1110175000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Empleo",
+      "programa_codigo": "19.00.00",
+      "programa_nombre": "Programa de turismo de eventos, reuniones y estadísticas",
+      "monto_texto": "179.090.039,00",
+      "monto_centavos": 17909003900,
+      "pagina_fuente": 26
+    },
+    {
+      "jurisdiccion_codigo": "1110175000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Empleo",
+      "programa_codigo": "20.00.00",
+      "programa_nombre": "Programa de Innovación y Emprendedurismo",
+      "monto_texto": "921.030.397,00",
+      "monto_centavos": 92103039700,
+      "pagina_fuente": 26
+    },
+    {
+      "jurisdiccion_codigo": "1110175000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Empleo",
+      "programa_codigo": "21.00.00",
+      "programa_nombre": "Programa de Empleo y Formación para el Trabajo",
+      "monto_texto": "372.930.377,00",
+      "monto_centavos": 37293037700,
+      "pagina_fuente": 26
+    },
+    {
+      "jurisdiccion_codigo": "1110176000",
+      "jurisdiccion_nombre": "Secretaría de Cultura",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Secretaría de Cultura",
+      "monto_texto": "2.933.960.727,00",
+      "monto_centavos": 293396072700,
+      "pagina_fuente": 26
+    },
+    {
+      "jurisdiccion_codigo": "1110176000",
+      "jurisdiccion_nombre": "Secretaría de Cultura",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Comunidades activas",
+      "monto_texto": "94.377.091,00",
+      "monto_centavos": 9437709100,
+      "pagina_fuente": 26
+    },
+    {
+      "jurisdiccion_codigo": "1110176000",
+      "jurisdiccion_nombre": "Secretaría de Cultura",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Economía Cultural y Creativa",
+      "monto_texto": "11.488.271,00",
+      "monto_centavos": 1148827100,
+      "pagina_fuente": 26
+    },
+    {
+      "jurisdiccion_codigo": "1110176000",
+      "jurisdiccion_nombre": "Secretaría de Cultura",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programación de Museos, Espacios Culturales y Organismos Municipales",
+      "monto_texto": "6.656.389.745,00",
+      "monto_centavos": 665638974500,
+      "pagina_fuente": 27
+    },
+    {
+      "jurisdiccion_codigo": "1110176000",
+      "jurisdiccion_nombre": "Secretaría de Cultura",
+      "programa_codigo": "19.00.00",
+      "programa_nombre": "Cultura y Ciudad",
+      "monto_texto": "9.765.030,00",
+      "monto_centavos": 976503000,
+      "pagina_fuente": 27
+    },
+    {
+      "jurisdiccion_codigo": "1110176000",
+      "jurisdiccion_nombre": "Secretaría de Cultura",
+      "programa_codigo": "20.00.00",
+      "programa_nombre": "Estación Belgrano - Centro de Convenciones",
+      "monto_texto": "35.383.874,00",
+      "monto_centavos": 3538387400,
+      "pagina_fuente": 27
+    },
+    {
+      "jurisdiccion_codigo": "1110177000",
+      "jurisdiccion_nombre": "Secretaría de Gestión Urbana y Ambiente",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Secretaría de Gestión Urbana y Ambiente",
+      "monto_texto": "4.627.515.492,00",
+      "monto_centavos": 462751549200,
+      "pagina_fuente": 27
+    },
+    {
+      "jurisdiccion_codigo": "1110177000",
+      "jurisdiccion_nombre": "Secretaría de Gestión Urbana y Ambiente",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa Santa Fe más Limpia",
+      "monto_texto": "68.267.187.984,00",
+      "monto_centavos": 6826718798400,
+      "pagina_fuente": 27
+    },
+    {
+      "jurisdiccion_codigo": "1110177000",
+      "jurisdiccion_nombre": "Secretaría de Gestión Urbana y Ambiente",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa Espacios Verdes",
+      "monto_texto": "18.290.088.470,00",
+      "monto_centavos": 1829008847000,
+      "pagina_fuente": 27
+    },
+    {
+      "jurisdiccion_codigo": "1110177000",
+      "jurisdiccion_nombre": "Secretaría de Gestión Urbana y Ambiente",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa de Intervenciones Urbanas",
+      "monto_texto": "34.775.330.955,00",
+      "monto_centavos": 3477533095500,
+      "pagina_fuente": 27
+    },
+    {
+      "jurisdiccion_codigo": "1110177000",
+      "jurisdiccion_nombre": "Secretaría de Gestión Urbana y Ambiente",
+      "programa_codigo": "19.00.00",
+      "programa_nombre": "Programa de Respuesta Rápida",
+      "monto_texto": "750.917.873,00",
+      "monto_centavos": 75091787300,
+      "pagina_fuente": 27
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Secretaria de Políticas Sociales",
+      "monto_texto": "10.906.192.987,00",
+      "monto_centavos": 1090619298700,
+      "pagina_fuente": 27
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa Asistencia y Promoción de la Economía Social Santafesina",
+      "monto_texto": "725.619.470,00",
+      "monto_centavos": 72561947000,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa Deportes",
+      "monto_texto": "3.135.033.963,00",
+      "monto_centavos": 313503396300,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa Políticas de Cuidados",
+      "monto_texto": "768.033.397,00",
+      "monto_centavos": 76803339700,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "19.00.00",
+      "programa_nombre": "Programa Género y Disidencias",
+      "monto_texto": "1.061.401.693,00",
+      "monto_centavos": 106140169300,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "20.00.00",
+      "programa_nombre": "Programa Infancias y Adolescencias",
+      "monto_texto": "823.698.486,00",
+      "monto_centavos": 82369848600,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "21.00.00",
+      "programa_nombre": "Programa Promoción Social",
+      "monto_texto": "3.111.658.999,00",
+      "monto_centavos": 311165899900,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "22.00.00",
+      "programa_nombre": "Programas Asuntos Vecinales",
+      "monto_texto": "421.688.947,00",
+      "monto_centavos": 42168894700,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "23.00.00",
+      "programa_nombre": "Programa Estaciones",
+      "monto_texto": "44.084.283,00",
+      "monto_centavos": 4408428300,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "24.00.00",
+      "programa_nombre": "Programa Intervenciones Sociales Inmediatas",
+      "monto_texto": "264.394.804,00",
+      "monto_centavos": 26439480400,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "25.00.00",
+      "programa_nombre": "Programa Promoción de la Salud",
+      "monto_texto": "1.241.150.831,00",
+      "monto_centavos": 124115083100,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "26.00.00",
+      "programa_nombre": "Programa Abordajes de Consumos Problemáticos",
+      "monto_texto": "36.206.871,00",
+      "monto_centavos": 3620687100,
+      "pagina_fuente": 28
+    },
+    {
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "programa_codigo": "27.00.00",
+      "programa_nombre": "Programa de Atención Primaria en Salud",
+      "monto_texto": "26.742.415,00",
+      "monto_centavos": 2674241500,
+      "pagina_fuente": 29
+    },
+    {
+      "jurisdiccion_codigo": "1110179000",
+      "jurisdiccion_nombre": "Secretaría de Educación",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Secretaría de Educación",
+      "monto_texto": "2.651.742.435,00",
+      "monto_centavos": 265174243500,
+      "pagina_fuente": 29
+    },
+    {
+      "jurisdiccion_codigo": "1110179000",
+      "jurisdiccion_nombre": "Secretaría de Educación",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa de Sistema Municipal de Educación Inicial",
+      "monto_texto": "7.084.898.661,00",
+      "monto_centavos": 708489866100,
+      "pagina_fuente": 29
+    },
+    {
+      "jurisdiccion_codigo": "1110179000",
+      "jurisdiccion_nombre": "Secretaría de Educación",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa Socioeducativo de Jardines Municipales",
+      "monto_texto": "8.282.453,00",
+      "monto_centavos": 828245300,
+      "pagina_fuente": 29
+    },
+    {
+      "jurisdiccion_codigo": "1110179000",
+      "jurisdiccion_nombre": "Secretaría de Educación",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa Innovación Educativa",
+      "monto_texto": "609.473.440,00",
+      "monto_centavos": 60947344000,
+      "pagina_fuente": 29
+    },
+    {
+      "jurisdiccion_codigo": "1110179000",
+      "jurisdiccion_nombre": "Secretaría de Educación",
+      "programa_codigo": "19.00.00",
+      "programa_nombre": "Programa de Formación y Educación Municipal",
+      "monto_texto": "4.801.720.978,00",
+      "monto_centavos": 480172097800,
+      "pagina_fuente": 29
+    },
+    {
+      "jurisdiccion_codigo": "1110179000",
+      "jurisdiccion_nombre": "Secretaría de Educación",
+      "programa_codigo": "20.00.00",
+      "programa_nombre": "Programa Educación Ciudadana",
+      "monto_texto": "11.685.112,00",
+      "monto_centavos": 1168511200,
+      "pagina_fuente": 29
+    },
+    {
+      "jurisdiccion_codigo": "1110179000",
+      "jurisdiccion_nombre": "Secretaría de Educación",
+      "programa_codigo": "21.00.00",
+      "programa_nombre": "Programa Fondo de Asistencia Educativa",
+      "monto_texto": "3.658.903.683,00",
+      "monto_centavos": 365890368300,
+      "pagina_fuente": 29
+    },
+    {
+      "jurisdiccion_codigo": "1110180000",
+      "jurisdiccion_nombre": "Dirección General de Desarrollo Municipal",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Dir. Gral. de Desarrollo Municipal",
+      "monto_texto": "1.546.593.476,00",
+      "monto_centavos": 154659347600,
+      "pagina_fuente": 29
+    },
+    {
+      "jurisdiccion_codigo": "1110180000",
+      "jurisdiccion_nombre": "Dirección General de Desarrollo Municipal",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa Gestión Talleres Municipales",
+      "monto_texto": "1.994.787.034,00",
+      "monto_centavos": 199478703400,
+      "pagina_fuente": 30
+    },
+    {
+      "jurisdiccion_codigo": "1110180000",
+      "jurisdiccion_nombre": "Dirección General de Desarrollo Municipal",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa Plan Cementerio",
+      "monto_texto": "2.608.388.349,00",
+      "monto_centavos": 260838834900,
+      "pagina_fuente": 30
+    },
+    {
+      "jurisdiccion_codigo": "1110180000",
+      "jurisdiccion_nombre": "Dirección General de Desarrollo Municipal",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa Transformación Digital",
+      "monto_texto": "21.441.733,00",
+      "monto_centavos": 2144173300,
+      "pagina_fuente": 30
+    },
+    {
+      "jurisdiccion_codigo": "1110180000",
+      "jurisdiccion_nombre": "Dirección General de Desarrollo Municipal",
+      "programa_codigo": "19.00.00",
+      "programa_nombre": "Programa Innovación Comunitaria",
+      "monto_texto": "543.620.692,00",
+      "monto_centavos": 54362069200,
+      "pagina_fuente": 30
+    },
+    {
+      "jurisdiccion_codigo": "1110180000",
+      "jurisdiccion_nombre": "Dirección General de Desarrollo Municipal",
+      "programa_codigo": "20.00.00",
+      "programa_nombre": "Programa de Proyectos Estratégicos para la ciudad",
+      "monto_texto": "5.257.985.595,00",
+      "monto_centavos": 525798559500,
+      "pagina_fuente": 30
+    },
+    {
+      "jurisdiccion_codigo": "1110181000",
+      "jurisdiccion_nombre": "Dir. Der. y Vinculación Ciudadana e Institucional",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Dir. Der. y Vinculación Ciudadana e Institucional",
+      "monto_texto": "808.821.003,00",
+      "monto_centavos": 80882100300,
+      "pagina_fuente": 30
+    },
+    {
+      "jurisdiccion_codigo": "1110181000",
+      "jurisdiccion_nombre": "Dir. Der. y Vinculación Ciudadana e Institucional",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa Derechos Humanos e Integración",
+      "monto_texto": "4.184.104,00",
+      "monto_centavos": 418410400,
+      "pagina_fuente": 30
+    },
+    {
+      "jurisdiccion_codigo": "1110181000",
+      "jurisdiccion_nombre": "Dir. Der. y Vinculación Ciudadana e Institucional",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa Santa Fe Ciudad de Derechos",
+      "monto_texto": "214.130.176,00",
+      "monto_centavos": 21413017600,
+      "pagina_fuente": 30
+    },
+    {
+      "jurisdiccion_codigo": "1110181000",
+      "jurisdiccion_nombre": "Dir. Der. y Vinculación Ciudadana e Institucional",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa Municipio Cercano",
+      "monto_texto": "52.597.317,00",
+      "monto_centavos": 5259731700,
+      "pagina_fuente": 30
+    },
+    {
+      "jurisdiccion_codigo": "1110181000",
+      "jurisdiccion_nombre": "Dir. Der. y Vinculación Ciudadana e Institucional",
+      "programa_codigo": "19.00.00",
+      "programa_nombre": "Programa Diálogo y Planificación",
+      "monto_texto": "5.064.968,00",
+      "monto_centavos": 506496800,
+      "pagina_fuente": 30
+    },
+    {
+      "jurisdiccion_codigo": "1110182000",
+      "jurisdiccion_nombre": "Dir. Gral. Comunicación Púb. y Rel Institucionales",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión Dir. Gral. Comunicación Púb. y Rel. Institucionales",
+      "monto_texto": "1.491.486.633,00",
+      "monto_centavos": 149148663300,
+      "pagina_fuente": 31
+    },
+    {
+      "jurisdiccion_codigo": "1110182000",
+      "jurisdiccion_nombre": "Dir. Gral. Comunicación Púb. y Rel Institucionales",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa de comunicación Institucional",
+      "monto_texto": "210.459.061,00",
+      "monto_centavos": 21045906100,
+      "pagina_fuente": 31
+    },
+    {
+      "jurisdiccion_codigo": "1110182000",
+      "jurisdiccion_nombre": "Dir. Gral. Comunicación Púb. y Rel Institucionales",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa de Información Pública y Transparencia",
+      "monto_texto": "1.908.882.497,00",
+      "monto_centavos": 190888249700,
+      "pagina_fuente": 31
+    },
+    {
+      "jurisdiccion_codigo": "1110182000",
+      "jurisdiccion_nombre": "Dir. Gral. Comunicación Púb. y Rel Institucionales",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa de Producción de Contenidos",
+      "monto_texto": "119.951.640,00",
+      "monto_centavos": 11995164000,
+      "pagina_fuente": 31
+    },
+    {
+      "jurisdiccion_codigo": "1110183000",
+      "jurisdiccion_nombre": "Dirección de Gestión de Riesgo",
+      "programa_codigo": "01.00.00",
+      "programa_nombre": "Coordinación y Gestión de la Dirección de Gestión de Riesgo",
+      "monto_texto": "624.625.866,00",
+      "monto_centavos": 62462586600,
+      "pagina_fuente": 31
+    },
+    {
+      "jurisdiccion_codigo": "1110183000",
+      "jurisdiccion_nombre": "Dirección de Gestión de Riesgo",
+      "programa_codigo": "16.00.00",
+      "programa_nombre": "Programa de Articulación y Difusión",
+      "monto_texto": "3.372.058,00",
+      "monto_centavos": 337205800,
+      "pagina_fuente": 31
+    },
+    {
+      "jurisdiccion_codigo": "1110183000",
+      "jurisdiccion_nombre": "Dirección de Gestión de Riesgo",
+      "programa_codigo": "17.00.00",
+      "programa_nombre": "Programa de Alertas, Prevención, Mitigación y Respuestas",
+      "monto_texto": "119.851.800,00",
+      "monto_centavos": 11985180000,
+      "pagina_fuente": 31
+    },
+    {
+      "jurisdiccion_codigo": "1110183000",
+      "jurisdiccion_nombre": "Dirección de Gestión de Riesgo",
+      "programa_codigo": "18.00.00",
+      "programa_nombre": "Programa Central Operativa Brigada de Emergencias Municipal - COBEM",
+      "monto_texto": "2.800.451.445,00",
+      "monto_centavos": 280045144500,
+      "pagina_fuente": 31
+    }
+  ],
+  "recursos": [
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.01.00",
+      "rubro_nombre": "Coparticipación Patente Única de Vehículos",
+      "monto_texto": "25.063.341.931,00",
+      "monto_centavos": 2506334193100,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.02.00",
+      "rubro_nombre": "Coparticipación Impuesto Inmobiliario",
+      "monto_texto": "9.440.876.000,00",
+      "monto_centavos": 944087600000,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.03.00",
+      "rubro_nombre": "Coparticipación Impuesto a los Ingresos Brutos",
+      "monto_texto": "55.701.369.792,00",
+      "monto_centavos": 5570136979200,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.04.00",
+      "rubro_nombre": "Coparticipación Federal - Ley Nº 23.548",
+      "monto_texto": "83.912.217.897,00",
+      "monto_centavos": 8391221789700,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.05.00",
+      "rubro_nombre": "Lotería y PRODE",
+      "monto_texto": "1.459.036.239,00",
+      "monto_centavos": 145903623900,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.06.00",
+      "rubro_nombre": "Coparticipación Embarcaciones Deportivas o de Recreación",
+      "monto_texto": "4.321.800,00",
+      "monto_centavos": 432180000,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.07.00",
+      "rubro_nombre": "Fondo de Financiamiento Educativo Recupero Ejercicio Anterior",
+      "monto_texto": "2.704.482.120,00",
+      "monto_centavos": 270448212000,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.09.00",
+      "rubro_nombre": "Diferencias de Coparticipación",
+      "monto_texto": "216.256,00",
+      "monto_centavos": 21625600,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.12.00",
+      "rubro_nombre": "Fondo de Financiamiento Educativo",
+      "monto_texto": "10.012.129.591,00",
+      "monto_centavos": 1001212959100,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.13.00",
+      "rubro_nombre": "Utilidades de Casinos y Bingos",
+      "monto_texto": "326.721.360,00",
+      "monto_centavos": 32672136000,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.18.00",
+      "rubro_nombre": "A.S.S.Al. - Agencia Santafesina de Seguridad Alimentaria",
+      "monto_texto": "110.462.333,00",
+      "monto_centavos": 11046233300,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.4.00.00",
+      "rubro_grupo_nombre": "Ingresos Tributarios de otras Jurisdicciones",
+      "rubro_codigo": "11.4.19.00",
+      "rubro_nombre": "Convenio de Coparticipación Fallo Histórico CSJN a favor de SF",
+      "monto_texto": "203.491.209,00",
+      "monto_centavos": 20349120900,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.9.00.00",
+      "rubro_grupo_nombre": "Otros tributarios",
+      "rubro_codigo": "11.9.03.00",
+      "rubro_nombre": "Empresa Provincial de la Energía de Libre Disponibilidad",
+      "monto_texto": "4.896.299.923,00",
+      "monto_centavos": 489629992300,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "11.0.00.00",
+      "rubro_mayor_nombre": "Ingresos Tributarios",
+      "rubro_grupo_codigo": "11.9.00.00",
+      "rubro_grupo_nombre": "Otros tributarios",
+      "rubro_codigo": "11.9.04.00",
+      "rubro_nombre": "EPE - FAP",
+      "monto_texto": "4.896.299.923,00",
+      "monto_centavos": 489629992300,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.1.00.00",
+      "rubro_grupo_nombre": "Tasas",
+      "rubro_codigo": "12.1.01.00",
+      "rubro_nombre": "Tasa General de Inmuebles",
+      "monto_texto": "33.536.463.017,00",
+      "monto_centavos": 3353646301700,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.1.00.00",
+      "rubro_grupo_nombre": "Tasas",
+      "rubro_codigo": "12.1.02.00",
+      "rubro_nombre": "Tasas de Actuaciones Administrativas",
+      "monto_texto": "1.512.822.614,00",
+      "monto_centavos": 151282261400,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.1.00.00",
+      "rubro_grupo_nombre": "Tasas",
+      "rubro_codigo": "12.1.03.00",
+      "rubro_nombre": "Tasas Varias",
+      "monto_texto": "79.727.600,00",
+      "monto_centavos": 7972760000,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.01.00",
+      "rubro_nombre": "Derecho de Registro e Inspección",
+      "monto_texto": "88.871.821.911,00",
+      "monto_centavos": 8887182191100,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.02.00",
+      "rubro_nombre": "Derecho de Cementerio",
+      "monto_texto": "955.619.287,00",
+      "monto_centavos": 95561928700,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.03.00",
+      "rubro_nombre": "Derecho de Espéctaculos Públicos",
+      "monto_texto": "223.879.278,00",
+      "monto_centavos": 22387927800,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.04.00",
+      "rubro_nombre": "Derecho de Ocupación del Dominio Público",
+      "monto_texto": "3.261.082.428,00",
+      "monto_centavos": 326108242800,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.05.00",
+      "rubro_nombre": "Derecho de Uso Bienes del Estado",
+      "monto_texto": "403.062.434,00",
+      "monto_centavos": 40306243400,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.06.00",
+      "rubro_nombre": "Derecho de Edificación",
+      "monto_texto": "947.782.722,00",
+      "monto_centavos": 94778272200,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.07.00",
+      "rubro_nombre": "Derecho de Publicidad y Propaganda",
+      "monto_texto": "159.317.074,00",
+      "monto_centavos": 15931707400,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.08.00",
+      "rubro_nombre": "Derechos Varios",
+      "monto_texto": "9.233.703.140,00",
+      "monto_centavos": 923370314000,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.09.00",
+      "rubro_nombre": "Derecho de Concesión y Transferencia de Licencia de Taxis",
+      "monto_texto": "52.589.853,00",
+      "monto_centavos": 5258985300,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.10.00",
+      "rubro_nombre": "Derecho de Instalaciones Eléctricas",
+      "monto_texto": "197.983.456,00",
+      "monto_centavos": 19798345600,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.2.00.00",
+      "rubro_grupo_nombre": "Derechos",
+      "rubro_codigo": "12.2.12.00",
+      "rubro_nombre": "Habilitación Instalación de Antenas y Derecho de Inspección",
+      "monto_texto": "552.120,00",
+      "monto_centavos": 55212000,
+      "pagina_fuente": 6
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.5.00.00",
+      "rubro_grupo_nombre": "Alquileres",
+      "rubro_codigo": "12.5.02.00",
+      "rubro_nombre": "Alquiler de Inmuebles",
+      "monto_texto": "38.304.000,00",
+      "monto_centavos": 3830400000,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.6.00.00",
+      "rubro_grupo_nombre": "Multas",
+      "rubro_codigo": "12.6.01.00",
+      "rubro_nombre": "Multas a las Contravenciones",
+      "monto_texto": "5.383.076.542,00",
+      "monto_centavos": 538307654200,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.9.00.00",
+      "rubro_grupo_nombre": "Otros",
+      "rubro_codigo": "12.9.01.00",
+      "rubro_nombre": "Contribución de Mejoras",
+      "monto_texto": "6.270.135,00",
+      "monto_centavos": 627013500,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.9.00.00",
+      "rubro_grupo_nombre": "Otros",
+      "rubro_codigo": "12.9.03.00",
+      "rubro_nombre": "Regímenes Ordenanzas Varias",
+      "monto_texto": "28.098,00",
+      "monto_centavos": 2809800,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.9.00.00",
+      "rubro_grupo_nombre": "Otros",
+      "rubro_codigo": "12.9.07.00",
+      "rubro_nombre": "Padrinazgos",
+      "monto_texto": "4.949.880,00",
+      "monto_centavos": 494988000,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.9.00.00",
+      "rubro_grupo_nombre": "Otros",
+      "rubro_codigo": "12.9.08.00",
+      "rubro_nombre": "Recuperos Desagregados",
+      "monto_texto": "917.440.853,00",
+      "monto_centavos": 91744085300,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "12.0.00.00",
+      "rubro_mayor_nombre": "Ingresos No Tributarios",
+      "rubro_grupo_codigo": "12.9.00.00",
+      "rubro_grupo_nombre": "Otros",
+      "rubro_codigo": "12.9.99.00",
+      "rubro_nombre": "Otros",
+      "monto_texto": "677.269.320,00",
+      "monto_centavos": 67726932000,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "14.0.00.00",
+      "rubro_mayor_nombre": "Venta de bienes y servicios",
+      "rubro_grupo_codigo": "14.2.00.00",
+      "rubro_grupo_nombre": "Venta de servicios",
+      "rubro_codigo": "14.2.04.00",
+      "rubro_nombre": "Venta de Servicios Municipales",
+      "monto_texto": "1.530.372.975,00",
+      "monto_centavos": 153037297500,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "14.0.00.00",
+      "rubro_mayor_nombre": "Venta de bienes y servicios",
+      "rubro_grupo_codigo": "14.2.00.00",
+      "rubro_grupo_nombre": "Venta de servicios",
+      "rubro_codigo": "14.2.05.00",
+      "rubro_nombre": "Servicios del Teatro Municipal",
+      "monto_texto": "48.310.981,00",
+      "monto_centavos": 4831098100,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "16.0.00.00",
+      "rubro_mayor_nombre": "Rentas de la propiedad",
+      "rubro_grupo_codigo": "16.2.00.00",
+      "rubro_grupo_nombre": "Intereses por depósitos",
+      "rubro_codigo": "16.2.01.00",
+      "rubro_nombre": "Intereses por depósitos Internos",
+      "monto_texto": "5.583.273.434,00",
+      "monto_centavos": 558327343400,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "16.0.00.00",
+      "rubro_mayor_nombre": "Rentas de la propiedad",
+      "rubro_grupo_codigo": "16.3.00.00",
+      "rubro_grupo_nombre": "Intereses por títulos y valores",
+      "rubro_codigo": "16.3.01.00",
+      "rubro_nombre": "Intereses por títulos y valores internos",
+      "monto_texto": "4.464.997.512,00",
+      "monto_centavos": 446499751200,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "17.0.00.00",
+      "rubro_mayor_nombre": "Transferencias corrientes",
+      "rubro_grupo_codigo": "17.5.00.00",
+      "rubro_grupo_nombre": "De gobiernos e instituciones provinciales y municipales",
+      "rubro_codigo": "17.5.01.00",
+      "rubro_nombre": "De gobiernos provinciales",
+      "monto_texto": "745.767.056,00",
+      "monto_centavos": 74576705600,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "21.0.00.00",
+      "rubro_mayor_nombre": "Recursos propios de capital",
+      "rubro_grupo_codigo": "21.1.00.00",
+      "rubro_grupo_nombre": "Venta de activos",
+      "rubro_codigo": "21.1.01.00",
+      "rubro_nombre": "Venta de tierras y terrenos",
+      "monto_texto": "45.406,00",
+      "monto_centavos": 4540600,
+      "pagina_fuente": 7
+    },
+    {
+      "rubro_mayor_codigo": "22.0.00.00",
+      "rubro_mayor_nombre": "Transferencias de capital",
+      "rubro_grupo_codigo": "22.2.00.00",
+      "rubro_grupo_nombre": "De administración nacional",
+      "rubro_codigo": "22.2.01.00",
+      "rubro_nombre": "De la administración central nacional",
+      "monto_texto": "1.677.796.345,00",
+      "monto_centavos": 167779634500,
+      "pagina_fuente": 8
+    },
+    {
+      "rubro_mayor_codigo": "22.0.00.00",
+      "rubro_mayor_nombre": "Transferencias de capital",
+      "rubro_grupo_codigo": "22.5.00.00",
+      "rubro_grupo_nombre": "De gobiernos e instituciones provinciales y municipales",
+      "rubro_codigo": "22.5.01.00",
+      "rubro_nombre": "De gobiernos provinciales",
+      "monto_texto": "360.806.948,00",
+      "monto_centavos": 36080694800,
+      "pagina_fuente": 8
+    },
+    {
+      "rubro_mayor_codigo": "22.0.00.00",
+      "rubro_mayor_nombre": "Transferencias de capital",
+      "rubro_grupo_codigo": "22.5.00.00",
+      "rubro_grupo_nombre": "De gobiernos e instituciones provinciales y municipales",
+      "rubro_codigo": "22.5.03.00",
+      "rubro_nombre": "De empresas públicas no financieras provinciales",
+      "monto_texto": "4.800.000.000,00",
+      "monto_centavos": 480000000000,
+      "pagina_fuente": 8
+    },
+    {
+      "rubro_mayor_codigo": "33.0.00.00",
+      "rubro_mayor_nombre": "Recuperación de préstamos de corto plazo",
+      "rubro_grupo_codigo": "33.1.00.00",
+      "rubro_grupo_nombre": "Del sector privado",
+      "rubro_codigo": "33.1.01.00",
+      "rubro_nombre": "Recuperación de préstamos Programa Banco Solidario",
+      "monto_texto": "53.776.110,00",
+      "monto_centavos": 5377611000,
+      "pagina_fuente": 8
+    },
+    {
+      "rubro_mayor_codigo": "33.0.00.00",
+      "rubro_mayor_nombre": "Recuperación de préstamos de corto plazo",
+      "rubro_grupo_codigo": "33.1.00.00",
+      "rubro_grupo_nombre": "Del sector privado",
+      "rubro_codigo": "33.1.03.00",
+      "rubro_nombre": "Recupero de Préstamos Fortalecimiento Activa",
+      "monto_texto": "22.503.117,00",
+      "monto_centavos": 2250311700,
+      "pagina_fuente": 8
+    },
+    {
+      "rubro_mayor_codigo": "38.0.00.00",
+      "rubro_mayor_nombre": "Incremento de otros pasivos",
+      "rubro_grupo_codigo": "38.2.00.00",
+      "rubro_grupo_nombre": "De otras cuentas a pagar",
+      "rubro_codigo": "38.2.01.00",
+      "rubro_nombre": "De otras cuentas a pagar a corto plazo",
+      "monto_texto": "47.348.731.757,00",
+      "monto_centavos": 4734873175700,
+      "pagina_fuente": 8
+    }
+  ],
+  "objetos_gasto": [
+    {
+      "objeto_codigo": "1.0.0.0",
+      "objeto_nombre": "Gastos en personal",
+      "monto_texto": "170.455.077.598,00",
+      "monto_centavos": 17045507759800,
+      "pagina_fuente": 10
+    },
+    {
+      "objeto_codigo": "2.0.0.0",
+      "objeto_nombre": "Bienes de consumo",
+      "monto_texto": "6.199.765.307,00",
+      "monto_centavos": 619976530700,
+      "pagina_fuente": 10
+    },
+    {
+      "objeto_codigo": "3.0.0.0",
+      "objeto_nombre": "Servicios no personales",
+      "monto_texto": "107.742.372.839,00",
+      "monto_centavos": 10774237283900,
+      "pagina_fuente": 10
+    },
+    {
+      "objeto_codigo": "4.0.0.0",
+      "objeto_nombre": "Bienes de uso",
+      "monto_texto": "25.598.708.847,00",
+      "monto_centavos": 2559870884700,
+      "pagina_fuente": 10
+    },
+    {
+      "objeto_codigo": "5.0.0.0",
+      "objeto_nombre": "Transferencias",
+      "monto_texto": "18.502.100.191,00",
+      "monto_centavos": 1850210019100,
+      "pagina_fuente": 10
+    },
+    {
+      "objeto_codigo": "6.0.0.0",
+      "objeto_nombre": "Activos financieros",
+      "monto_texto": "410.522.488,00",
+      "monto_centavos": 41052248800,
+      "pagina_fuente": 10
+    },
+    {
+      "objeto_codigo": "7.0.0.0",
+      "objeto_nombre": "Servicio de la deuda y disminución de otros pasivos",
+      "monto_texto": "51.643.866.632,00",
+      "monto_centavos": 5164386663200,
+      "pagina_fuente": 10
+    },
+    {
+      "objeto_codigo": "9.0.0.0",
+      "objeto_nombre": "Gastos figurativos",
+      "monto_texto": "31.278.979.875,00",
+      "monto_centavos": 3127897987500,
+      "pagina_fuente": 10
+    }
+  ],
+  "fuentes_financiamiento": [
+    {
+      "fuente_codigo": "110",
+      "fuente_nombre": "Tesoro Municipal",
+      "monto_texto": "359.795.116.352,00",
+      "monto_centavos": 35979511635200,
+      "pagina_fuente": 11
+    },
+    {
+      "fuente_codigo": "120",
+      "fuente_nombre": "Recursos propios",
+      "monto_texto": "0,00",
+      "monto_centavos": 0,
+      "pagina_fuente": 11
+    },
+    {
+      "fuente_codigo": "131",
+      "fuente_nombre": "De origen municipal",
+      "monto_texto": "29.660.826.431,00",
+      "monto_centavos": 2966082643100,
+      "pagina_fuente": 11
+    },
+    {
+      "fuente_codigo": "132",
+      "fuente_nombre": "De origen provincial",
+      "monto_texto": "6.017.036.337,00",
+      "monto_centavos": 601703633700,
+      "pagina_fuente": 11
+    },
+    {
+      "fuente_codigo": "133",
+      "fuente_nombre": "De origen nacional",
+      "monto_texto": "16.358.414.657,00",
+      "monto_centavos": 1635841465700,
+      "pagina_fuente": 11
+    },
+    {
+      "fuente_codigo": "140",
+      "fuente_nombre": "Transferencias internas",
+      "monto_texto": "0,00",
+      "monto_centavos": 0,
+      "pagina_fuente": 11
+    },
+    {
+      "fuente_codigo": "150",
+      "fuente_nombre": "Crédito interno",
+      "monto_texto": "0,00",
+      "monto_centavos": 0,
+      "pagina_fuente": 11
+    },
+    {
+      "fuente_codigo": "210",
+      "fuente_nombre": "Transferencias externas",
+      "monto_texto": "0,00",
+      "monto_centavos": 0,
+      "pagina_fuente": 11
+    },
+    {
+      "fuente_codigo": "220",
+      "fuente_nombre": "Crédito externo",
+      "monto_texto": "0,00",
+      "monto_centavos": 0,
+      "pagina_fuente": 11
+    }
+  ]
+}

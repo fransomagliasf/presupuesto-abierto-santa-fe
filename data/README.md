@@ -122,3 +122,22 @@ el subtotal impreso: `$ 1.891.097.079,00`.
 En el Proyecto 2027 la función 399 aparece como “Otros servivicios urbanos”.
 La denominación se normalizó a “Otros servicios urbanos” para mantener la
 serie histórica identificada por el mismo código.
+
+## Proyecto de Presupuesto 2027
+
+`proyecto_presupuesto_2027.json` conserva por separado los datos anuales del
+Mensaje 22: 98 programas, 47 conceptos de recursos, 8 objetos del gasto y 9
+fuentes de financiamiento. Cada una de esas cuatro clasificaciones concilia
+exactamente con el total impreso de `$ 411.831.393.777,00`.
+
+El proyecto no informa ejecución, devengado, pagado ni percibido para 2027.
+Tampoco contiene el Estado de Fondos Especiales ni cruces de fuente u objeto
+por programa. La aplicación muestra esas ausencias como “no desagregado” y no
+las reemplaza por ceros. Los montos anuales comparables se distinguen mediante
+una trama y la leyenda “Proyecto de Presupuesto 2027”.
+
+La extracción reproducible se ejecuta con:
+
+```sh
+python3 scripts/extract_proyecto_presupuesto.py 'Mensaje 22 Presupuesto 2027.pdf' data/processed/proyecto_presupuesto_2027.json
+```

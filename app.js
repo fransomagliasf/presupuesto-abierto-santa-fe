@@ -18,6 +18,7 @@ const FUND_DATA_FILES = [
 ];
 const DESCRIPTION_DATA_FILE = "data/processed/presupuesto_descripciones_2026.json";
 const BUDGET_FUNCTION_DATA_FILE = "data/processed/presupuesto_finalidad_funcion_2019_2027.csv";
+const PROJECT_BUDGET_DATA_FILE = "data/processed/proyecto_presupuesto_2027.json";
 const BUDGET_PROJECT_YEAR = "2027";
 const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
@@ -30,6 +31,7 @@ let fundData = [], fundSelectedPeriods = new Set(), fundExpandedOrigins = new Se
 let financingCompositionChart = null, financingExecutionChart = null;
 let descriptionData = { source: "Presupuesto 2026 de la Municipalidad de Santa Fe", policies: [], programs: [] };
 let budgetFunctionData = [], selectedBudgetFunction = "310", selectedBudgetTableFinality = "", budgetYearsChart = null, budgetFunctionChart = null, budgetCompositionChart = null, budgetTableExpanded = false, budgetTableSort = { key: BUDGET_PROJECT_YEAR, direction: "desc" };
+let projectBudgetData = { meta: {}, programas: [], recursos: [], objetos_gasto: [], fuentes_financiamiento: [] };
 const TABLE_PAGE_SIZE = 5;
 let expenseTablePage = 1, resourceTablePage = 1, fundTablePage = 1, guideTablePage = 1, guideExpandedSecretaries = new Set(), activeDownloadView = "expenses";
 let heatmapExpanded = false;
@@ -54,6 +56,33 @@ function labelPeriod(value) { return dateFormat.format(date({ fecha_corte: value
 function unique(values) { return [...new Set(values)].sort((a, b) => a.localeCompare(b, "es")); }
 function escapeHtml(value) { return String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]); }
 function normalizeDescriptionKey(value) { return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
+function projectExpenseAmount(jurisdiction = $("#jurisdiction-filter")?.value || "", programNames = null) {
+  if ($("#source-filter")?.value || $("#object-filter")?.value) return null;
+  let rows = projectBudgetData.programas;
+  if (jurisdiction) rows = rows.filter((row) => row.jurisdiccion_nombre === jurisdiction);
+  if (programNames) {
+    const keys = new Set([...programNames].map(normalizeDescriptionKey));
+    rows = rows.filter((row) => keys.has(normalizeDescriptionKey(row.programa_nombre)));
+  } else if (jurisdiction) {
+    const available = programsForSelectedJurisdiction();
+    if (selectedPrograms.size !== available.length) {
+      const keys = new Set([...selectedPrograms].map(normalizeDescriptionKey));
+      rows = rows.filter((row) => keys.has(normalizeDescriptionKey(row.programa_nombre)));
+    }
+  }
+  if (!rows.length && (jurisdiction || programNames)) return null;
+  return rows.reduce((total, row) => total + Number(row.monto_centavos || 0), 0);
+}
+function projectResourceRows() {
+  const majorCodes = new Set(resourceData.filter((row) => resourceSelectedMajors.has(row.rubro_mayor_nombre)).map((row) => row.rubro_mayor_codigo));
+  const detailCodes = new Set(resourceData.filter((row) => resourceSelectedDetails.has(row.rubro_nombre)).map((row) => row.rubro_codigo));
+  return projectBudgetData.recursos.filter((row) => (!majorCodes.size || majorCodes.has(row.rubro_mayor_codigo)) && (!detailCodes.size || detailCodes.has(row.rubro_codigo)));
+}
+function projectResourceAmount() { const rows = projectResourceRows(); return rows.length || (!resourceSelectedMajors.size && !resourceSelectedDetails.size) ? rows.reduce((total, row) => total + Number(row.monto_centavos || 0), 0) : null; }
+function projectResourceAmountForCodes(codes) {
+  const codeSet = new Set(codes), rows = projectBudgetData.recursos.filter((row) => codeSet.has(row.rubro_codigo));
+  return rows.length ? rows.reduce((total, row) => total + Number(row.monto_centavos || 0), 0) : null;
+}
 function policyDescription(jurisdiction) { return descriptionData.policies.find((item) => normalizeDescriptionKey(item.name) === normalizeDescriptionKey(jurisdiction)) || null; }
 function programDescription(jurisdiction, code) { const shortCode = String(code || "").split(".")[0].padStart(2, "0"); return descriptionData.programs.find((item) => normalizeDescriptionKey(item.jurisdiction) === normalizeDescriptionKey(jurisdiction) && item.code === shortCode) || null; }
 function descriptionPages(pages) { if (!pages?.length) return ""; const sorted = [...new Set(pages)].sort((a, b) => a - b); return sorted.length === 1 ? `página ${sorted[0]}` : `páginas ${sorted[0]}–${sorted.at(-1)}`; }
@@ -258,7 +287,8 @@ const mainBarValueLabelsPlugin = {
   afterDatasetsDraw(chart, _args, options) {
     if (!options?.display) return;
     const context = chart.ctx; context.save(); context.font = "700 10px system-ui, sans-serif"; context.textAlign = "center";
-    chart.data.datasets.forEach((dataset, datasetIndex) => { if ((dataset.type || chart.config.type) !== "bar") return; const meta = chart.getDatasetMeta(datasetIndex); meta.data.forEach((bar, index) => { const value = Number(dataset.data[index] || 0); context.fillStyle = value >= 0 ? "#155c39" : "#a93642"; context.textBaseline = value >= 0 ? "bottom" : "top"; context.fillText(formatAxisAmount(value), bar.x, bar.y + (value >= 0 ? -6 : 6)); }); });
+    const barDatasets = chart.data.datasets.filter((dataset) => (dataset.type || chart.config.type) === "bar");
+    chart.data.datasets.forEach((dataset, datasetIndex) => { if ((dataset.type || chart.config.type) !== "bar") return; const meta = chart.getDatasetMeta(datasetIndex), dense = barDatasets.length === 1 && meta.data.length > 8; let previousBox = null; meta.data.forEach((bar, index) => { const value = Number(dataset.data[index] || 0), label = formatAxisAmount(value), halfWidth = context.measureText(label).width / 2, offset = 6 + (dense && index % 2 ? 15 : 0); let labelY = bar.y + (value >= 0 ? -offset : offset); if (dense && previousBox && Math.abs(previousBox.x - bar.x) < previousBox.halfWidth + halfWidth + 3 && Math.abs(previousBox.y - labelY) < 13) labelY += value >= 0 ? -14 : 14; labelY = value >= 0 ? Math.max(chart.chartArea.top + 11, labelY) : Math.min(chart.chartArea.bottom - 11, labelY); previousBox = { x: bar.x, y: labelY, halfWidth }; context.fillStyle = value >= 0 ? "#155c39" : "#a93642"; context.textBaseline = value >= 0 ? "bottom" : "top"; context.fillText(label, bar.x, labelY); }); });
     context.restore();
   },
 };
@@ -333,6 +363,7 @@ function renderChart(rows) {
   if (typeof Chart === "undefined") { canvas.hidden = true; empty.hidden = false; empty.textContent = "No se pudo cargar la biblioteca de gráficos."; return; }
   empty.textContent = "No hay datos para esta combinación de filtros.";
   let labels = values.map((value) => labelPeriod(value.period)), datasets, yOptions, bridgeItems = [];
+  const projectExpense = projectExpenseAmount(), hasProjectExpense = activeChart === "current" && projectExpense !== null;
   if (activeChart === "line") {
     const maximum = Math.max(100, Math.ceil(Math.max(...values.flatMap((value) => [value.execution || 0, value.expected])) / 25) * 25);
     datasets = [
@@ -343,10 +374,11 @@ function renderChart(rows) {
     $("#chart-title").textContent = "Ejecución real y ritmo esperado";
     $("#chart-legend").innerHTML = '<span class="legend-execution"></span>% ejecutado <span class="legend-expected"></span>% esperado';
   } else if (activeChart === "current") {
-    datasets = [{ id: "current", label: "Crédito vigente", data: values.map((value) => value.current), backgroundColor: "#174f7c", borderRadius: 6, maxBarThickness: 62 }];
+    if (hasProjectExpense) labels.push("Proyecto 2027");
+    datasets = [{ id: "current", label: "Crédito vigente", data: [...values.map((value) => value.current), ...(hasProjectExpense ? [projectExpense] : [])], backgroundColor: [...values.map(() => "#174f7c"), ...(hasProjectExpense ? [budgetProjectPattern()] : [])], borderColor: [...values.map(() => "transparent"), ...(hasProjectExpense ? ["#9a7711"] : [])], borderWidth: [...values.map(() => 0), ...(hasProjectExpense ? [1] : [])], borderRadius: 6, maxBarThickness: 62 }];
     yOptions = { beginAtZero: true, ticks: { callback: formatAxisAmount } };
     $("#chart-title").textContent = "Evolución del crédito vigente";
-    $("#chart-legend").innerHTML = '<span class="legend-current"></span>Crédito vigente de cada cierre';
+    $("#chart-legend").innerHTML = `<span class="legend-current"></span>Crédito vigente de cada cierre${hasProjectExpense ? ' <span class="legend-project"></span>Proyecto de Presupuesto 2027' : ""}`;
   } else {
     let running = 0;
     const allBridgeItems = comparisonValues.map((value, index) => { const next = value.current - value.approved, change = next - running, previousPeriod = index ? comparisonValues[index - 1].period : null, breakdown = monthlyModificationBreakdown(value.period, previousPeriod, allRows), item = { ...value, start: running, end: next, change, breakdown, leaders: breakdown.items.slice(0, 3), programHighlights: monthlyProgramModificationHighlights(value.period, previousPeriod, allRows) }; running = next; return item; });
@@ -370,8 +402,8 @@ function renderChart(rows) {
       plugins: {
         legend: { display: false },
         tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, displayColors: true, callbacks: {
-          label: (context) => { if (activeChart === "line") return `${context.dataset.label}: ${formatPercent(context.parsed.y)}`; if (activeChart === "current") return `Crédito vigente: ${formatCents(context.parsed.y)}`; const change = context.dataset.displayValues[context.dataIndex]; return context.dataIndex === bridgeItems.length ? `Modificación acumulada: ${change >= 0 ? "+" : ""}${formatCents(change)}` : `Movimiento del mes: ${change >= 0 ? "+" : ""}${formatCents(change)}`; },
-          afterBody: (items) => { if (!items.length) return []; const index = items[0].dataIndex; if (activeChart === "line") { const value = values[index], difference = value.execution === null ? null : value.execution - value.expected; return [difference === null ? "Diferencia: —" : `Diferencia: ${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`]; } if (activeChart === "current") { const previous = index ? values[index - 1].current : values[index].approved, change = values[index].current - previous; return [`Variación: ${change >= 0 ? "+" : "−"}${formatCents(Math.abs(change))}`]; } if (index === bridgeItems.length) return []; const leaders = bridgeItems[index].leaders; return leaders.length ? ["", "Mayor participación en el movimiento mensual:", ...leaders.map((item) => `${item.label}: ${item.value >= 0 ? "+" : "−"}${formatCents(Math.abs(item.value))} (${formatPercent(item.share)})`)] : ["Sin modificaciones por secretaría."]; },
+          label: (context) => { if (activeChart === "line") return `${context.dataset.label}: ${formatPercent(context.parsed.y)}`; if (activeChart === "current") return `${context.label === "Proyecto 2027" ? "Proyecto de Presupuesto" : "Crédito vigente"}: ${formatCents(context.parsed.y)}`; const change = context.dataset.displayValues[context.dataIndex]; return context.dataIndex === bridgeItems.length ? `Modificación acumulada: ${change >= 0 ? "+" : ""}${formatCents(change)}` : `Movimiento del mes: ${change >= 0 ? "+" : ""}${formatCents(change)}`; },
+          afterBody: (items) => { if (!items.length) return []; const index = items[0].dataIndex; if (activeChart === "line") { const value = values[index], difference = value.execution === null ? null : value.execution - value.expected; return [difference === null ? "Diferencia: —" : `Diferencia: ${difference >= 0 ? "+" : ""}${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} p.p.`]; } if (activeChart === "current") { if (items[0].label === "Proyecto 2027") return ["Monto anual previsto; no representa ejecución."]; const previous = index ? values[index - 1].current : values[index].approved, change = values[index].current - previous; return [`Variación: ${change >= 0 ? "+" : "−"}${formatCents(Math.abs(change))}`]; } if (index === bridgeItems.length) return []; const leaders = bridgeItems[index].leaders; return leaders.length ? ["", "Mayor participación en el movimiento mensual:", ...leaders.map((item) => `${item.label}: ${item.value >= 0 ? "+" : "−"}${formatCents(Math.abs(item.value))} (${formatPercent(item.share)})`)] : ["Sin modificaciones por secretaría."]; },
         } },
       },
       scales: {
@@ -380,7 +412,7 @@ function renderChart(rows) {
       },
     },
   });
-  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. Posate sobre un punto para comparar." : activeChart === "current" ? "Cada barra muestra el crédito vigente acumulado informado al cierre de ese mes." : "Cada barra enlaza la modificación acumulada de un cierre con el siguiente. Los porcentajes del detalle se calculan sobre la suma de todos los aumentos y reducciones del mes.";
+  $("#chart-note").textContent = values.length < 2 ? "Seleccioná más períodos para comparar la evolución." : activeChart === "line" ? "La línea esperada distribuye el 100% del crédito en doce meses. El proyecto 2027 no se incluye porque todavía no tiene ejecución." : activeChart === "current" ? hasProjectExpense ? "Las barras mensuales muestran cierres reales de 2026. La última barra rayada es el monto anual del Proyecto de Presupuesto 2027 y no representa ejecución. Los próximos cierres de 2026 se incorporarán antes de esa barra." : "El Proyecto 2027 no puede compararse con esta selección porque el documento no cruza programas con fuente u objeto del gasto." : "Cada barra enlaza la modificación acumulada de un cierre con el siguiente. El proyecto 2027 no se incluye porque no informa modificaciones mensuales.";
 }
 function rankingLabel(row, dimension) {
   if (dimension === "program") return `${row.jurisdiccion_nombre} · ${row.programa_nombre}`;
@@ -514,6 +546,10 @@ function totalCells(values, period, columnTotals) {
   const title = assessment.expected === null ? "Porcentaje no disponible" : `${formatPercent(assessment.actual)} ejecutado; ritmo lineal esperado a ${period}: ${formatPercent(assessment.expected)}; diferencia ${difference.toLocaleString("es-AR", { maximumFractionDigits: 1 })} puntos porcentuales.`;
   return `${amountCell(values.approved, columnTotals.approved)}${amountCell(values.current, columnTotals.current)}${modificationCell(values.current - values.approved)}${amountCell(values.accrued, columnTotals.accrued)}${amountCell(values.available, columnTotals.available)}<td class="number"><span class="execution-pill execution-${assessment.status}" title="${escapeHtml(title)}">${formatPercent(assessment.actual)}</span></td>`;
 }
+function projectAmountCell(value, total, unavailableText = "No desagregado") {
+  if (value === null) return `<td class="number project-budget-column"><span>—</span><small>${escapeHtml(unavailableText)}</small></td>`;
+  return `<td class="number project-budget-column"><span>${formatCents(value)}</span><small class="cell-share">(${columnShare(value, total)} del proyecto)</small></td>`;
+}
 function sortedGroups(entries) {
   const direction = tableSort.direction === "asc" ? 1 : -1;
   return [...entries].sort(([labelA, rowsA], [labelB, rowsB]) => {
@@ -532,24 +568,31 @@ function renderTable(rows) {
   const latestPeriod = aggregatePeriods(rows).at(-1)?.period, visibleRows = rows.filter((row) => row.fecha_corte === latestPeriod), breakdown = $("#detail-breakdown-filter").value;
   const columnTotals = totals(visibleRows);
   const bySecretary = new Map(); visibleRows.forEach((row) => { const group = bySecretary.get(row.jurisdiccion_nombre) || []; group.push(row); bySecretary.set(row.jurisdiccion_nombre, group); });
-  const entries = sortedGroups([...bySecretary.entries()]);
+  const entries = sortedGroups([...bySecretary.entries()]), projectTotal = projectExpenseAmount();
   const pageState = paginate(entries, expenseTablePage); expenseTablePage = pageState.page;
   $("#detail-table").innerHTML = pageState.items.map(([name, secretaryRows]) => {
     const open = expandedSecretaries.has(name), subdivisions = new Map();
     secretaryRows.forEach((row) => { const label = breakdown === "program" ? row.programa_nombre : breakdown === "source" ? row.fuente_financiamiento_nombre : row.objeto_gasto_nombre; const group = subdivisions.get(label) || []; group.push(row); subdivisions.set(label, group); });
     const subdivisionEntries = breakdown === "program" && tableSort.key === "name" ? [...subdivisions.entries()].sort((a, b) => totals(b[1]).accrued - totals(a[1]).accrued) : sortedGroups([...subdivisions.entries()]);
-    const children = open ? subdivisionEntries.map(([label, group]) => `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod, columnTotals)}</tr>`).join("") : "";
-    return `<tr class="secretary-total"><td><button class="expand-row" type="button" data-secretary="${escapeHtml(name)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(name)}</button></td><td>Total de secretaría</td>${totalCells(totals(secretaryRows), latestPeriod, columnTotals)}</tr>${children}`;
+    const children = open ? subdivisionEntries.map(([label, group]) => { const projectValue = breakdown === "program" ? projectExpenseAmount(name, new Set([label])) : null; return `<tr class="breakdown-row"><td></td><td>${escapeHtml(label)}</td>${totalCells(totals(group), latestPeriod, columnTotals)}${projectAmountCell(projectValue, projectTotal, breakdown === "program" ? "No figura en el proyecto" : "Sin cruce para esta selección")}</tr>`; }).join("") : "";
+    const programs = new Set(secretaryRows.map((row) => row.programa_nombre)), allPrograms = new Set(data.filter((row) => row.jurisdiccion_nombre === name).map((row) => row.programa_nombre)), secretaryProject = projectExpenseAmount(name, programs.size === allPrograms.size ? null : programs);
+    return `<tr class="secretary-total"><td><button class="expand-row" type="button" data-secretary="${escapeHtml(name)}" aria-expanded="${open}"><span aria-hidden="true">${open ? "▾" : "▸"}</span>${escapeHtml(name)}</button></td><td>Total de secretaría</td>${totalCells(totals(secretaryRows), latestPeriod, columnTotals)}${projectAmountCell(secretaryProject, projectTotal, "Sin cruce en el proyecto")}</tr>${children}`;
   }).join("");
   renderPagination("#expense-pagination", pageState, "expenses", entries.length);
   const breakdownName = { program: "programa", source: "fuente de financiamiento", object: "objeto del gasto" }[breakdown];
-  $("#table-note").textContent = latestPeriod ? `Totales de ${labelPeriod(latestPeriod)}. Los porcentajes entre paréntesis muestran la participación sobre el total visible de cada columna. Usá la flecha para ver el detalle por ${breakdownName}.` : "No hay partidas para mostrar.";
+  $("#table-note").textContent = latestPeriod ? `Totales de ${labelPeriod(latestPeriod)}. La columna rayada corresponde al Proyecto de Presupuesto 2027. Sus totales por fuente y objeto están disponibles para toda la Municipalidad, pero el documento no los cruza por secretaría o programa. Los porcentajes muestran la participación sobre el total visible de cada columna. Usá la flecha para ver el detalle por ${breakdownName}.` : "No hay partidas para mostrar.";
   updateSortHeaders();
+}
+function renderAnnualProjectBreakdown() {
+  const total = Number(projectBudgetData.meta.total_centavos || 0);
+  const list = (rows, nameField) => rows.filter((row) => Number(row.monto_centavos) > 0).sort((a, b) => Number(b.monto_centavos) - Number(a.monto_centavos)).map((row) => `<li><i class="budget-project-key" aria-hidden="true"></i><span>${escapeHtml(row[nameField])}</span><strong>${formatCents(row.monto_centavos)}</strong><small>${columnShare(row.monto_centavos, total)}</small></li>`).join("");
+  $("#project-object-list").innerHTML = list(projectBudgetData.objetos_gasto, "objeto_nombre");
+  $("#project-source-list").innerHTML = list(projectBudgetData.fuentes_financiamiento, "fuente_nombre");
 }
 function render() {
   const rows = filteredRows(), periodsSelected = selectedPeriodSequence(), latestPeriod = periodsSelected.at(-1), previousPeriod = periodsSelected.at(-2);
   const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod);
-  renderMetrics(latestRows, latestPeriod, previousPeriod); renderBudgetSize(latestRows, latestPeriod); renderRankings(latestRows, latestPeriod); renderChart(rows); renderTable(rows); renderInsights(rows, latestRows, latestPeriod); renderFinancingAnalysis(latestRows, latestPeriod);
+  renderMetrics(latestRows, latestPeriod, previousPeriod); renderBudgetSize(latestRows, latestPeriod); renderRankings(latestRows, latestPeriod); renderChart(rows); renderAnnualProjectBreakdown(); renderTable(rows); renderInsights(rows, latestRows, latestPeriod); renderFinancingAnalysis(latestRows, latestPeriod);
 }
 function guideDirectoryEntries() {
   const latestPeriod = periods().at(-1), rows = data.filter((row) => row.fecha_corte === latestPeriod), groups = new Map();
@@ -705,7 +748,7 @@ function renderResourceChart(rows) {
   if (!selected.length) { empty.textContent = "No hay datos para esta selección."; renderResourceChartReading([]); return; }
   const values = selected.map((value) => { const index = allIndex.get(value.period), previous = index > 0 ? all[index - 1] : null; return { ...value, rate: collectionPercent(value.perceived, value.current), accruedRate: collectionPercent(value.accrued, value.current), expected: Number(value.period.split("/")[1]) * 100 / 12, monthlyPerceived: value.perceived - (previous?.perceived || 0), modification: value.current - value.estimated, monthlyModification: (value.current - value.estimated) - (previous ? previous.current - previous.estimated : 0) }; });
   renderResourceChartReading(values);
-  let type = "line", datasets, y, tooltipFormatter;
+  let type = "line", datasets, y, tooltipFormatter, labels = values.map((value) => labelPeriod(value.period));
   if (resourceActiveChart === "collection") {
     datasets = [
       { label: "% percibido", data: values.map((value) => value.rate), borderColor: "#008a81", backgroundColor: "#008a81", borderWidth: 3, pointRadius: 4, tension: .25 },
@@ -727,25 +770,27 @@ function renderResourceChart(rows) {
     ]; y = { min: -limit, max: limit, ticks: { stepSize: step, callback: formatAxisAmount } }; tooltipFormatter = (context) => `${context.dataset.label}: ${context.parsed.y >= 0 ? "+" : ""}${formatCents(context.parsed.y)}`;
     $("#resource-chart-title").textContent = "Cambios en la estimación de recursos"; $("#resource-chart-legend").innerHTML = '<span class="legend-positive"></span>Aumento mensual <span class="legend-negative"></span>Reducción mensual <span class="legend-cumulative"></span>Acumulado'; $("#resource-chart-note").textContent = "Cada barra compara la modificación acumulada con el mes anterior; la línea muestra la diferencia total entre vigente y estimado.";
   } else {
-    type = "bar"; datasets = [{ label: "Recurso vigente", data: values.map((value) => value.current), backgroundColor: "#174f7c", borderRadius: 6, maxBarThickness: 64 }]; y = { beginAtZero: true, ticks: { callback: formatAxisAmount } }; tooltipFormatter = (context) => `Recurso vigente: ${formatCents(context.parsed.y)}`;
-    $("#resource-chart-title").textContent = "Evolución del recurso vigente"; $("#resource-chart-legend").innerHTML = '<span class="legend-current"></span>Recurso vigente de cada cierre'; $("#resource-chart-note").textContent = "Cada barra muestra la estimación vigente acumulada informada al cierre de ese mes.";
+    const projectValue = projectResourceAmount(), hasProjectResource = projectValue !== null; if (hasProjectResource) labels.push("Proyecto 2027");
+    type = "bar"; datasets = [{ label: "Recurso vigente", data: [...values.map((value) => value.current), ...(hasProjectResource ? [projectValue] : [])], backgroundColor: [...values.map(() => "#174f7c"), ...(hasProjectResource ? [budgetProjectPattern()] : [])], borderColor: [...values.map(() => "transparent"), ...(hasProjectResource ? ["#9a7711"] : [])], borderWidth: [...values.map(() => 0), ...(hasProjectResource ? [1] : [])], borderRadius: 6, maxBarThickness: 64 }]; y = { beginAtZero: true, ticks: { callback: formatAxisAmount } }; tooltipFormatter = (context) => `${context.label === "Proyecto 2027" ? "Proyecto de Presupuesto" : "Recurso vigente"}: ${formatCents(context.parsed.y)}${context.label === "Proyecto 2027" ? " · monto anual, no recaudación" : ""}`;
+    $("#resource-chart-title").textContent = "Evolución del recurso vigente"; $("#resource-chart-legend").innerHTML = `<span class="legend-current"></span>Recurso vigente de cada cierre${hasProjectResource ? ' <span class="legend-project"></span>Proyecto de Presupuesto 2027' : ""}`; $("#resource-chart-note").textContent = hasProjectResource ? "Las barras mensuales muestran cierres reales de 2026. La última barra rayada es la estimación anual del Proyecto de Presupuesto 2027; no es recurso percibido ni devengado. Los próximos cierres de 2026 se ubicarán antes de esa barra." : "El concepto seleccionado no figura como partida individual en el Proyecto de Presupuesto 2027; no se reemplaza esa ausencia por cero.";
   }
   if (typeof Chart === "undefined") { canvas.hidden = true; empty.hidden = false; empty.textContent = "No se pudo cargar la biblioteca de gráficos."; return; }
-  resourceChart = new Chart(canvas, { type, data: { labels: values.map((value) => labelPeriod(value.period)), datasets }, plugins: [mainBarValueLabelsPlugin], options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { top: resourceShowValues && type === "bar" ? 20 : 4, bottom: resourceShowValues && type === "bar" ? 16 : 0 } }, plugins: { legend: { display: false }, mainBarValueLabels: { display: resourceShowValues && type === "bar" }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, callbacks: { label: tooltipFormatter } } }, scales: { x: { grid: { display: false }, border: { display: false } }, y: { ...y, border: { display: false }, grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#dce3eb", lineWidth: (context) => context.tick.value === 0 ? 2 : 1 }, ticks: { ...y.ticks, color: "#60708a", padding: 10 } } } } });
+  resourceChart = new Chart(canvas, { type, data: { labels, datasets }, plugins: [mainBarValueLabelsPlugin], options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { top: resourceShowValues && type === "bar" ? 36 : 4, bottom: resourceShowValues && type === "bar" ? 16 : 0 } }, plugins: { legend: { display: false }, mainBarValueLabels: { display: resourceShowValues && type === "bar" }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, callbacks: { label: tooltipFormatter } } }, scales: { x: { grid: { display: false }, border: { display: false } }, y: { ...y, border: { display: false }, grid: { color: (context) => context.tick.value === 0 ? "#526176" : "#dce3eb", lineWidth: (context) => context.tick.value === 0 ? 2 : 1 }, ticks: { ...y.ticks, color: "#60708a", padding: 10 } } } } });
 }
 function resourceAmountCell(value, total) { return `<td class="number">${formatCents(value)}<small class="cell-share">(${columnShare(value, total)} del total)</small></td>`; }
 function renderResourceTable(rows, latestPeriod) {
   const latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), overall = resourceTotals(latestRows), groups = new Map();
   latestRows.forEach((row) => { const key = row.rubro_mayor_nombre, group = groups.get(key) || []; group.push(row); groups.set(key, group); });
-  const ordered = [...groups.entries()].sort((a, b) => resourceTotals(b[1]).perceived - resourceTotals(a[1]).perceived);
+  const ordered = [...groups.entries()].sort((a, b) => resourceTotals(b[1]).perceived - resourceTotals(a[1]).perceived), projectTotal = projectResourceAmount();
   const pageState = paginate(ordered, resourceTablePage); resourceTablePage = pageState.page;
   $("#resource-detail-table").innerHTML = pageState.items.map(([label, group]) => {
     const open = resourceExpandedMajors.has(label), values = resourceTotals(group), rate = collectionPercent(values.perceived, values.current);
-    const children = open ? [...group].sort((a, b) => cents(b, "recurso_percibido_centavos") - cents(a, "recurso_percibido_centavos")).map((row) => { const child = resourceTotals([row]), childRate = collectionPercent(child.perceived, child.current), origin = row.procedencia_nombre || "Sin procedencia informada"; return `<tr class="breakdown-row"><td></td><td><strong>${escapeHtml(row.rubro_nombre)}</strong><small>${escapeHtml(origin)}</small></td>${resourceAmountCell(child.estimated, overall.estimated)}${resourceAmountCell(child.current, overall.current)}${resourceAmountCell(child.accrued, overall.accrued)}${resourceAmountCell(child.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: child.perceived, current: child.current }, latestPeriod).status}">${formatPercent(childRate)}</span></td></tr>`; }).join("") : "";
-    return `<tr class="secretary-total"><td><button class="expand-row resource-expand-row" type="button" data-resource-major="${escapeHtml(label)}" aria-expanded="${open}"><span>${open ? "▾" : "▸"}</span>${escapeHtml(label)}</button></td><td>Total del rubro</td>${resourceAmountCell(values.estimated, overall.estimated)}${resourceAmountCell(values.current, overall.current)}${resourceAmountCell(values.accrued, overall.accrued)}${resourceAmountCell(values.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: values.perceived, current: values.current }, latestPeriod).status}">${formatPercent(rate)}</span></td></tr>${children}`;
+    const children = open ? [...group].sort((a, b) => cents(b, "recurso_percibido_centavos") - cents(a, "recurso_percibido_centavos")).map((row) => { const child = resourceTotals([row]), childRate = collectionPercent(child.perceived, child.current), origin = row.procedencia_nombre || "Sin procedencia informada", projectValue = projectResourceAmountForCodes([row.rubro_codigo]); return `<tr class="breakdown-row"><td></td><td><strong>${escapeHtml(row.rubro_nombre)}</strong><small>${escapeHtml(origin)}</small></td>${resourceAmountCell(child.estimated, overall.estimated)}${resourceAmountCell(child.current, overall.current)}${resourceAmountCell(child.accrued, overall.accrued)}${resourceAmountCell(child.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: child.perceived, current: child.current }, latestPeriod).status}">${formatPercent(childRate)}</span></td>${projectAmountCell(projectValue, projectTotal, "No figura en el proyecto")}</tr>`; }).join("") : "";
+    const majorProjectRows = projectBudgetData.recursos.filter((row) => row.rubro_mayor_codigo === group[0]?.rubro_mayor_codigo), projectValue = resourceSelectedDetails.size ? projectResourceAmountForCodes(group.map((row) => row.rubro_codigo)) : majorProjectRows.length ? majorProjectRows.reduce((total, row) => total + Number(row.monto_centavos || 0), 0) : null;
+    return `<tr class="secretary-total"><td><button class="expand-row resource-expand-row" type="button" data-resource-major="${escapeHtml(label)}" aria-expanded="${open}"><span>${open ? "▾" : "▸"}</span>${escapeHtml(label)}</button></td><td>Total del rubro</td>${resourceAmountCell(values.estimated, overall.estimated)}${resourceAmountCell(values.current, overall.current)}${resourceAmountCell(values.accrued, overall.accrued)}${resourceAmountCell(values.perceived, overall.perceived)}<td class="number"><span class="execution-pill execution-${executionAssessment({ accrued: values.perceived, current: values.current }, latestPeriod).status}">${formatPercent(rate)}</span></td>${projectAmountCell(projectValue, projectTotal, "No figura en el proyecto")}</tr>${children}`;
   }).join("");
   renderPagination("#resource-pagination", pageState, "resources", ordered.length);
-  $("#resource-table-note").textContent = latestPeriod ? `Valores acumulados a ${labelPeriod(latestPeriod)}. Los porcentajes entre paréntesis muestran la participación de cada rubro o concepto sobre el total visible de la columna.` : "No hay datos para mostrar.";
+  $("#resource-table-note").textContent = latestPeriod ? `Valores acumulados a ${labelPeriod(latestPeriod)}. La columna rayada muestra la estimación anual del Proyecto de Presupuesto 2027; no es recaudación. Los porcentajes entre paréntesis muestran la participación de cada rubro o concepto sobre el total visible de la columna.` : "No hay datos para mostrar.";
 }
 function resourceMajorLabel(row) { return row.rubro_mayor_nombre; }
 function resourceOriginCategory(row) {
@@ -890,9 +935,14 @@ function renderFundInsights(latestRows, renderGraph) {
   document.querySelectorAll("[data-fund-ranking]").forEach((button) => { const active = button.dataset.fundRanking === fundRankingMetric; button.classList.toggle("active", active); button.setAttribute("aria-selected", String(active)); });
   $("#fund-top-list").innerHTML = top.length ? top.map((item) => `<li><strong>${escapeHtml(item.label)}</strong><span class="fund-ranking-amount">${formatCents(item.value)}</span><span class="fund-ranking-share">${columnShare(item.value, rankingTotal)}</span></li>`).join("") : `<li class="ranking-empty">Sin ${escapeHtml(metricLabel)} para esta selección.</li>`;
 }
+function renderFundProjectScope() {
+  const visibleCodes = new Set(fundFilteredRows(true).map((row) => row.fondo_codigo));
+  const matches = projectBudgetData.recursos.filter((row) => visibleCodes.has(row.rubro_codigo));
+  $("#fund-project-matches").innerHTML = matches.length ? `<strong>${matches.length} conceptos con código coincidente</strong><ul>${matches.map((row) => `<li><span>${escapeHtml(row.rubro_nombre)}</span><b>${formatCents(row.monto_centavos)}</b></li>`).join("")}</ul><small>Son estimaciones de recursos identificables por código; no equivalen a un presupuesto integral de cada fondo.</small>` : "<strong>Sin conceptos coincidentes para este filtro.</strong><small>Esto no implica que el fondo tenga presupuesto cero: el proyecto no publica el anexo necesario para medirlo.</small>";
+}
 function renderFunds(renderGraph = true) {
   const rows = fundFilteredRows(), selected = [...fundSelectedPeriods].sort((a, b) => date({ fecha_corte: a }) - date({ fecha_corte: b })), latestPeriod = selected.at(-1), previousPeriod = selected.at(-2), latestRows = rows.filter((row) => row.fecha_corte === latestPeriod), previousRows = previousPeriod ? rows.filter((row) => row.fecha_corte === previousPeriod) : null;
-  renderFundMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderFundTable(rows, latestPeriod); renderFundInsights(latestRows, renderGraph); if (renderGraph) renderFundChart(rows);
+  renderFundMetrics(latestRows, previousRows, latestPeriod, previousPeriod); renderFundProjectScope(); renderFundTable(rows, latestPeriod); renderFundInsights(latestRows, renderGraph); if (renderGraph) renderFundChart(rows);
 }
 function resetFundFilters() { fundSelectedPeriods = new Set(fundPeriods()); fundExpandedOrigins.clear(); fundTablePage = 1; $("#fund-origin-filter").value = ""; $("#fund-name-filter").value = ""; fillFundNameFilter(); document.querySelectorAll("[data-fund-period]").forEach((button) => { button.classList.add("active"); button.setAttribute("aria-pressed", "true"); }); $("#fund-toggle-periods").textContent = "Quitar todos"; renderFunds(); }
 function setupFilterPanelToggle(buttonSelector, bodySelector, layoutSelector, name) {
@@ -1043,6 +1093,7 @@ async function init() {
     resourceData = (await Promise.all(RESOURCE_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     fundData = (await Promise.all(FUND_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     budgetFunctionData = await fetch(BUDGET_FUNCTION_DATA_FILE).then((response) => { if (!response.ok) throw new Error(BUDGET_FUNCTION_DATA_FILE); return response.text(); }).then(parseCSV);
+    projectBudgetData = await fetch(PROJECT_BUDGET_DATA_FILE).then((response) => { if (!response.ok) throw new Error(PROJECT_BUDGET_DATA_FILE); return response.json(); });
     descriptionData = await fetch(DESCRIPTION_DATA_FILE).then((response) => { if (!response.ok) throw new Error(DESCRIPTION_DATA_FILE); return response.json(); });
     fillFilters(); fillResourceFilters(); fillFundFilters(); fillBudgetFunctionFilter(); fillBudgetFinalityFilter(); render(); renderResources(false); renderFunds(false); renderBudgets(false); renderPublicSummary(); renderGuideDirectory();
     document.querySelectorAll("[data-period-year-toggle]").forEach((button) => button.addEventListener("click", () => { const months = button.closest(".period-year").querySelector(".month-list"), expanded = months.hidden; months.hidden = !expanded; button.classList.toggle("expanded", expanded); button.setAttribute("aria-expanded", String(expanded)); }));
