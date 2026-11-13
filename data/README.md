@@ -96,11 +96,11 @@ python3 scripts/extract_fondos_especiales.py INFORME.pdf data/processed/fondos_e
 
 ## Presupuesto por finalidad y función
 
-El archivo `presupuesto_finalidad_funcion_2019_2026.csv` reúne las funciones
-de gasto publicadas en los presupuestos municipales 2019 a 2025 y en el
-Proyecto de Presupuesto 2026. Los importes se conservan como texto original y
-como centavos enteros. No se duplican subtotales de finalidad: la aplicación
-los calcula sumando sus funciones.
+El archivo `presupuesto_finalidad_funcion_2019_2027.csv` reúne las funciones
+de gasto publicadas en los presupuestos municipales 2019 a 2025 y en los
+Proyectos de Presupuesto 2026 y 2027. Los importes se conservan como texto
+original y como centavos enteros. No se duplican subtotales de finalidad: la
+aplicación los calcula sumando sus funciones.
 
 La suma de las funciones concilia exactamente con el total impreso de cada
 documento:
@@ -113,7 +113,12 @@ documento:
 - 2024: `$ 108.064.744.537,00`.
 - 2025: `$ 225.046.038.799,00`.
 - 2026: `$ 295.881.415.299,00`.
+- 2027: `$ 411.831.393.777,00` (Proyecto de Presupuesto).
 
 En el documento 2024 un sello se superpone a las tres funciones de Servicios
 económicos. Los importes fueron verificados visualmente y su suma coincide con
 el subtotal impreso: `$ 1.891.097.079,00`.
+
+En el Proyecto 2027 la función 399 aparece como “Otros servivicios urbanos”.
+La denominación se normalizó a “Otros servicios urbanos” para mantener la
+serie histórica identificada por el mismo código.

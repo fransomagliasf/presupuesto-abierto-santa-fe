@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261111-1" />
+    <link rel="stylesheet" href="styles.css?v=20261113-1" />
   </head>
   <body>
     <header class="site-header">
@@ -77,16 +77,16 @@
 
       <section id="page-budgets" class="page-view budgets-page" hidden>
         <header class="budgets-hero">
-          <div><p class="eyebrow">Comparación 2019–2026</p><h2>¿A qué destina dinero el presupuesto?</h2><p>Esta comparación organiza el gasto según su <strong>finalidad y función</strong>: salud, seguridad, cultura, vivienda y otros objetivos. Para comparar años con distintos niveles de precios, la lectura principal muestra qué porcentaje del presupuesto representa cada categoría.</p></div>
+          <div><p class="eyebrow">Comparación 2019–2027</p><h2>¿A qué destina dinero el presupuesto?</h2><p>Esta comparación organiza el gasto según su <strong>finalidad y función</strong>: salud, seguridad, cultura, vivienda y otros objetivos. Para comparar años con distintos niveles de precios, la lectura principal muestra qué porcentaje del presupuesto representa cada categoría.</p></div>
           <button class="public-guide-link" type="button" data-page-target="guide">¿Cómo leer estos datos? <span aria-hidden="true">→</span></button>
         </header>
 
         <section class="budgets-section panel budget-years-panel" aria-labelledby="budget-years-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Tamaño del presupuesto</p><h2 id="budget-years-title">Ocho presupuestos, en números</h2></div><p>Las barras muestran el monto nominal de cada año. La línea indica cuánto aumentó frente al presupuesto anterior.</p></div>
-          <div class="budget-years-chart" tabindex="0" aria-label="Gráfico desplazable con los presupuestos de 2019 a 2026">
+          <div class="public-section-heading"><div><p class="eyebrow">Tamaño del presupuesto</p><h2 id="budget-years-title">Nueve presupuestos, en números</h2></div><p>Las barras muestran el monto nominal de cada año. La línea indica cuánto aumentó frente al presupuesto anterior.</p></div>
+          <div class="budget-years-chart" tabindex="0" aria-label="Gráfico desplazable con los presupuestos de 2019 a 2027">
             <div class="budget-years-chart-inner"><canvas id="budget-years-chart"></canvas></div>
           </div>
-          <div class="budget-years-legend" aria-label="Referencias del gráfico"><span><i class="budget-years-bar-key"></i>Presupuesto nominal</span><span><i class="budget-years-line-key"></i>Aumento frente al año anterior</span></div>
+          <div class="budget-years-legend" aria-label="Referencias del gráfico"><span><i class="budget-years-bar-key"></i>Presupuesto nominal</span><span><i class="budget-years-line-key"></i>Aumento frente al año anterior</span><span><i class="budget-project-key"></i>2027 · Proyecto de Presupuesto</span></div>
           <p class="budget-chart-mobile-note">Deslizá el gráfico para ver todos los años.</p>
         </section>
 
@@ -100,7 +100,7 @@
             </label>
           </div>
           <div class="budget-function-layout">
-            <div class="budget-function-chart"><canvas id="budget-function-chart"></canvas></div>
+            <div class="budget-function-visual"><div class="budget-function-chart"><canvas id="budget-function-chart"></canvas></div><div class="budget-project-legend"><i class="budget-project-key"></i><span>2027 corresponde al Proyecto de Presupuesto.</span></div></div>
             <aside class="budget-reading-card"><p class="eyebrow">Lectura rápida</p><h3 id="budget-function-reading-title">¿Qué cambió?</h3><div id="budget-function-reading"></div><p class="budget-inflation-note">La variación en pesos es nominal. Para analizar poder de compra habría que incorporar inflación.</p></aside>
           </div>
         </section>
@@ -108,17 +108,18 @@
         <section class="budgets-section panel" aria-labelledby="budget-composition-title">
           <div class="public-section-heading"><div><p class="eyebrow">Panorama completo</p><h2 id="budget-composition-title">Cómo se reparte cada presupuesto</h2></div><p>Cada barra suma 100%. Así se observan cambios de prioridad sin comparar pesos de años diferentes.</p></div>
           <div class="budget-composition-chart"><canvas id="budget-composition-chart"></canvas></div>
+          <div class="budget-project-legend"><i class="budget-project-key"></i><span>La barra 2027 corresponde al Proyecto de Presupuesto.</span></div>
           <ul id="budget-composition-legend" class="budget-composition-legend" aria-label="Finalidades presupuestarias"></ul>
         </section>
 
         <section class="budgets-section panel budget-functions-table-panel" aria-labelledby="budget-functions-table-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Detalle comparado</p><h2 id="budget-functions-table-title">Funciones con mayor participación</h2></div><p>El cambio compara la participación de 2026 con 2024; si falta alguno de esos años se indica que no es comparable.</p></div>
+          <div class="public-section-heading"><div><p class="eyebrow">Detalle comparado</p><h2 id="budget-functions-table-title">Funciones con mayor participación</h2></div><p>El cambio compara la participación del Proyecto 2027 con 2024; si falta alguno de esos años se indica que no es comparable.</p></div>
           <div class="budget-functions-filter-row">
             <label class="budget-finality-filter"><span>Filtrar por finalidad</span><select id="budget-finality-filter" aria-label="Filtrar funciones por finalidad"><option value="">Todas las finalidades</option></select></label>
           </div>
           <div class="table-wrap"><table class="budget-functions-table"><thead><tr id="budget-functions-head"></tr></thead><tbody id="budget-functions-table"></tbody></table></div>
           <button id="toggle-budget-functions" class="public-inline-link" type="button" aria-expanded="false">Ver todas las funciones <span aria-hidden="true">↓</span></button>
-          <p class="budget-source-note">Fuente: presupuestos municipales 2019–2025 y Proyecto de Presupuesto 2026, cuadros “Presupuesto de gastos por finalidad y función”.</p>
+          <p class="budget-source-note">Fuente: presupuestos municipales 2019–2025 y proyectos de Presupuesto 2026 y 2027, cuadros “Presupuesto de gastos por finalidad y función”.</p>
         </section>
       </section>
 
@@ -490,6 +491,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261111-1"></script>
+    <script src="app.js?v=20261113-1"></script>
   </body>
 </html>

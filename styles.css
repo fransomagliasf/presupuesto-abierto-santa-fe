@@ -379,25 +379,32 @@ table.expense-detail-table tbody td.number { text-align: center; }.expense-detai
 
 .budget-years-panel { margin: 0; padding: clamp(1.2rem, 2.5vw, 1.7rem); }
 .budget-years-chart { height: 390px; padding: .5rem .35rem 0; overflow-x: auto; overflow-y: hidden; border-top: 1px solid #e0e6ed; }
-.budget-years-chart-inner { position: relative; width: 100%; min-width: 720px; height: 100%; }
+.budget-years-chart-inner { position: relative; width: 100%; min-width: 820px; height: 100%; }
 .budget-years-chart canvas { width: 100% !important; height: 100% !important; }
 .budget-years-legend { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; align-items: center; justify-content: center; color: #33415a; font-size: .75rem; font-weight: 750; }
 .budget-years-legend span { display: inline-flex; gap: .4rem; align-items: center; }
 .budget-years-legend i { display: inline-block; width: .85rem; height: .85rem; flex: none; border-radius: 50%; }
 .budget-years-bar-key { border: 1px solid #0b4f82; background: rgba(18, 100, 163, .84); }
 .budget-years-line-key { border: 3px solid #b77c00; background: #fff; }
+.budget-project-key { border: 1px solid #9a7711; background: repeating-linear-gradient(135deg, #fff8d8 0 4px, #c5a435 4px 6px); }
+.budget-project-legend { display: flex; gap: .5rem; align-items: center; justify-content: center; margin-top: .7rem; color: #5b4b17; font-size: .72rem; font-weight: 750; }
+.budget-project-legend i { display: inline-block; width: 1.1rem; height: .8rem; flex: none; border-radius: 3px; }
 .budget-chart-mobile-note { display: none; margin: -.35rem 0 0; color: #60708a; font-size: .72rem; font-weight: 700; text-align: center; }
 .budget-analysis-divider { display: flex; gap: 1rem; align-items: center; color: #60708a; font-size: .68rem; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
 .budget-analysis-divider::before, .budget-analysis-divider::after { height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #aebdca); content: ""; }
 .budget-analysis-divider::after { background: linear-gradient(90deg, #aebdca, transparent); }
 .budget-analysis-divider span { padding: .45rem .8rem; border: 1px solid #cbd7e1; border-radius: 999px; background: #f7fafc; }
 .budget-function-panel { border-top: 4px solid #177a8a; }
+.budget-function-visual { min-width: 0; }
 .budget-functions-filter-row { display: flex; justify-content: flex-end; padding-top: .15rem; border-top: 1px solid #e0e6ed; }
 .budget-finality-filter { width: min(360px, 100%); }
 .budget-finality-filter span { display: block; margin-bottom: .35rem; color: #526176; font-size: .72rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
 .budget-functions-table td:first-child { color: var(--muted); font-size: .76rem; }
 .budget-functions-table td:nth-child(2) { color: #33415a; font-size: inherit; }
-@media (max-width: 650px) { .budget-years-chart { height: 350px; padding-inline: 0; }.budget-years-chart-inner { min-width: 720px; }.budget-years-legend { gap: .45rem 1rem; font-size: .68rem; }.budget-chart-mobile-note { display: block; }.budget-analysis-divider { gap: .5rem; }.budget-analysis-divider span { padding-inline: .6rem; white-space: nowrap; } }
+.budget-functions-table th.budget-project-column, .budget-functions-table td.budget-project-column { background: repeating-linear-gradient(135deg, #fffdf2 0 8px, #f7edb9 8px 10px); }
+.budget-functions-table th.budget-project-column { color: #5b4b17; }
+.budget-functions-table th.budget-project-column small { display: block; margin-top: .18rem; font-size: .58rem; letter-spacing: .04em; text-transform: uppercase; }
+@media (max-width: 650px) { .budget-years-chart { height: 350px; padding-inline: 0; }.budget-years-chart-inner { min-width: 820px; }.budget-years-legend { gap: .45rem 1rem; font-size: .68rem; }.budget-chart-mobile-note { display: block; }.budget-analysis-divider { gap: .5rem; }.budget-analysis-divider span { padding-inline: .6rem; white-space: nowrap; } }
 
 /* Descripciones institucionales del Presupuesto 2026 */
 .description-trigger { display: inline-flex; width: fit-content; gap: .4rem; align-items: center; justify-content: center; padding: .42rem .65rem; border: 1px solid #8ab5d4; border-radius: 6px; color: var(--blue); background: #f7fbfe; cursor: pointer; font: 700 .76rem/1.2 system-ui, sans-serif; }.description-trigger[hidden] { display: none; }.description-trigger > span { display: grid; width: 1.1rem; height: 1.1rem; place-items: center; border-radius: 50%; color: white; background: var(--blue); font-size: .68rem; font-weight: 850; }.description-trigger:hover { border-color: var(--blue); background: #eaf3fa; }.description-trigger-compact { width: 1.65rem; height: 1.65rem; flex: none; padding: 0; border-radius: 50%; }.description-trigger-compact > span { width: 1rem; height: 1rem; }.program-option-actions, .guide-name-actions { display: flex; gap: .4rem; align-items: center; }.guide-name-actions { justify-content: space-between; }.guide-programs li { display: flex; gap: .45rem; align-items: center; }.guide-program-name { min-width: 0; flex: 1; }

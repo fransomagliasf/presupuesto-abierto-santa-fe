@@ -17,7 +17,8 @@ const FUND_DATA_FILES = [
   "data/processed/fondos_especiales_2026-10-31.csv",
 ];
 const DESCRIPTION_DATA_FILE = "data/processed/presupuesto_descripciones_2026.json";
-const BUDGET_FUNCTION_DATA_FILE = "data/processed/presupuesto_finalidad_funcion_2019_2026.csv";
+const BUDGET_FUNCTION_DATA_FILE = "data/processed/presupuesto_finalidad_funcion_2019_2027.csv";
+const BUDGET_PROJECT_YEAR = "2027";
 const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const exactCurrency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -902,6 +903,13 @@ function budgetTotalsByYear() { return new Map(budgetYears().map((year) => [year
 function budgetShare(value) { return `${value.toLocaleString("es-AR", { minimumFractionDigits: value > 0 && value < 1 ? 2 : 1, maximumFractionDigits: 2 })}%`; }
 function budgetPointChange(value) { return value === null ? "No comparable" : Math.abs(value) < .005 ? "Sin cambios" : `${value > 0 ? "+" : "−"}${Math.abs(value).toLocaleString("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 2 })} puntos`; }
 function budgetChangeClass(value) { return value === null || Math.abs(value) < .005 ? "" : value > 0 ? "positive" : "negative"; }
+const budgetProjectPatterns = new Map();
+function budgetProjectPattern(stripeColor = "#a68013") {
+  if (budgetProjectPatterns.has(stripeColor)) return budgetProjectPatterns.get(stripeColor);
+  const tile = document.createElement("canvas"), context = tile.getContext("2d"); tile.width = 10; tile.height = 10;
+  context.fillStyle = "#fff8d8"; context.fillRect(0, 0, 10, 10); context.strokeStyle = stripeColor; context.lineWidth = 2; context.beginPath(); context.moveTo(-2, 10); context.lineTo(10, -2); context.moveTo(4, 12); context.lineTo(12, 4); context.stroke();
+  const pattern = context.createPattern(tile, "repeat"); budgetProjectPatterns.set(stripeColor, pattern); return pattern;
+}
 function budgetFunctionOptions() {
   const groups = new Map();
   budgetFunctionData.forEach((row) => { const group = groups.get(row.finalidad_nombre) || new Map(); group.set(row.funcion_codigo, row.funcion_nombre); groups.set(row.finalidad_nombre, group); });
@@ -925,8 +933,8 @@ const budgetYearLabelsPlugin = {
     const context = chart.ctx, budgetValues = chart.data.datasets[0].data, growthValues = chart.data.datasets[1].data;
     context.save(); context.font = "800 11px system-ui, sans-serif"; context.textAlign = "center"; context.textBaseline = "middle";
     chart.getDatasetMeta(0).data.forEach((bar, index) => {
-      const tallEnough = bar.base - bar.y > 38, label = formatBillions(budgetValues[index]);
-      context.fillStyle = tallEnough ? "#fff" : "#173b5d";
+      const tallEnough = bar.base - bar.y > 38, label = formatBillions(budgetValues[index]), isProject = chart.data.labels[index] === BUDGET_PROJECT_YEAR;
+      context.fillStyle = isProject ? "#6f570e" : tallEnough ? "#fff" : "#173b5d";
       context.fillText(label, bar.x, tallEnough ? bar.y + 16 : Math.max(chart.chartArea.top + 10, bar.y - 11));
     });
     context.font = "850 11px system-ui, sans-serif";
@@ -970,7 +978,7 @@ function renderBudgetYearsChart(renderGraph = true) {
     data: {
       labels: years,
       datasets: [
-        { type: "bar", label: "Presupuesto nominal", data: totals, yAxisID: "amount", backgroundColor: "rgba(18, 100, 163, .84)", borderColor: "#0b4f82", borderWidth: 1, borderRadius: 7, maxBarThickness: 76, order: 2 },
+        { type: "bar", label: "Presupuesto nominal", data: totals, yAxisID: "amount", backgroundColor: years.map((year) => year === BUDGET_PROJECT_YEAR ? budgetProjectPattern() : "rgba(18, 100, 163, .84)"), borderColor: years.map((year) => year === BUDGET_PROJECT_YEAR ? "#9a7711" : "#0b4f82"), borderWidth: 1, borderRadius: 7, maxBarThickness: 76, order: 2 },
         { type: "line", label: "Aumento frente al año anterior", data: changes, yAxisID: "growth", borderColor: "#d59a13", backgroundColor: "#d59a13", borderWidth: 3, pointBackgroundColor: "#fff", pointBorderColor: "#b77c00", pointBorderWidth: 3, pointRadius: 5, pointHoverRadius: 7, tension: .25, spanGaps: false, order: 1 },
       ],
     },
@@ -978,7 +986,7 @@ function renderBudgetYearsChart(renderGraph = true) {
       responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { top: 58 } },
       plugins: {
         legend: { display: false },
-        tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, callbacks: { label: (context) => context.dataset.yAxisID === "growth" ? `Aumento frente a ${years[context.dataIndex - 1]}: ${context.parsed.y >= 0 ? "+" : "−"}${formatPercent(Math.abs(context.parsed.y))}` : `Presupuesto: ${formatCents(context.parsed.y)}` } },
+        tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, callbacks: { label: (context) => context.dataset.yAxisID === "growth" ? `${years[context.dataIndex] === BUDGET_PROJECT_YEAR ? "Aumento del proyecto" : "Aumento"} frente a ${years[context.dataIndex - 1]}: ${context.parsed.y >= 0 ? "+" : "−"}${formatPercent(Math.abs(context.parsed.y))}` : `${years[context.dataIndex] === BUDGET_PROJECT_YEAR ? "Proyecto de Presupuesto" : "Presupuesto"}: ${formatCents(context.parsed.y)}` } },
       },
       scales: {
         x: { grid: { display: false }, border: { display: false }, ticks: { color: "#33415a", font: { weight: "750" } } },
@@ -998,7 +1006,7 @@ function renderBudgetFunction(renderGraph = true) {
   if (!renderGraph || typeof Chart === "undefined") return;
   if (budgetFunctionChart) budgetFunctionChart.destroy();
   const maxShare = Math.max(...available.map((item) => item.share), 1), chartMax = Math.ceil(maxShare * 1.35 * 10) / 10, palette = ["#b9d3e6", "#9bc2dd", "#7baed1", "#5d99c3", "#438dcc", "#2877b5", "#1264a3", "#0b4f82"];
-  budgetFunctionChart = new Chart($("#budget-function-chart"), { type: "bar", plugins: [budgetShareLabelsPlugin], data: { labels: values.map((item) => item.year), datasets: [{ data: values.map((item) => item.share), rawValues: values.map((item) => item.row ? item.value : null), backgroundColor: values.map((_, index) => palette[index % palette.length]), borderRadius: 7, maxBarThickness: 74 }] }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 24 } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => context.dataset.rawValues[context.dataIndex] === null ? "Sin partida individual" : `${budgetShare(context.parsed.y)} del total · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } }, y: { beginAtZero: true, max: chartMax, border: { display: false }, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%`, color: "#60708a" } } } } });
+  budgetFunctionChart = new Chart($("#budget-function-chart"), { type: "bar", plugins: [budgetShareLabelsPlugin], data: { labels: values.map((item) => item.year), datasets: [{ data: values.map((item) => item.share), rawValues: values.map((item) => item.row ? item.value : null), backgroundColor: values.map((item, index) => item.year === BUDGET_PROJECT_YEAR ? budgetProjectPattern() : palette[index % palette.length]), borderColor: values.map((item) => item.year === BUDGET_PROJECT_YEAR ? "#9a7711" : "transparent"), borderWidth: values.map((item) => item.year === BUDGET_PROJECT_YEAR ? 1 : 0), borderRadius: 7, maxBarThickness: 74 }] }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 24 } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => context.dataset.rawValues[context.dataIndex] === null ? "Sin partida individual" : `${values[context.dataIndex].year === BUDGET_PROJECT_YEAR ? "Proyecto 2027 · " : ""}${budgetShare(context.parsed.y)} del total · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } }, y: { beginAtZero: true, max: chartMax, border: { display: false }, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%`, color: "#60708a" } } } } });
 }
 function budgetFinalityValues() {
   const years = budgetYears(), totals = budgetTotalsByYear(), finalities = [...new Map(budgetFunctionData.map((row) => [row.finalidad_codigo, row.finalidad_nombre])).entries()].sort(([a], [b]) => a.localeCompare(b, "es", { numeric: true }));
@@ -1009,12 +1017,12 @@ function renderBudgetComposition(renderGraph = true) {
   $("#budget-composition-legend").innerHTML = finalities.map((item, index) => `<li><i style="background:${colors[index]}"></i><span>${escapeHtml(item.name)}</span></li>`).join("");
   if (!renderGraph || typeof Chart === "undefined") return;
   if (budgetCompositionChart) budgetCompositionChart.destroy();
-  budgetCompositionChart = new Chart($("#budget-composition-chart"), { type: "bar", data: { labels: years, datasets: finalities.map((item, index) => ({ label: item.name, data: item.values.map((value) => value.share), rawValues: item.values.map((value) => value.value), backgroundColor: colors[index], borderColor: "#fff", borderWidth: 1, borderRadius: 2, barThickness: 38 })) }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${context.dataset.label}: ${budgetShare(context.parsed.x)} · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { stacked: true, min: 0, max: 100, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` } }, y: { stacked: true, grid: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } } } } });
+  budgetCompositionChart = new Chart($("#budget-composition-chart"), { type: "bar", data: { labels: years, datasets: finalities.map((item, index) => ({ label: item.name, data: item.values.map((value) => value.share), rawValues: item.values.map((value) => value.value), backgroundColor: item.values.map((_, valueIndex) => years[valueIndex] === BUDGET_PROJECT_YEAR ? budgetProjectPattern(colors[index]) : colors[index]), borderColor: "#fff", borderWidth: 1, borderRadius: 2, barThickness: 38 })) }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${years[context.dataIndex] === BUDGET_PROJECT_YEAR ? "Proyecto 2027 · " : ""}${context.dataset.label}: ${budgetShare(context.parsed.x)} · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { stacked: true, min: 0, max: 100, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` } }, y: { stacked: true, grid: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } } } } });
 }
 function renderBudgetFunctionsTable() {
   const years = budgetYears(), totals = budgetTotalsByYear(), baselineIndex = years.indexOf("2024"), allFunctions = [...new Map(budgetFunctionData.map((row) => [row.funcion_codigo, { code: row.funcion_codigo, name: row.funcion_nombre, finality: row.finalidad_nombre }])).values()].map((item) => { const values = years.map((year) => { const row = budgetFunctionData.find((entry) => entry.anio === year && entry.funcion_codigo === item.code), value = row ? cents(row, "monto_centavos") : 0; return { row, value, share: row && totals.get(year) ? value / totals.get(year) * 100 : null }; }), baseline = values[baselineIndex], latest = values.at(-1); return { ...item, values, change: baseline?.row && latest.row ? latest.share - baseline.share : null }; }).sort((a, b) => (b.values.at(-1).share ?? -1) - (a.values.at(-1).share ?? -1)), functions = selectedBudgetTableFinality ? allFunctions.filter((item) => item.finality === selectedBudgetTableFinality) : allFunctions, visible = budgetTableExpanded ? functions : functions.slice(0, 10);
-  $("#budget-functions-head").innerHTML = `<th>Finalidad</th><th>Función</th>${years.map((year) => `<th class="number">${year}</th>`).join("")}<th class="number">Cambio vs. 2024</th>`;
-  $("#budget-functions-table").innerHTML = visible.map((item) => `<tr><td>${escapeHtml(item.finality)}</td><td><strong>${escapeHtml(item.name)}</strong></td>${item.values.map((value) => `<td class="number"><strong>${value.row ? budgetShare(value.share) : "—"}</strong><small>${value.row ? formatAxisAmount(value.value) : "Sin partida"}</small></td>`).join("")}<td class="number ${budgetChangeClass(item.change)}">${budgetPointChange(item.change)}</td></tr>`).join("");
+  $("#budget-functions-head").innerHTML = `<th>Finalidad</th><th>Función</th>${years.map((year) => `<th class="number ${year === BUDGET_PROJECT_YEAR ? "budget-project-column" : ""}">${year}${year === BUDGET_PROJECT_YEAR ? "<small>Proyecto</small>" : ""}</th>`).join("")}<th class="number">Cambio vs. 2024</th>`;
+  $("#budget-functions-table").innerHTML = visible.map((item) => `<tr><td>${escapeHtml(item.finality)}</td><td><strong>${escapeHtml(item.name)}</strong></td>${item.values.map((value, index) => `<td class="number ${years[index] === BUDGET_PROJECT_YEAR ? "budget-project-column" : ""}"><strong>${value.row ? budgetShare(value.share) : "—"}</strong><small>${value.row ? formatAxisAmount(value.value) : "Sin partida"}</small></td>`).join("")}<td class="number ${budgetChangeClass(item.change)}">${budgetPointChange(item.change)}</td></tr>`).join("");
   $("#toggle-budget-functions").hidden = functions.length <= 10; $("#toggle-budget-functions").setAttribute("aria-expanded", String(budgetTableExpanded)); $("#toggle-budget-functions").innerHTML = budgetTableExpanded ? 'Ver solo las 10 principales <span aria-hidden="true">↑</span>' : 'Ver todas las funciones <span aria-hidden="true">↓</span>';
 }
 function renderBudgets(renderGraphs = true) { renderBudgetYearsChart(renderGraphs); renderBudgetFunction(renderGraphs); renderBudgetComposition(renderGraphs); renderBudgetFunctionsTable(); }
