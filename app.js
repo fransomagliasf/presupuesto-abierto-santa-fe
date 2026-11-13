@@ -906,8 +906,8 @@ function budgetChangeClass(value) { return value === null || Math.abs(value) < .
 const budgetProjectPatterns = new Map();
 function budgetProjectPattern(stripeColor = "#a68013") {
   if (budgetProjectPatterns.has(stripeColor)) return budgetProjectPatterns.get(stripeColor);
-  const tile = document.createElement("canvas"), context = tile.getContext("2d"); tile.width = 10; tile.height = 10;
-  context.fillStyle = "#fff8d8"; context.fillRect(0, 0, 10, 10); context.strokeStyle = stripeColor; context.lineWidth = 2; context.beginPath(); context.moveTo(-2, 10); context.lineTo(10, -2); context.moveTo(4, 12); context.lineTo(12, 4); context.stroke();
+  const tile = document.createElement("canvas"), context = tile.getContext("2d"); tile.width = 14; tile.height = 14;
+  context.fillStyle = "rgba(255, 248, 216, .22)"; context.fillRect(0, 0, 14, 14); context.globalAlpha = .38; context.strokeStyle = stripeColor; context.lineWidth = 1; context.beginPath(); context.moveTo(-2, 14); context.lineTo(14, -2); context.moveTo(6, 16); context.lineTo(16, 6); context.stroke();
   const pattern = context.createPattern(tile, "repeat"); budgetProjectPatterns.set(stripeColor, pattern); return pattern;
 }
 function budgetFunctionOptions() {
