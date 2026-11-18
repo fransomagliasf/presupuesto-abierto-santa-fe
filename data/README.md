@@ -134,6 +134,11 @@ de las Cuentas de Inversión 2020–2025. Cada valor se extrae del “TOTAL GENE
 del Estado de Ejecución Presupuestaria de Recursos y se valida comprobando que
 el crédito inicial más las modificaciones netas sea igual al crédito vigente.
 
+El mismo archivo incluye `finalidad_funcion`, con el crédito vigente de cada
+función tomado del cuadro “Estado de ejecución del presupuesto de gastos (por
+finalidad y función)”. La suma de las funciones se valida contra el crédito
+vigente total de cada cierre anual. Esta apertura está disponible hasta 2025.
+
 Para 2026 no existe todavía una Cuenta de Inversión anual: el registro se toma
 del informe mensual de gastos al 31/10/2026 y queda identificado como corte
 mensual. El script reproducible es `extract_credito_vigente_cierres.py`.

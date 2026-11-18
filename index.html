@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261118-1" />
+    <link rel="stylesheet" href="styles.css?v=20261118-2" />
   </head>
   <body>
     <header class="site-header">
@@ -100,13 +100,13 @@
 
         <section class="budgets-section panel budget-function-panel" aria-labelledby="budget-function-title">
           <div class="budget-function-heading">
-            <div><p class="eyebrow">Elegí una función</p><h2 id="budget-function-title">Evolución de Salud</h2><p>La participación indica cuánto representa esta función dentro del presupuesto total de cada año.</p></div>
+            <div><p class="eyebrow">Elegí una función</p><h2 id="budget-function-title">Evolución de Salud</h2><p>Compará qué porcentaje representaba al aprobarse el presupuesto y qué porcentaje alcanzó en el crédito vigente de cierre.</p></div>
             <label class="budget-function-select">Comparar
               <select id="budget-function-filter" aria-label="Función presupuestaria a comparar"></select>
             </label>
           </div>
           <div class="budget-function-layout">
-            <div class="budget-function-visual"><div class="budget-function-chart"><canvas id="budget-function-chart"></canvas></div><div class="budget-project-legend"><i class="budget-project-key"></i><span>2027 corresponde al Proyecto de Presupuesto.</span></div></div>
+            <div class="budget-function-visual"><div class="budget-function-chart"><div id="budget-function-chart-inner" class="budget-function-chart-inner"><canvas id="budget-function-chart"></canvas></div></div><p id="budget-function-mobile-note" class="budget-chart-mobile-note" hidden>Deslizá el gráfico para ver todos los años.</p><div class="budget-function-comparison-legend" aria-label="Referencias del gráfico"><span><i class="budget-function-approved-key"></i>Aprobado</span><span><i class="budget-function-positive-key"></i>Cierre con mayor participación</span><span><i class="budget-function-negative-key"></i>Cierre con menor participación</span><span><i class="budget-project-key"></i>Proyecto 2027</span></div><p class="budget-function-source-note">El cierre por función está disponible en las Cuentas de Inversión 2020–2025. Para 2026 y 2027 todavía no existe un cierre anual comparable.</p></div>
             <aside class="budget-reading-card"><p class="eyebrow">Lectura rápida</p><h3 id="budget-function-reading-title">¿Qué cambió?</h3><div id="budget-function-reading"></div><p class="budget-inflation-note">La variación en pesos es nominal. Para analizar poder de compra habría que incorporar inflación.</p></aside>
           </div>
         </section>
@@ -512,6 +512,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261118-1"></script>
+    <script src="app.js?v=20261118-2"></script>
   </body>
 </html>

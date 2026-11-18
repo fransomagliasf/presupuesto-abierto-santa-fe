@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Extract annual closing credit totals from Cuenta de Inversión PDFs.
+"""Extract annual closing credit totals and functions from Cuenta de Inversión PDFs.
 
 The first consolidated resource-execution table is used because it prints the
 three values needed for reconciliation: initial estimate, net modifications
-and current estimate. The 2026 observation comes from the latest monthly
-expense CSV and is deliberately labelled as a monthly cut, not an annual close.
+and current estimate. The consolidated finality/function table provides the
+same values for each function. The 2026 observation comes from the latest
+monthly expense CSV and is deliberately labelled as a monthly cut, not an
+annual close; it has no comparable function breakdown.
 
 Usage:
     python3 scripts/extract_credito_vigente_cierres.py OUTPUT.json \
@@ -24,13 +26,81 @@ from pathlib import Path
 
 AMOUNT = re.compile(r"-?[\d.]+,\d{2}")
 REPORT_TITLE = "ESTADO DE EJECUCION PRESUPUESTARIA DE RECURSOS"
+FUNCTION_REPORT_TITLE = "(POR FINALIDAD Y FUNCIÓN)"
+FINALITY_LINE = re.compile(r"^\s*(\d{3})\s+-\s+([^\d].*?)\s*$")
+FUNCTION_LINE = re.compile(
+    r"^\s+(\d{3})\s+(.+?)\s+(-?[\d.]+,\d{2})\s+(-?[\d.]+,\d{2})\s+(-?[\d.]+,\d{2})(?:\s|$)"
+)
 
 
 def cents(value: str) -> int:
     return int(Decimal(value.replace(".", "").replace(",", ".")) * 100)
 
 
-def extract_pdf(year: int, path: Path) -> dict:
+def extract_functions(year: int, path: Path, pages: list[str], expected_total: int) -> list[dict]:
+    start = next(
+        (
+            index
+            for index, page in enumerate(pages)
+            if FUNCTION_REPORT_TITLE in page
+            and "Municipalidad de" in page
+            and "Hoja: 1 de" in page
+        ),
+        None,
+    )
+    if start is None:
+        raise ValueError(f"{year}: consolidated finality/function table not found")
+
+    table_pages = []
+    for index in range(start, len(pages)):
+        page = pages[index]
+        if index > start and FUNCTION_REPORT_TITLE not in page:
+            break
+        table_pages.append((index + 1, page))
+        if "Totales Generales" in page:
+            break
+
+    rows = []
+    finality_code = None
+    finality_name = None
+    for page_number, page in table_pages:
+        for line in page.splitlines():
+            finality_match = FINALITY_LINE.match(line)
+            if finality_match and finality_match.group(1).endswith("00"):
+                finality_code, finality_name = finality_match.groups()
+                continue
+            function_match = FUNCTION_LINE.match(line)
+            if not function_match:
+                continue
+            code, name, approved_text, modifications_text, current_text = function_match.groups()
+            approved, modifications, current = map(cents, (approved_text, modifications_text, current_text))
+            if approved + modifications != current:
+                raise ValueError(f"{year}, function {code}: approved plus modifications does not reconcile")
+            rows.append(
+                {
+                    "anio": year,
+                    "finalidad_codigo": finality_code,
+                    "finalidad_nombre": finality_name,
+                    "funcion_codigo": code,
+                    "funcion_nombre": name.replace("servivicios", "servicios"),
+                    "credito_aprobado_documento_centavos": approved,
+                    "modificaciones_netas_centavos": modifications,
+                    "credito_vigente_centavos": current,
+                    "fuente": path.name,
+                    "pagina_pdf": page_number,
+                }
+            )
+
+    codes = [row["funcion_codigo"] for row in rows]
+    if not rows or len(codes) != len(set(codes)):
+        raise ValueError(f"{year}: missing or duplicated functions in consolidated table")
+    actual_total = sum(row["credito_vigente_centavos"] for row in rows)
+    if actual_total != expected_total:
+        raise ValueError(f"{year}: function current total {actual_total} does not match closing total {expected_total}")
+    return rows
+
+
+def extract_pdf(year: int, path: Path) -> tuple[dict, list[dict]]:
     with tempfile.TemporaryDirectory() as directory:
         text_path = Path(directory) / "cuenta.txt"
         subprocess.run(["pdftotext", "-layout", str(path), str(text_path)], check=True)
@@ -47,7 +117,7 @@ def extract_pdf(year: int, path: Path) -> dict:
         initial, modification, current = map(cents, (initial_text, modification_text, current_text))
         if initial + modification != current:
             raise ValueError(f"{year}: initial plus modifications does not reconcile on PDF page {page_number}")
-        return {
+        closing = {
             "anio": year,
             "tipo_corte": "cierre_anual",
             "periodo_referencia": f"Cuenta de Inversión {year}",
@@ -60,6 +130,7 @@ def extract_pdf(year: int, path: Path) -> dict:
             "fuente": path.name,
             "pagina_pdf": page_number,
         }
+        return closing, extract_functions(year, path, pages, current)
     raise ValueError(f"{year}: consolidated resource-execution total not found")
 
 
@@ -105,14 +176,17 @@ def main() -> None:
     if set(pdfs) != expected:
         raise ValueError(f"Expected PDF years {sorted(expected)}, received {sorted(pdfs)}")
 
-    records = [extract_pdf(year, pdfs[year]) for year in sorted(pdfs)]
+    extracted = [extract_pdf(year, pdfs[year]) for year in sorted(pdfs)]
+    records = [closing for closing, _ in extracted]
+    functions = [row for _, rows in extracted for row in rows]
     records.append(extract_monthly_2026(args.monthly_2026))
     output = {
         "meta": {
-            "descripcion": "Crédito vigente al cierre anual 2020–2025 y último corte mensual 2026",
-            "criterio": "El cierre anual surge del total general del Estado de Ejecución Presupuestaria de Recursos de cada Cuenta de Inversión. El dato 2026 es provisorio y corresponde al último informe mensual disponible.",
+            "descripcion": "Crédito vigente total y por finalidad/función al cierre anual 2020–2025, más el último corte mensual total de 2026",
+            "criterio": "El cierre anual surge del total general de recursos y del cuadro de gastos por finalidad y función de cada Cuenta de Inversión. El dato 2026 es provisorio, corresponde al último informe mensual disponible y no incluye apertura comparable por función.",
         },
         "cierres": records,
+        "finalidad_funcion": functions,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

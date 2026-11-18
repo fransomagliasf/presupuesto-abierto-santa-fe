@@ -978,8 +978,12 @@ function fillBudgetFinalityFilter() {
   if (finalities.includes(selectedBudgetTableFinality)) $("#budget-finality-filter").value = selectedBudgetTableFinality;
 }
 function budgetFunctionValues(code) {
-  const totalsByYear = budgetTotalsByYear();
-  return visibleBudgetYears().map((year) => { const row = budgetFunctionData.find((item) => item.anio === year && item.funcion_codigo === code), value = row ? cents(row, "monto_centavos") : 0, total = totalsByYear.get(year) || 0; return { year, row, value, total, share: row && total ? value / total * 100 : null }; });
+  const totalsByYear = budgetTotalsByYear(), closingByYear = budgetClosingByYear();
+  return visibleBudgetYears().map((year) => {
+    const row = budgetFunctionData.find((item) => item.anio === year && item.funcion_codigo === code), value = row ? cents(row, "monto_centavos") : 0, total = totalsByYear.get(year) || 0, share = row && total ? value / total * 100 : null;
+    const closingRow = closingBudgetData.finalidad_funcion?.find((item) => String(item.anio) === year && item.funcion_codigo === code), closingTotal = closingByYear.get(year)?.credito_vigente_centavos || 0, closingValue = closingRow?.credito_vigente_centavos ?? null, closingShare = closingRow && closingTotal ? closingValue / closingTotal * 100 : null;
+    return { year, row, value, total, share, closingRow, closingValue, closingShare, shareChange: closingShare === null || share === null ? null : closingShare - share };
+  });
 }
 const budgetYearLabelsPlugin = {
   id: "budgetYearLabels",
@@ -1005,7 +1009,7 @@ const budgetYearLabelsPlugin = {
         context.fillStyle = "#fff"; context.fillText(gapLabel, bar.x, (bar.base + bar.y) / 2);
       }
       context.font = "800 9px system-ui, sans-serif"; context.fillStyle = isMonthly ? "#08665f" : "#7b4215";
-      context.fillText(`${isMonthly ? "Oct." : "Cierre"}: ${formatBillions(closing)}`, bar.x, Math.max(chart.chartArea.top + 9, bar.y - (compact ? 28 : 10)));
+      context.fillText(formatBillions(closing), bar.x, Math.max(chart.chartArea.top + 9, bar.y - (compact ? 28 : 10)));
     });
     context.font = "850 11px system-ui, sans-serif";
     chart.getDatasetMeta(growthDatasetIndex).data.forEach((point, index) => {
@@ -1069,17 +1073,37 @@ function renderBudgetYearsChart(renderGraph = true) {
     },
   });
 }
-const budgetShareLabelsPlugin = { id: "budgetShareLabels", afterDatasetsDraw(chart) { const meta = chart.getDatasetMeta(0), context = chart.ctx; context.save(); context.fillStyle = "#173b5d"; context.font = "800 12px system-ui, sans-serif"; context.textAlign = "center"; context.textBaseline = "bottom"; meta.data.forEach((bar, index) => { const value = chart.data.datasets[0].data[index]; if (value !== null && Number.isFinite(value)) context.fillText(budgetShare(value), bar.x, Math.max(chart.chartArea.top + 13, bar.y - 8)); }); context.restore(); } };
+const budgetFunctionShareLabelsPlugin = {
+  id: "budgetFunctionShareLabels",
+  afterDatasetsDraw(chart) {
+    const context = chart.ctx;
+    context.save(); context.font = "800 11px system-ui, sans-serif"; context.textAlign = "center"; context.textBaseline = "bottom";
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      chart.getDatasetMeta(datasetIndex).data.forEach((bar, index) => {
+        const value = dataset.data[index];
+        if (value === null || !Number.isFinite(value) || bar.skip) return;
+        const approvedBar = chart.getDatasetMeta(0).data[index], labelInside = dataset.id === "closing" && Math.abs(bar.y - approvedBar.y) < 14 && Math.abs(bar.base - bar.y) > 24;
+        context.fillStyle = labelInside ? "#fff" : dataset.id === "approved" ? "#173b5d" : dataset.shareChanges[index] >= 0 ? "#187347" : "#a93642";
+        context.fillText(budgetShare(value), bar.x, labelInside ? bar.y + 15 : Math.max(chart.chartArea.top + 13, bar.y - 7));
+      });
+    });
+    context.restore();
+  },
+};
 function renderBudgetFunction(renderGraph = true) {
-  const values = budgetFunctionValues(selectedBudgetFunction), available = values.filter((item) => item.row), selectedRow = budgetFunctionData.filter((row) => row.funcion_codigo === selectedBudgetFunction).at(-1), name = selectedRow?.funcion_nombre || "Función seleccionada", first = available[0], last = available.at(-1), shareChange = first && last ? last.share - first.share : null, nominalChange = first?.value ? (last.value / first.value - 1) * 100 : null;
+  const values = budgetFunctionValues(selectedBudgetFunction), comparable = values.filter((item) => item.row && item.closingShare !== null), selectedRow = budgetFunctionData.filter((row) => row.funcion_codigo === selectedBudgetFunction).at(-1), name = selectedRow?.funcion_nombre || "Función seleccionada", latestComparable = comparable.at(-1), project = values.find((item) => item.year === BUDGET_PROJECT_YEAR);
   $("#budget-function-title").textContent = `Evolución de ${name}`;
-  const direction = shareChange === null || Math.abs(shareChange) < .005 ? "se mantuvo estable" : shareChange > 0 ? "aumentó" : "disminuyó";
-  $("#budget-function-reading-title").textContent = first && last ? `${name}: ${first.year} frente a ${last.year}` : name;
-  $("#budget-function-reading").innerHTML = first && last ? `<p>Su participación ${direction}: pasó de <strong>${budgetShare(first.share)}</strong> en ${first.year} a <strong>${budgetShare(last.share)}</strong> en ${last.year}.</p><p>Esto representa <strong class="${budgetChangeClass(shareChange)}">${budgetPointChange(shareChange)}</strong> sobre el total municipal.</p><p>El monto pasó de <strong>${formatAxisAmount(first.value)}</strong> a <strong>${formatAxisAmount(last.value)}</strong>${nominalChange === null ? "" : `, un cambio nominal de <strong>${nominalChange >= 0 ? "+" : "−"}${formatPercent(Math.abs(nominalChange))}</strong>`}.</p>` : "<p>No hay años suficientes para construir la comparación.</p>";
+  $("#budget-function-reading-title").textContent = latestComparable ? `${name}: cierre ${latestComparable.year}` : name;
+  $("#budget-function-reading").innerHTML = latestComparable ? `<p>En ${latestComparable.year} comenzó con <strong>${budgetShare(latestComparable.share)}</strong> del presupuesto y cerró con <strong class="${budgetChangeClass(latestComparable.shareChange)}">${budgetShare(latestComparable.closingShare)}</strong>.</p><p>El cambio fue de <strong class="${budgetChangeClass(latestComparable.shareChange)}">${budgetPointChange(latestComparable.shareChange)}</strong> de participación.</p><p>El crédito pasó de <strong>${formatAxisAmount(latestComparable.value)}</strong> a <strong>${formatAxisAmount(latestComparable.closingValue)}</strong>.</p>${project?.row ? `<p>Para 2027, el proyecto le asigna <strong>${budgetShare(project.share)}</strong>; todavía no existe un cierre comparable.</p>` : ""}` : "<p>No hay un cierre anual comparable para esta función.</p>";
   if (!renderGraph || typeof Chart === "undefined") return;
   if (budgetFunctionChart) budgetFunctionChart.destroy();
-  const maxShare = Math.max(...available.map((item) => item.share), 1), chartMax = Math.ceil(maxShare * 1.35 * 10) / 10, palette = ["#b9d3e6", "#9bc2dd", "#7baed1", "#5d99c3", "#438dcc", "#2877b5", "#1264a3", "#0b4f82"];
-  budgetFunctionChart = new Chart($("#budget-function-chart"), { type: "bar", plugins: [budgetShareLabelsPlugin], data: { labels: values.map((item) => item.year), datasets: [{ data: values.map((item) => item.share), rawValues: values.map((item) => item.row ? item.value : null), backgroundColor: values.map((item, index) => item.year === BUDGET_PROJECT_YEAR ? budgetProjectPattern() : palette[index % palette.length]), borderColor: values.map((item) => item.year === BUDGET_PROJECT_YEAR ? "#9a7711" : "transparent"), borderWidth: values.map((item) => item.year === BUDGET_PROJECT_YEAR ? 1 : 0), borderRadius: 7, maxBarThickness: 74 }] }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 24 } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => context.dataset.rawValues[context.dataIndex] === null ? "Sin partida individual" : `${values[context.dataIndex].year === BUDGET_PROJECT_YEAR ? "Proyecto 2027 · " : ""}${budgetShare(context.parsed.y)} del total · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } }, y: { beginAtZero: true, max: chartMax, border: { display: false }, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%`, color: "#60708a" } } } } });
+  $("#budget-function-chart-inner").style.minWidth = budgetEarlierYearsExpanded ? "920px" : "100%";
+  $("#budget-function-mobile-note").hidden = !budgetEarlierYearsExpanded;
+  const chartShares = values.flatMap((item) => [item.share, item.closingShare]).filter(Number.isFinite), maxShare = Math.max(...chartShares, 1), chartMax = Math.ceil(maxShare * 1.35 * 10) / 10;
+  budgetFunctionChart = new Chart($("#budget-function-chart"), { type: "bar", plugins: [budgetFunctionShareLabelsPlugin], data: { labels: values.map((item) => item.year), datasets: [
+    { id: "approved", label: "Presupuesto aprobado", data: values.map((item) => item.share), rawValues: values.map((item) => item.row ? item.value : null), backgroundColor: values.map((item) => item.year === BUDGET_PROJECT_YEAR ? budgetProjectPattern() : "#76acd2"), borderColor: values.map((item) => item.year === BUDGET_PROJECT_YEAR ? "#9a7711" : "#397da9"), borderWidth: 1, borderRadius: 6, maxBarThickness: 48 },
+    { id: "closing", label: "Crédito vigente al cierre", data: values.map((item) => item.closingShare), rawValues: values.map((item) => item.closingValue), shareChanges: values.map((item) => item.shareChange), backgroundColor: values.map((item) => item.shareChange === null ? "transparent" : item.shareChange >= 0 ? "rgba(42, 145, 91, .82)" : "rgba(201, 74, 84, .82)"), borderColor: values.map((item) => item.shareChange === null ? "transparent" : item.shareChange >= 0 ? "#187347" : "#a93642"), borderWidth: 1, borderRadius: 6, maxBarThickness: 48 },
+  ] }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 28 } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => { const item = values[context.dataIndex], amount = context.dataset.rawValues[context.dataIndex]; if (amount === null || context.parsed.y === null) return "Sin cierre anual comparable"; if (context.dataset.id === "closing") return `Cierre: ${budgetShare(context.parsed.y)} · ${formatCents(amount)} · ${budgetPointChange(item.shareChange)}`; return `${item.year === BUDGET_PROJECT_YEAR ? "Proyecto 2027" : "Aprobado"}: ${budgetShare(context.parsed.y)} · ${formatCents(amount)}`; } } } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } }, y: { beginAtZero: true, max: chartMax, border: { display: false }, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%`, color: "#60708a" } } } } });
 }
 function budgetFinalityValues() {
   const years = visibleBudgetYears(), totals = budgetTotalsByYear(), finalities = [...new Map(budgetFunctionData.map((row) => [row.finalidad_codigo, row.finalidad_nombre])).entries()].sort(([a], [b]) => a.localeCompare(b, "es", { numeric: true }));
