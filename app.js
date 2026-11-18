@@ -19,6 +19,7 @@ const FUND_DATA_FILES = [
 const DESCRIPTION_DATA_FILE = "data/processed/presupuesto_descripciones_2026.json";
 const BUDGET_FUNCTION_DATA_FILE = "data/processed/presupuesto_finalidad_funcion_2019_2027.csv";
 const PROJECT_BUDGET_DATA_FILE = "data/processed/proyecto_presupuesto_2027.json";
+const CLOSING_BUDGET_DATA_FILE = "data/processed/credito_vigente_cierres_2020_2026.json";
 const BUDGET_PROJECT_YEAR = "2027";
 const $ = (selector) => document.querySelector(selector);
 const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
@@ -32,6 +33,7 @@ let financingCompositionChart = null, financingExecutionChart = null;
 let descriptionData = { source: "Presupuesto 2026 de la Municipalidad de Santa Fe", policies: [], programs: [] };
 let budgetFunctionData = [], selectedBudgetFunction = "310", selectedBudgetTableFinality = "", budgetYearsChart = null, budgetFunctionChart = null, budgetCompositionChart = null, budgetTableExpanded = false, budgetTableSort = { key: BUDGET_PROJECT_YEAR, direction: "desc" };
 let projectBudgetData = { meta: {}, programas: [], recursos: [], objetos_gasto: [], fuentes_financiamiento: [] };
+let closingBudgetData = { meta: {}, cierres: [] }, budgetEarlierYearsExpanded = false;
 const TABLE_PAGE_SIZE = 5;
 let expenseTablePage = 1, resourceTablePage = 1, fundTablePage = 1, guideTablePage = 1, guideExpandedSecretaries = new Set(), activeDownloadView = "expenses";
 let heatmapExpanded = false;
@@ -948,8 +950,10 @@ function resetFundFilters() { fundSelectedPeriods = new Set(fundPeriods()); fund
 function setupFilterPanelToggle(buttonSelector, bodySelector, layoutSelector, name) {
   $(buttonSelector).addEventListener("click", () => { const body = $(bodySelector), button = $(buttonSelector), collapsed = !body.hidden; body.hidden = collapsed; $(layoutSelector).classList.toggle("filters-collapsed", collapsed); button.textContent = collapsed ? "›" : "‹"; button.setAttribute("aria-expanded", String(!collapsed)); button.setAttribute("aria-label", collapsed ? `Desplegar ${name}` : `Plegar ${name}`); });
 }
-function budgetYears() { return unique(budgetFunctionData.map((row) => row.anio)).sort((a, b) => Number(a) - Number(b)); }
+function budgetYears() { return unique(budgetFunctionData.map((row) => row.anio)).filter((year) => Number(year) >= 2020).sort((a, b) => Number(a) - Number(b)); }
+function visibleBudgetYears() { return budgetYears().filter((year) => budgetEarlierYearsExpanded || Number(year) >= 2024); }
 function budgetTotalsByYear() { return new Map(budgetYears().map((year) => [year, sum(budgetFunctionData.filter((row) => row.anio === year), "monto_centavos")])); }
+function budgetClosingByYear() { return new Map(closingBudgetData.cierres.map((row) => [String(row.anio), row])); }
 function budgetShare(value) { return `${value.toLocaleString("es-AR", { minimumFractionDigits: value > 0 && value < 1 ? 2 : 1, maximumFractionDigits: 2 })}%`; }
 function budgetPointChange(value) { return value === null ? "No comparable" : Math.abs(value) < .005 ? "Sin cambios" : `${value > 0 ? "+" : "−"}${Math.abs(value).toLocaleString("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 2 })} puntos`; }
 function budgetChangeClass(value) { return value === null || Math.abs(value) < .005 ? "" : value > 0 ? "positive" : "negative"; }
@@ -975,20 +979,36 @@ function fillBudgetFinalityFilter() {
 }
 function budgetFunctionValues(code) {
   const totalsByYear = budgetTotalsByYear();
-  return budgetYears().map((year) => { const row = budgetFunctionData.find((item) => item.anio === year && item.funcion_codigo === code), value = row ? cents(row, "monto_centavos") : 0, total = totalsByYear.get(year) || 0; return { year, row, value, total, share: row && total ? value / total * 100 : null }; });
+  return visibleBudgetYears().map((year) => { const row = budgetFunctionData.find((item) => item.anio === year && item.funcion_codigo === code), value = row ? cents(row, "monto_centavos") : 0, total = totalsByYear.get(year) || 0; return { year, row, value, total, share: row && total ? value / total * 100 : null }; });
 }
 const budgetYearLabelsPlugin = {
   id: "budgetYearLabels",
   afterDatasetsDraw(chart) {
-    const context = chart.ctx, budgetValues = chart.data.datasets[0].data, growthValues = chart.data.datasets[1].data;
+    const context = chart.ctx, budgetDatasetIndex = chart.data.datasets.findIndex((dataset) => dataset.id === "approved"), gapDatasetIndex = chart.data.datasets.findIndex((dataset) => dataset.id === "closingGap"), growthDatasetIndex = chart.data.datasets.findIndex((dataset) => dataset.id === "growth"), budgetValues = chart.data.datasets[budgetDatasetIndex].data, gapValues = chart.data.datasets[gapDatasetIndex].data, growthValues = chart.data.datasets[growthDatasetIndex].data, closingValues = chart.data.datasets[gapDatasetIndex].closingValues;
     context.save(); context.font = "800 11px system-ui, sans-serif"; context.textAlign = "center"; context.textBaseline = "middle";
-    chart.getDatasetMeta(0).data.forEach((bar, index) => {
+    chart.getDatasetMeta(budgetDatasetIndex).data.forEach((bar, index) => {
       const tallEnough = bar.base - bar.y > 38, label = formatBillions(budgetValues[index]), isProject = chart.data.labels[index] === BUDGET_PROJECT_YEAR;
       context.fillStyle = isProject ? "#6f570e" : tallEnough ? "#fff" : "#173b5d";
       context.fillText(label, bar.x, tallEnough ? bar.y + 16 : Math.max(chart.chartArea.top + 10, bar.y - 11));
     });
+    chart.getDatasetMeta(gapDatasetIndex).data.forEach((bar, index) => {
+      const value = gapValues[index], closing = closingValues[index];
+      if (!Number.isFinite(value) || !Number.isFinite(closing)) return;
+      const segmentHeight = Math.abs(bar.base - bar.y), gapLabel = `+${formatBillions(value)}`, isMonthly = chart.data.labels[index] === "2026", compact = segmentHeight <= 25;
+      context.font = "800 10px system-ui, sans-serif";
+      if (compact) {
+        const gapY = Math.max(chart.chartArea.top + 10, bar.y - 9), gapWidth = context.measureText(gapLabel).width + 10;
+        context.fillStyle = "rgba(255,255,255,.94)"; context.strokeStyle = isMonthly ? "#4aa79f" : "#dc9857"; context.lineWidth = 1;
+        context.beginPath(); context.roundRect(bar.x - gapWidth / 2, gapY - 9, gapWidth, 18, 5); context.fill(); context.stroke();
+        context.fillStyle = isMonthly ? "#08665f" : "#8a4b18"; context.fillText(gapLabel, bar.x, gapY);
+      } else {
+        context.fillStyle = "#fff"; context.fillText(gapLabel, bar.x, (bar.base + bar.y) / 2);
+      }
+      context.font = "800 9px system-ui, sans-serif"; context.fillStyle = isMonthly ? "#08665f" : "#7b4215";
+      context.fillText(`${isMonthly ? "Oct." : "Cierre"}: ${formatBillions(closing)}`, bar.x, Math.max(chart.chartArea.top + 9, bar.y - (compact ? 28 : 10)));
+    });
     context.font = "850 11px system-ui, sans-serif";
-    chart.getDatasetMeta(1).data.forEach((point, index) => {
+    chart.getDatasetMeta(growthDatasetIndex).data.forEach((point, index) => {
       const value = growthValues[index];
       if (value === null || !Number.isFinite(value)) return;
       const label = `${value >= 0 ? "+" : "−"}${formatPercent(Math.abs(value))}`, x = point.x, y = Math.max(chart.chartArea.top + 10, point.y - 14), width = context.measureText(label).width + 10;
@@ -1002,17 +1022,16 @@ const budgetManagementBandsPlugin = {
   id: "budgetManagementBands",
   beforeDraw(chart) {
     const labels = chart.data.labels || [], xScale = chart.scales.x;
-    if (!xScale || labels.length < 8) return;
-    const context = chart.ctx, { top, bottom, left, right } = chart.chartArea, centers = labels.map((_, index) => xScale.getPixelForTick(index)), boundaryAfter = (index) => (centers[index] + centers[index + 1]) / 2, headerTop = top - 44;
-    const bands = [
-      { label: "Corral", start: left, end: boundaryAfter(0), fill: "rgba(198, 92, 98, .11)", color: "#9b4b51" },
-      { label: "Jatón", start: boundaryAfter(0), end: boundaryAfter(4), fill: "rgba(235, 148, 72, .11)", color: "#a85e22" },
-      { label: "Poletti", start: boundaryAfter(4), end: right, fill: "rgba(247, 213, 92, .14)", color: "#8d7110" },
-    ];
+    if (!xScale || !labels.length) return;
+    const context = chart.ctx, { top, bottom, left, right } = chart.chartArea, centers = labels.map((_, index) => xScale.getPixelForTick(index)), headerTop = top - 44, polettiIndex = labels.indexOf("2024"), split = polettiIndex > 0 ? (centers[polettiIndex - 1] + centers[polettiIndex]) / 2 : left;
+    const bands = polettiIndex > 0 ? [
+      { label: "Jatón", start: left, end: split, fill: "rgba(235, 148, 72, .11)", color: "#a85e22" },
+      { label: "Poletti", start: split, end: right, fill: "rgba(247, 213, 92, .14)", color: "#8d7110" },
+    ] : [{ label: "Poletti", start: left, end: right, fill: "rgba(247, 213, 92, .14)", color: "#8d7110" }];
     context.save();
     bands.forEach((band) => { context.fillStyle = band.fill; context.fillRect(band.start, headerTop, band.end - band.start, bottom - headerTop); });
     context.setLineDash([5, 5]); context.lineWidth = 1.5;
-    [boundaryAfter(0), boundaryAfter(4)].forEach((x, index) => { context.strokeStyle = index ? "rgba(166, 126, 36, .7)" : "rgba(166, 91, 72, .7)"; context.beginPath(); context.moveTo(x, headerTop); context.lineTo(x, bottom); context.stroke(); });
+    if (polettiIndex > 0) { context.strokeStyle = "rgba(166, 126, 36, .7)"; context.beginPath(); context.moveTo(split, headerTop); context.lineTo(split, bottom); context.stroke(); }
     context.setLineDash([]); context.font = "850 11px system-ui, sans-serif"; context.textAlign = "center"; context.textBaseline = "middle";
     bands.forEach((band) => { context.fillStyle = band.color; context.fillText(band.label, (band.start + band.end) / 2, top - 25); });
     context.restore();
@@ -1021,26 +1040,30 @@ const budgetManagementBandsPlugin = {
 function renderBudgetYearsChart(renderGraph = true) {
   if (budgetYearsChart) { budgetYearsChart.destroy(); budgetYearsChart = null; }
   if (!renderGraph || typeof Chart === "undefined") return;
-  const totalsByYear = budgetTotalsByYear(), years = budgetYears(), totals = years.map((year) => totalsByYear.get(year)), changes = totals.map((total, index) => index && totals[index - 1] ? (total / totals[index - 1] - 1) * 100 : null);
+  const totalsByYear = budgetTotalsByYear(), closingByYear = budgetClosingByYear(), allYears = budgetYears(), years = visibleBudgetYears(), totals = years.map((year) => totalsByYear.get(year)), closingValues = years.map((year) => closingByYear.get(year)?.credito_vigente_centavos ?? null), gaps = years.map((year, index) => closingValues[index] === null ? null : Math.max(0, closingValues[index] - totals[index])), changes = years.map((year) => { const index = allYears.indexOf(year), previous = allYears[index - 1]; return previous && totalsByYear.get(previous) ? (totalsByYear.get(year) / totalsByYear.get(previous) - 1) * 100 : null; });
+  const chartLabel = `Gráfico con los presupuestos de ${years[0]} a ${years.at(-1)}`;
+  $("#budget-years-chart").setAttribute("aria-label", chartLabel); $("#budget-years-chart-wrap").setAttribute("aria-label", chartLabel);
+  $("#budget-years-chart-wrap .budget-years-chart-inner").style.minWidth = budgetEarlierYearsExpanded ? "1180px" : "820px";
   budgetYearsChart = new Chart($("#budget-years-chart"), {
     type: "bar",
     plugins: [budgetManagementBandsPlugin, budgetYearLabelsPlugin],
     data: {
       labels: years,
       datasets: [
-        { type: "bar", label: "Presupuesto nominal", data: totals, yAxisID: "amount", backgroundColor: years.map((year) => year === BUDGET_PROJECT_YEAR ? budgetProjectPattern() : "rgba(18, 100, 163, .84)"), borderColor: years.map((year) => year === BUDGET_PROJECT_YEAR ? "#9a7711" : "#0b4f82"), borderWidth: 1, borderRadius: 7, maxBarThickness: 76, order: 2 },
-        { type: "line", label: "Aumento frente al año anterior", data: changes, yAxisID: "growth", borderColor: "#d59a13", backgroundColor: "#d59a13", borderWidth: 3, pointBackgroundColor: "#fff", pointBorderColor: "#b77c00", pointBorderWidth: 3, pointRadius: 5, pointHoverRadius: 7, tension: .25, spanGaps: false, order: 1 },
+        { id: "approved", type: "bar", label: "Presupuesto aprobado", data: totals, yAxisID: "amount", stack: "credit", backgroundColor: years.map((year) => year === BUDGET_PROJECT_YEAR ? budgetProjectPattern() : "rgba(18, 100, 163, .84)"), borderColor: years.map((year) => year === BUDGET_PROJECT_YEAR ? "#9a7711" : "#0b4f82"), borderWidth: 1, borderRadius: 7, maxBarThickness: 76, order: 2 },
+        { id: "closingGap", type: "bar", label: "Diferencia hasta el crédito vigente", data: gaps, closingValues, yAxisID: "amount", stack: "credit", backgroundColor: years.map((year) => year === "2026" ? "rgba(0, 138, 129, .78)" : "rgba(224, 139, 47, .78)"), borderColor: years.map((year) => year === "2026" ? "#08766f" : "#b56b22"), borderWidth: 1, borderRadius: 7, maxBarThickness: 76, order: 2 },
+        { id: "growth", type: "line", label: "Aumento frente al año anterior", data: changes, yAxisID: "growth", borderColor: "#d59a13", backgroundColor: "#d59a13", borderWidth: 3, pointBackgroundColor: "#fff", pointBorderColor: "#b77c00", pointBorderWidth: 3, pointRadius: 5, pointHoverRadius: 7, tension: .25, spanGaps: false, order: 1 },
       ],
     },
     options: {
-      responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { top: 58 } },
+      responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { top: 72 } },
       plugins: {
         legend: { display: false },
-        tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, callbacks: { label: (context) => context.dataset.yAxisID === "growth" ? `${years[context.dataIndex] === BUDGET_PROJECT_YEAR ? "Aumento del proyecto" : "Aumento"} frente a ${years[context.dataIndex - 1]}: ${context.parsed.y >= 0 ? "+" : "−"}${formatPercent(Math.abs(context.parsed.y))}` : `${years[context.dataIndex] === BUDGET_PROJECT_YEAR ? "Proyecto de Presupuesto" : "Presupuesto"}: ${formatCents(context.parsed.y)}` } },
+        tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 12, callbacks: { label: (context) => { const year = years[context.dataIndex]; if (context.dataset.id === "growth") { const previous = allYears[allYears.indexOf(year) - 1]; return `${year === BUDGET_PROJECT_YEAR ? "Aumento del proyecto" : "Aumento"} frente a ${previous}: ${context.parsed.y >= 0 ? "+" : "−"}${formatPercent(Math.abs(context.parsed.y))}`; } if (context.dataset.id === "closingGap") return `${year === "2026" ? "Diferencia hasta octubre" : "Diferencia hasta el cierre"}: +${formatCents(context.parsed.y)}`; return `${year === BUDGET_PROJECT_YEAR ? "Proyecto de Presupuesto" : "Presupuesto aprobado"}: ${formatCents(context.parsed.y)}`; }, afterBody: (items) => { const index = items[0]?.dataIndex, year = years[index], closing = closingValues[index]; return Number.isFinite(closing) ? [`${year === "2026" ? "Crédito vigente a octubre" : "Crédito vigente de cierre"}: ${formatCents(closing)}`] : []; } } },
       },
       scales: {
-        x: { grid: { display: false }, border: { display: false }, ticks: { color: "#33415a", font: { weight: "750" } } },
-        amount: { beginAtZero: true, position: "left", border: { display: false }, grid: { color: "#e2e7ed" }, ticks: { color: "#60708a", callback: formatAxisAmount } },
+        x: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { color: "#33415a", font: { weight: "750" } } },
+        amount: { stacked: true, beginAtZero: true, position: "left", border: { display: false }, grid: { color: "#e2e7ed" }, ticks: { color: "#60708a", callback: formatAxisAmount } },
         growth: { beginAtZero: true, position: "right", border: { display: false }, grid: { drawOnChartArea: false }, ticks: { color: "#8a5a00", callback: (value) => `${value}%` }, title: { display: true, text: "Aumento anual", color: "#8a5a00", font: { weight: "700" } } },
       },
     },
@@ -1059,7 +1082,7 @@ function renderBudgetFunction(renderGraph = true) {
   budgetFunctionChart = new Chart($("#budget-function-chart"), { type: "bar", plugins: [budgetShareLabelsPlugin], data: { labels: values.map((item) => item.year), datasets: [{ data: values.map((item) => item.share), rawValues: values.map((item) => item.row ? item.value : null), backgroundColor: values.map((item, index) => item.year === BUDGET_PROJECT_YEAR ? budgetProjectPattern() : palette[index % palette.length]), borderColor: values.map((item) => item.year === BUDGET_PROJECT_YEAR ? "#9a7711" : "transparent"), borderWidth: values.map((item) => item.year === BUDGET_PROJECT_YEAR ? 1 : 0), borderRadius: 7, maxBarThickness: 74 }] }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 24 } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => context.dataset.rawValues[context.dataIndex] === null ? "Sin partida individual" : `${values[context.dataIndex].year === BUDGET_PROJECT_YEAR ? "Proyecto 2027 · " : ""}${budgetShare(context.parsed.y)} del total · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } }, y: { beginAtZero: true, max: chartMax, border: { display: false }, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%`, color: "#60708a" } } } } });
 }
 function budgetFinalityValues() {
-  const years = budgetYears(), totals = budgetTotalsByYear(), finalities = [...new Map(budgetFunctionData.map((row) => [row.finalidad_codigo, row.finalidad_nombre])).entries()].sort(([a], [b]) => a.localeCompare(b, "es", { numeric: true }));
+  const years = visibleBudgetYears(), totals = budgetTotalsByYear(), finalities = [...new Map(budgetFunctionData.map((row) => [row.finalidad_codigo, row.finalidad_nombre])).entries()].sort(([a], [b]) => a.localeCompare(b, "es", { numeric: true }));
   return { years, finalities: finalities.map(([code, name]) => ({ code, name, values: years.map((year) => { const value = sum(budgetFunctionData.filter((row) => row.anio === year && row.finalidad_codigo === code), "monto_centavos"); return { value, share: totals.get(year) ? value / totals.get(year) * 100 : 0 }; }) })) };
 }
 function renderBudgetComposition(renderGraph = true) {
@@ -1070,7 +1093,7 @@ function renderBudgetComposition(renderGraph = true) {
   budgetCompositionChart = new Chart($("#budget-composition-chart"), { type: "bar", data: { labels: years, datasets: finalities.map((item, index) => ({ label: item.name, data: item.values.map((value) => value.share), rawValues: item.values.map((value) => value.value), backgroundColor: item.values.map((_, valueIndex) => years[valueIndex] === BUDGET_PROJECT_YEAR ? budgetProjectPattern(colors[index]) : colors[index]), borderColor: "#fff", borderWidth: 1, borderRadius: 2, barThickness: 38 })) }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${years[context.dataIndex] === BUDGET_PROJECT_YEAR ? "Proyecto 2027 · " : ""}${context.dataset.label}: ${budgetShare(context.parsed.x)} · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { stacked: true, min: 0, max: 100, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` } }, y: { stacked: true, grid: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } } } } });
 }
 function renderBudgetFunctionsTable() {
-  const years = budgetYears(), totals = budgetTotalsByYear(), baselineIndex = years.indexOf("2024"), latestIndex = years.length - 1;
+  const years = visibleBudgetYears(), totals = budgetTotalsByYear(), baselineIndex = years.indexOf("2024"), latestIndex = years.length - 1;
   const allFunctions = [...new Map(budgetFunctionData.map((row) => [row.funcion_codigo, { code: row.funcion_codigo, name: row.funcion_nombre, finality: row.finalidad_nombre }])).values()].map((item) => {
     const values = years.map((year) => { const row = budgetFunctionData.find((entry) => entry.anio === year && entry.funcion_codigo === item.code), value = row ? cents(row, "monto_centavos") : 0; return { row, value, share: row && totals.get(year) ? value / totals.get(year) * 100 : null }; });
     const baseline = values[baselineIndex], latest = values[latestIndex];
@@ -1085,7 +1108,13 @@ function renderBudgetFunctionsTable() {
   $("#budget-functions-table").innerHTML = visible.map((item) => `<tr><td>${escapeHtml(item.finality)}</td><td><strong>${escapeHtml(item.name)}</strong></td>${item.values.map((value, index) => `<td class="number ${years[index] === BUDGET_PROJECT_YEAR ? "budget-project-column" : ""}"><strong>${value.row ? budgetShare(value.share) : "—"}</strong><small>${value.row ? formatAxisAmount(value.value) : "Sin partida"}</small></td>`).join("")}<td class="number ${budgetChangeClass(item.change)}">${budgetPointChange(item.change)}</td></tr>`).join("");
   $("#toggle-budget-functions").hidden = functions.length <= 10; $("#toggle-budget-functions").setAttribute("aria-expanded", String(budgetTableExpanded)); $("#toggle-budget-functions").innerHTML = budgetTableExpanded ? 'Ver solo las 10 principales <span aria-hidden="true">↑</span>' : 'Ver todas las funciones <span aria-hidden="true">↓</span>';
 }
-function renderBudgets(renderGraphs = true) { renderBudgetYearsChart(renderGraphs); renderBudgetFunction(renderGraphs); renderBudgetComposition(renderGraphs); renderBudgetFunctionsTable(); }
+function renderBudgetHistoryControl() {
+  const button = $("#toggle-budget-history");
+  button.setAttribute("aria-expanded", String(budgetEarlierYearsExpanded));
+  button.innerHTML = budgetEarlierYearsExpanded ? 'Ocultar gestión Jatón <span aria-hidden="true">↑</span>' : 'Mostrar gestión Jatón (2020–2023) <span aria-hidden="true">↓</span>';
+  $("#budget-history-status").textContent = budgetEarlierYearsExpanded ? "Se muestran 2020–2027." : "Vista inicial: 2024–2027.";
+}
+function renderBudgets(renderGraphs = true) { renderBudgetHistoryControl(); renderBudgetYearsChart(renderGraphs); renderBudgetFunction(renderGraphs); renderBudgetComposition(renderGraphs); renderBudgetFunctionsTable(); }
 async function init() {
   try {
     if (typeof Chart !== "undefined") Chart.defaults.devicePixelRatio = 2;
@@ -1094,6 +1123,7 @@ async function init() {
     fundData = (await Promise.all(FUND_DATA_FILES.map((file) => fetch(file).then((response) => { if (!response.ok) throw new Error(file); return response.text(); })))).flatMap(parseCSV);
     budgetFunctionData = await fetch(BUDGET_FUNCTION_DATA_FILE).then((response) => { if (!response.ok) throw new Error(BUDGET_FUNCTION_DATA_FILE); return response.text(); }).then(parseCSV);
     projectBudgetData = await fetch(PROJECT_BUDGET_DATA_FILE).then((response) => { if (!response.ok) throw new Error(PROJECT_BUDGET_DATA_FILE); return response.json(); });
+    closingBudgetData = await fetch(CLOSING_BUDGET_DATA_FILE).then((response) => { if (!response.ok) throw new Error(CLOSING_BUDGET_DATA_FILE); return response.json(); });
     descriptionData = await fetch(DESCRIPTION_DATA_FILE).then((response) => { if (!response.ok) throw new Error(DESCRIPTION_DATA_FILE); return response.json(); });
     fillFilters(); fillResourceFilters(); fillFundFilters(); fillBudgetFunctionFilter(); fillBudgetFinalityFilter(); render(); renderResources(false); renderFunds(false); renderBudgets(false); renderPublicSummary(); renderGuideDirectory();
     document.querySelectorAll("[data-period-year-toggle]").forEach((button) => button.addEventListener("click", () => { const months = button.closest(".period-year").querySelector(".month-list"), expanded = months.hidden; months.hidden = !expanded; button.classList.toggle("expanded", expanded); button.setAttribute("aria-expanded", String(expanded)); }));
@@ -1133,6 +1163,7 @@ async function init() {
     document.querySelectorAll("[data-page-target]").forEach((button) => button.addEventListener("click", () => document.querySelector(`.header-tabs [data-page="${button.dataset.pageTarget}"]`)?.click()));
     document.querySelectorAll("[data-tracking-target]").forEach((button) => button.addEventListener("click", () => { document.querySelector('.header-tabs [data-page="tracking"]')?.click(); document.querySelector(`.tracking-tabs [data-tracking="${button.dataset.trackingTarget}"]`)?.click(); }));
     $("#budget-function-filter").addEventListener("change", (event) => { selectedBudgetFunction = event.target.value; renderBudgetFunction(); });
+    $("#toggle-budget-history").addEventListener("click", () => { budgetEarlierYearsExpanded = !budgetEarlierYearsExpanded; if (!visibleBudgetYears().includes(budgetTableSort.key) && budgetTableSort.key !== "change") budgetTableSort = { key: BUDGET_PROJECT_YEAR, direction: "desc" }; renderBudgets(); });
     $("#budget-finality-filter").addEventListener("change", (event) => { selectedBudgetTableFinality = event.target.value; budgetTableExpanded = false; renderBudgetFunctionsTable(); });
     $("#budget-functions-head").addEventListener("click", (event) => { const button = event.target.closest("[data-budget-sort]"); if (!button) return; const key = button.dataset.budgetSort; if (budgetTableSort.key === key) budgetTableSort.direction = budgetTableSort.direction === "asc" ? "desc" : "asc"; else budgetTableSort = { key, direction: "desc" }; renderBudgetFunctionsTable(); });
     $("#toggle-budget-functions").addEventListener("click", () => { budgetTableExpanded = !budgetTableExpanded; renderBudgetFunctionsTable(); });

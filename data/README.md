@@ -123,6 +123,21 @@ En el Proyecto 2027 la función 399 aparece como “Otros servivicios urbanos”
 La denominación se normalizó a “Otros servicios urbanos” para mantener la
 serie histórica identificada por el mismo código.
 
+La interfaz comparativa comienza en 2020. De forma predeterminada muestra
+2024–2027 y permite desplegar la gestión Jatón (2020–2023); 2019 se conserva
+en el archivo fuente para trazabilidad, pero ya no forma parte de los análisis.
+
+## Crédito vigente al cierre
+
+`credito_vigente_cierres_2020_2026.json` reúne el crédito vigente consolidado
+de las Cuentas de Inversión 2020–2025. Cada valor se extrae del “TOTAL GENERAL”
+del Estado de Ejecución Presupuestaria de Recursos y se valida comprobando que
+el crédito inicial más las modificaciones netas sea igual al crédito vigente.
+
+Para 2026 no existe todavía una Cuenta de Inversión anual: el registro se toma
+del informe mensual de gastos al 31/10/2026 y queda identificado como corte
+mensual. El script reproducible es `extract_credito_vigente_cierres.py`.
+
 ## Proyecto de Presupuesto 2027
 
 `proyecto_presupuesto_2027.json` conserva por separado los datos anuales del

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261113-4" />
+    <link rel="stylesheet" href="styles.css?v=20261118-1" />
   </head>
   <body>
     <header class="site-header">
@@ -77,17 +77,23 @@
 
       <section id="page-budgets" class="page-view budgets-page" hidden>
         <header class="budgets-hero">
-          <div><p class="eyebrow">Comparación 2019–2027</p><h2>¿A qué destina dinero el presupuesto?</h2><p>Esta comparación organiza el gasto según su <strong>finalidad y función</strong>: salud, seguridad, cultura, vivienda y otros objetivos. Para comparar años con distintos niveles de precios, la lectura principal muestra qué porcentaje del presupuesto representa cada categoría.</p></div>
+          <div><p class="eyebrow">Comparación 2020–2027</p><h2>¿A qué destina dinero el presupuesto?</h2><p>Esta comparación organiza el gasto según su <strong>finalidad y función</strong>: salud, seguridad, cultura, vivienda y otros objetivos. Para comparar años con distintos niveles de precios, la lectura principal muestra qué porcentaje del presupuesto representa cada categoría.</p></div>
           <button class="public-guide-link" type="button" data-page-target="guide">¿Cómo leer estos datos? <span aria-hidden="true">→</span></button>
         </header>
 
+        <div class="budget-history-control" role="region" aria-label="Años visibles en los análisis">
+          <div><strong>Período visible</strong><span id="budget-history-status">Vista inicial: 2024–2027.</span></div>
+          <button id="toggle-budget-history" class="public-inline-link" type="button" aria-expanded="false">Mostrar gestión Jatón (2020–2023) <span aria-hidden="true">↓</span></button>
+        </div>
+
         <section class="budgets-section panel budget-years-panel" aria-labelledby="budget-years-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Tamaño del presupuesto</p><h2 id="budget-years-title">Nueve presupuestos, en números</h2></div><p>Las barras muestran el monto nominal de cada año. La línea indica cuánto aumentó frente al presupuesto anterior.</p></div>
-          <div class="budget-years-chart" tabindex="0" aria-label="Gráfico desplazable con los presupuestos de 2019 a 2027">
+          <div class="public-section-heading"><div><p class="eyebrow">Tamaño del presupuesto</p><h2 id="budget-years-title">Presupuesto aprobado y crédito vigente</h2></div><p>El tramo azul muestra el presupuesto aprobado. El tramo superior completa la diferencia hasta el crédito vigente de cierre; para 2026 se utiliza el último corte disponible, octubre.</p></div>
+          <div id="budget-years-chart-wrap" class="budget-years-chart" tabindex="0" aria-label="Gráfico con los presupuestos de 2024 a 2027">
             <div class="budget-years-chart-inner"><canvas id="budget-years-chart"></canvas></div>
           </div>
-          <div class="budget-years-legend" aria-label="Referencias del gráfico"><span><i class="budget-years-bar-key"></i>Presupuesto nominal</span><span><i class="budget-years-line-key"></i>Aumento frente al año anterior</span><span><i class="budget-project-key"></i>2027 · Proyecto de Presupuesto</span></div>
+          <div class="budget-years-legend" aria-label="Referencias del gráfico"><span><i class="budget-years-bar-key"></i>Presupuesto aprobado</span><span><i class="budget-years-closing-key"></i>Diferencia hasta cierre anual</span><span><i class="budget-years-monthly-key"></i>Diferencia hasta octubre 2026</span><span><i class="budget-years-line-key"></i>Aumento del presupuesto aprobado</span><span><i class="budget-project-key"></i>2027 · Proyecto de Presupuesto</span></div>
           <p class="budget-chart-mobile-note">Deslizá el gráfico para ver todos los años.</p>
+          <p class="budget-source-note">Crédito vigente: Cuentas de Inversión 2020–2025. Para 2026 se usa el informe mensual al 31/10/2026; todavía no existe Cuenta de Inversión anual. El Proyecto 2027 no tiene crédito vigente ni ejecución.</p>
         </section>
 
         <div class="budget-analysis-divider" role="separator"><span>Análisis por función</span></div>
@@ -119,7 +125,7 @@
           </div>
           <div class="table-wrap"><table class="budget-functions-table"><thead><tr id="budget-functions-head"></tr></thead><tbody id="budget-functions-table"></tbody></table></div>
           <button id="toggle-budget-functions" class="public-inline-link" type="button" aria-expanded="false">Ver todas las funciones <span aria-hidden="true">↓</span></button>
-          <p class="budget-source-note">Fuente: presupuestos municipales 2019–2025 y proyectos de Presupuesto 2026 y 2027, cuadros “Presupuesto de gastos por finalidad y función”.</p>
+          <p class="budget-source-note">Fuente: presupuestos municipales 2020–2025 y proyectos de Presupuesto 2026 y 2027, cuadros “Presupuesto de gastos por finalidad y función”.</p>
         </section>
       </section>
 
@@ -506,6 +512,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261113-4"></script>
+    <script src="app.js?v=20261118-1"></script>
   </body>
 </html>

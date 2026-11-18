@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "descripcion": "Crédito vigente al cierre anual 2020–2025 y último corte mensual 2026",
+    "criterio": "El cierre anual surge del total general del Estado de Ejecución Presupuestaria de Recursos de cada Cuenta de Inversión. El dato 2026 es provisorio y corresponde al último informe mensual disponible."
+  },
+  "cierres": [
+    {
+      "anio": 2020,
+      "tipo_corte": "cierre_anual",
+      "periodo_referencia": "Cuenta de Inversión 2020",
+      "credito_inicial_documento_texto": "19.418.795.052,00",
+      "credito_inicial_documento_centavos": 1941879505200,
+      "modificaciones_netas_texto": "-8.331.737.272,76",
+      "modificaciones_netas_centavos": -833173727276,
+      "credito_vigente_texto": "11.087.057.779,24",
+      "credito_vigente_centavos": 1108705777924,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 13
+    },
+    {
+      "anio": 2021,
+      "tipo_corte": "cierre_anual",
+      "periodo_referencia": "Cuenta de Inversión 2021",
+      "credito_inicial_documento_texto": "13.486.347.790,00",
+      "credito_inicial_documento_centavos": 1348634779000,
+      "modificaciones_netas_texto": "4.382.722.312,37",
+      "modificaciones_netas_centavos": 438272231237,
+      "credito_vigente_texto": "17.869.070.102,37",
+      "credito_vigente_centavos": 1786907010237,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 13
+    },
+    {
+      "anio": 2022,
+      "tipo_corte": "cierre_anual",
+      "periodo_referencia": "Cuenta de Inversión 2022",
+      "credito_inicial_documento_texto": "23.009.562.654,00",
+      "credito_inicial_documento_centavos": 2300956265400,
+      "modificaciones_netas_texto": "10.448.013.269,08",
+      "modificaciones_netas_centavos": 1044801326908,
+      "credito_vigente_texto": "33.457.575.923,08",
+      "credito_vigente_centavos": 3345757592308,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 14
+    },
+    {
+      "anio": 2023,
+      "tipo_corte": "cierre_anual",
+      "periodo_referencia": "Cuenta de Inversión 2023",
+      "credito_inicial_documento_texto": "45.345.879.699,00",
+      "credito_inicial_documento_centavos": 4534587969900,
+      "modificaciones_netas_texto": "25.993.065.585,40",
+      "modificaciones_netas_centavos": 2599306558540,
+      "credito_vigente_texto": "71.338.945.284,40",
+      "credito_vigente_centavos": 7133894528440,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 13
+    },
+    {
+      "anio": 2024,
+      "tipo_corte": "cierre_anual",
+      "periodo_referencia": "Cuenta de Inversión 2024",
+      "credito_inicial_documento_texto": "108.064.744.537,00",
+      "credito_inicial_documento_centavos": 10806474453700,
+      "modificaciones_netas_texto": "63.422.383.330,89",
+      "modificaciones_netas_centavos": 6342238333089,
+      "credito_vigente_texto": "171.487.127.867,89",
+      "credito_vigente_centavos": 17148712786789,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 13
+    },
+    {
+      "anio": 2025,
+      "tipo_corte": "cierre_anual",
+      "periodo_referencia": "Cuenta de Inversión 2025",
+      "credito_inicial_documento_texto": "225.096.038.799,00",
+      "credito_inicial_documento_centavos": 22509603879900,
+      "modificaciones_netas_texto": "46.512.310.760,60",
+      "modificaciones_netas_centavos": 4651231076060,
+      "credito_vigente_texto": "271.608.349.559,60",
+      "credito_vigente_centavos": 27160834955960,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 13
+    },
+    {
+      "anio": 2026,
+      "tipo_corte": "corte_mensual",
+      "periodo_referencia": "Ejecución mensual al 31/10/2026",
+      "credito_inicial_documento_texto": null,
+      "credito_inicial_documento_centavos": 29588141529900,
+      "modificaciones_netas_texto": null,
+      "modificaciones_netas_centavos": 1853249586493,
+      "credito_vigente_texto": null,
+      "credito_vigente_centavos": 31441391116393,
+      "fuente": "gastos_por_objeto_2026-10-31.csv",
+      "pagina_pdf": null
+    }
+  ]
+}
