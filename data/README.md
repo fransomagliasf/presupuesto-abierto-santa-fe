@@ -139,6 +139,11 @@ función tomado del cuadro “Estado de ejecución del presupuesto de gastos (po
 finalidad y función)”. La suma de las funciones se valida contra el crédito
 vigente total de cada cierre anual. Esta apertura está disponible hasta 2025.
 
+`jurisdicciones` contiene el crédito vigente por secretaría o área
+presupuestaria extraído del cuadro por categoría programática. También se
+valida que la suma de todas las jurisdicciones coincida con el total anual. La
+interfaz completa 2026 con el corte mensual de octubre y 2027 con el proyecto.
+
 Para 2026 no existe todavía una Cuenta de Inversión anual: el registro se toma
 del informe mensual de gastos al 31/10/2026 y queda identificado como corte
 mensual. El script reproducible es `extract_credito_vigente_cierres.py`.

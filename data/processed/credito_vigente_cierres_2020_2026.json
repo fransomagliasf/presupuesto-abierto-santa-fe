@@ -1,7 +1,7 @@
 {
   "meta": {
-    "descripcion": "Crédito vigente total y por finalidad/función al cierre anual 2020–2025, más el último corte mensual total de 2026",
-    "criterio": "El cierre anual surge del total general de recursos y del cuadro de gastos por finalidad y función de cada Cuenta de Inversión. El dato 2026 es provisorio, corresponde al último informe mensual disponible y no incluye apertura comparable por función."
+    "descripcion": "Crédito vigente total, por finalidad/función y por jurisdicción al cierre anual 2020–2025, más el último corte mensual total de 2026",
+    "criterio": "El cierre anual surge del total general de recursos y de los cuadros de gastos por finalidad/función y categoría programática de cada Cuenta de Inversión. El dato 2026 es provisorio y corresponde al último informe mensual disponible."
   },
   "cierres": [
     {
@@ -1824,6 +1824,1518 @@
       "credito_vigente_centavos": 2132061288996,
       "fuente": "Cuenta-inversion-2025.pdf",
       "pagina_pdf": 150
+    }
+  ],
+  "jurisdicciones": [
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110101000",
+      "jurisdiccion_nombre": "RECONDUCIDO Intendencia Municipal",
+      "credito_aprobado_documento_centavos": 5149523800,
+      "modificaciones_netas_centavos": -5149523800,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 141
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110102000",
+      "jurisdiccion_nombre": "RECONDUCIDO Secretaría de Gobierno",
+      "credito_aprobado_documento_centavos": 18400673200,
+      "modificaciones_netas_centavos": -18400673200,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 141
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110112000",
+      "jurisdiccion_nombre": "RECONDUCIDO Fiscalía Municipal",
+      "credito_aprobado_documento_centavos": 5141547700,
+      "modificaciones_netas_centavos": -5141547700,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 141
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110113000",
+      "jurisdiccion_nombre": "RECONDUCIDO Sindicatura General Municipal",
+      "credito_aprobado_documento_centavos": 2703944900,
+      "modificaciones_netas_centavos": -2703944900,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 141
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110114000",
+      "jurisdiccion_nombre": "RECONDUCIDO Servicios de la Deuda",
+      "credito_aprobado_documento_centavos": 144116654500,
+      "modificaciones_netas_centavos": -144116654500,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 141
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110115000",
+      "jurisdiccion_nombre": "RECONDUCIDO Obligaciones a Cargo del Tesoro",
+      "credito_aprobado_documento_centavos": 82904791000,
+      "modificaciones_netas_centavos": -82904791000,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 142
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110117000",
+      "jurisdiccion_nombre": "RECONDUCIDO Órg. Control Sist. Transporte Publico",
+      "credito_aprobado_documento_centavos": 573529900,
+      "modificaciones_netas_centavos": -573529900,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 142
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110118000",
+      "jurisdiccion_nombre": "RECONDUCIDO Secretaría General",
+      "credito_aprobado_documento_centavos": 24576510600,
+      "modificaciones_netas_centavos": -24576510600,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 142
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110122000",
+      "jurisdiccion_nombre": "RECONDUCIDO Justicia Mun Administrativa de Faltas",
+      "credito_aprobado_documento_centavos": 8329386900,
+      "modificaciones_netas_centavos": -8329386900,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 143
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110124000",
+      "jurisdiccion_nombre": "RECONDUCIDO Secretaría de Hacienda",
+      "credito_aprobado_documento_centavos": 37672718300,
+      "modificaciones_netas_centavos": -37672718300,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 143
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110127000",
+      "jurisdiccion_nombre": "Habitat Agencia para el Desarrollo Social y Urbano",
+      "credito_aprobado_documento_centavos": 10063998200,
+      "modificaciones_netas_centavos": -10063998200,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 143
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110137000",
+      "jurisdiccion_nombre": "RECONDUCIDO Sec. Integración y Economía Social",
+      "credito_aprobado_documento_centavos": 15957633300,
+      "modificaciones_netas_centavos": -15957633300,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 143
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110138000",
+      "jurisdiccion_nombre": "RECONDUCIDO Sec. Pol. de Cuidado y Acción Social",
+      "credito_aprobado_documento_centavos": 30416815700,
+      "modificaciones_netas_centavos": -30416815700,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 143
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110139000",
+      "jurisdiccion_nombre": "RECONDUCIDO Sec. de Obras y Espacio Público",
+      "credito_aprobado_documento_centavos": 118524443600,
+      "modificaciones_netas_centavos": -118524443600,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 144
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110140000",
+      "jurisdiccion_nombre": "RECONDUCIDO Sec. A. Hídricos y Gestión de Riesgos",
+      "credito_aprobado_documento_centavos": 37553156800,
+      "modificaciones_netas_centavos": -37553156800,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 144
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110141000",
+      "jurisdiccion_nombre": "RECONDUCIDO Secretaría de Ambiente",
+      "credito_aprobado_documento_centavos": 130055178300,
+      "modificaciones_netas_centavos": -130055178300,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 144
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110142000",
+      "jurisdiccion_nombre": "RECONDUCIDO Sec. de Desarrollo Urbano",
+      "credito_aprobado_documento_centavos": 19619546400,
+      "modificaciones_netas_centavos": -19619546400,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 144
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110143000",
+      "jurisdiccion_nombre": "RECONDUCIDO Sec. Control y Convivencia Ciudadana",
+      "credito_aprobado_documento_centavos": 85185129600,
+      "modificaciones_netas_centavos": -85185129600,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 145
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110144000",
+      "jurisdiccion_nombre": "RECONDUCIDO Sec. Educación y Cultura",
+      "credito_aprobado_documento_centavos": 77222695100,
+      "modificaciones_netas_centavos": -77222695100,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 145
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110145000",
+      "jurisdiccion_nombre": "RECONDUCIDO Sec. de Producción y Des. Económico",
+      "credito_aprobado_documento_centavos": 24688068700,
+      "modificaciones_netas_centavos": -24688068700,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 145
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110146000",
+      "jurisdiccion_nombre": "RECONDUCIDO Dir. Derechos y Vinculación Ciudadana",
+      "credito_aprobado_documento_centavos": 4382734000,
+      "modificaciones_netas_centavos": -4382734000,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 145
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110147000",
+      "jurisdiccion_nombre": "Intendencia Municipal",
+      "credito_aprobado_documento_centavos": 2501050800,
+      "modificaciones_netas_centavos": -46406124,
+      "credito_vigente_centavos": 2454644676,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 145
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110148000",
+      "jurisdiccion_nombre": "Secretaría de Gobierno",
+      "credito_aprobado_documento_centavos": 16675938600,
+      "modificaciones_netas_centavos": 290771295,
+      "credito_vigente_centavos": 16966709895,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 146
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110149000",
+      "jurisdiccion_nombre": "Fiscalía Municipal",
+      "credito_aprobado_documento_centavos": 5716258700,
+      "modificaciones_netas_centavos": 420607129,
+      "credito_vigente_centavos": 6136865829,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 146
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110150000",
+      "jurisdiccion_nombre": "Sindicatura General Municipal",
+      "credito_aprobado_documento_centavos": 2054050200,
+      "modificaciones_netas_centavos": -1765426,
+      "credito_vigente_centavos": 2052284774,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 146
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110151000",
+      "jurisdiccion_nombre": "Servicios de la Deuda",
+      "credito_aprobado_documento_centavos": 134340676600,
+      "modificaciones_netas_centavos": -76701029433,
+      "credito_vigente_centavos": 57639647167,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 146
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "credito_aprobado_documento_centavos": 119298088600,
+      "modificaciones_netas_centavos": -38590381490,
+      "credito_vigente_centavos": 80707707110,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 147
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110153000",
+      "jurisdiccion_nombre": "Órg Control del Sistema Transporte Público",
+      "credito_aprobado_documento_centavos": 844658100,
+      "modificaciones_netas_centavos": -231805158,
+      "credito_vigente_centavos": 612852942,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 147
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "credito_aprobado_documento_centavos": 23815408600,
+      "modificaciones_netas_centavos": -438275593,
+      "credito_vigente_centavos": 23377133007,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 147
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110155000",
+      "jurisdiccion_nombre": "Justicia Mun. Administrativa de Faltas",
+      "credito_aprobado_documento_centavos": 8461976200,
+      "modificaciones_netas_centavos": 139860216,
+      "credito_vigente_centavos": 8601836416,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 148
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110156000",
+      "jurisdiccion_nombre": "Secretaría de Hacienda",
+      "credito_aprobado_documento_centavos": 40979388400,
+      "modificaciones_netas_centavos": 1703117936,
+      "credito_vigente_centavos": 42682506336,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 148
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110157000",
+      "jurisdiccion_nombre": "Secretaría de Integración y Economía Social",
+      "credito_aprobado_documento_centavos": 21579624100,
+      "modificaciones_netas_centavos": 4886222670,
+      "credito_vigente_centavos": 26465846770,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 148
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110158000",
+      "jurisdiccion_nombre": "Secretaría de Políticas de Cuidado y Acción Social",
+      "credito_aprobado_documento_centavos": 41432777600,
+      "modificaciones_netas_centavos": 2861314879,
+      "credito_vigente_centavos": 44294092479,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 149
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110159000",
+      "jurisdiccion_nombre": "Secretaría de Obras y Espacio Público",
+      "credito_aprobado_documento_centavos": 178851893600,
+      "modificaciones_netas_centavos": -2286191996,
+      "credito_vigente_centavos": 176565701604,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 149
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110160000",
+      "jurisdiccion_nombre": "Secretaría Asuntos Hídricos y Gestión de Riesgos",
+      "credito_aprobado_documento_centavos": 72230476600,
+      "modificaciones_netas_centavos": 14170495128,
+      "credito_vigente_centavos": 86400971728,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 150
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110161000",
+      "jurisdiccion_nombre": "Secretaría de Ambiente",
+      "credito_aprobado_documento_centavos": 133053710600,
+      "modificaciones_netas_centavos": 140302717295,
+      "credito_vigente_centavos": 273356427895,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 150
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110162000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano",
+      "credito_aprobado_documento_centavos": 32081810300,
+      "modificaciones_netas_centavos": -7459220269,
+      "credito_vigente_centavos": 24622590031,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 151
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110163000",
+      "jurisdiccion_nombre": "Sec. de Control y Convivencia Ciudadana",
+      "credito_aprobado_documento_centavos": 86892986600,
+      "modificaciones_netas_centavos": 5092900943,
+      "credito_vigente_centavos": 91985887543,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 151
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110164000",
+      "jurisdiccion_nombre": "Secretaría de Educación y Cultura",
+      "credito_aprobado_documento_centavos": 83122936300,
+      "modificaciones_netas_centavos": 4607174047,
+      "credito_vigente_centavos": 87730110347,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 152
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110165000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Desarrollo Económico",
+      "credito_aprobado_documento_centavos": 16306417200,
+      "modificaciones_netas_centavos": 1741800557,
+      "credito_vigente_centavos": 18048217757,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 152
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110166000",
+      "jurisdiccion_nombre": "Dirección de Derechos y Vinculación Ciudadana",
+      "credito_aprobado_documento_centavos": 5232381600,
+      "modificaciones_netas_centavos": -169918720,
+      "credito_vigente_centavos": 5062462880,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 152
+    },
+    {
+      "anio": 2020,
+      "jurisdiccion_codigo": "1110167000",
+      "jurisdiccion_nombre": "Habitat Santa Fe Capital",
+      "credito_aprobado_documento_centavos": 33168315400,
+      "modificaciones_netas_centavos": -227034662,
+      "credito_vigente_centavos": 32941280738,
+      "fuente": "CUENTA-INVERSION-2020.pdf",
+      "pagina_pdf": 153
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110147000",
+      "jurisdiccion_nombre": "Intendencia Municipal",
+      "credito_aprobado_documento_centavos": 3355261600,
+      "modificaciones_netas_centavos": 1011410768,
+      "credito_vigente_centavos": 4366672368,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 102
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110148000",
+      "jurisdiccion_nombre": "Secretaría de Gobierno",
+      "credito_aprobado_documento_centavos": 24135663000,
+      "modificaciones_netas_centavos": 15722760762,
+      "credito_vigente_centavos": 39858423762,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 102
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110149000",
+      "jurisdiccion_nombre": "Fiscalía Municipal",
+      "credito_aprobado_documento_centavos": 7082626400,
+      "modificaciones_netas_centavos": 1338883510,
+      "credito_vigente_centavos": 8421509910,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 102
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110150000",
+      "jurisdiccion_nombre": "Sindicatura General Municipal",
+      "credito_aprobado_documento_centavos": 2649664400,
+      "modificaciones_netas_centavos": 371308357,
+      "credito_vigente_centavos": 3020972757,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 102
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110151000",
+      "jurisdiccion_nombre": "Servicios de la Deuda",
+      "credito_aprobado_documento_centavos": 117032530800,
+      "modificaciones_netas_centavos": 39483064224,
+      "credito_vigente_centavos": 156515595024,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 103
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "credito_aprobado_documento_centavos": 125976916500,
+      "modificaciones_netas_centavos": 5616753686,
+      "credito_vigente_centavos": 131593670186,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 103
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110153000",
+      "jurisdiccion_nombre": "Órg Control del Sistema Transporte Público",
+      "credito_aprobado_documento_centavos": 716846300,
+      "modificaciones_netas_centavos": 301869981,
+      "credito_vigente_centavos": 1018716281,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 104
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "credito_aprobado_documento_centavos": 29658716900,
+      "modificaciones_netas_centavos": -1384425942,
+      "credito_vigente_centavos": 28274290958,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 104
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110155000",
+      "jurisdiccion_nombre": "Justicia Mun. Administrativa de Faltas",
+      "credito_aprobado_documento_centavos": 10894435000,
+      "modificaciones_netas_centavos": 1943413455,
+      "credito_vigente_centavos": 12837848455,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 104
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110156000",
+      "jurisdiccion_nombre": "Secretaría de Hacienda",
+      "credito_aprobado_documento_centavos": 53077698500,
+      "modificaciones_netas_centavos": 9058411126,
+      "credito_vigente_centavos": 62136109626,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 104
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110157000",
+      "jurisdiccion_nombre": "Secretaría de Integración y Economía Social",
+      "credito_aprobado_documento_centavos": 37402065500,
+      "modificaciones_netas_centavos": 11003014989,
+      "credito_vigente_centavos": 48405080489,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 105
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110158000",
+      "jurisdiccion_nombre": "Secretaría de Políticas de Cuidado y Acción Social",
+      "credito_aprobado_documento_centavos": 43146686900,
+      "modificaciones_netas_centavos": 12106308582,
+      "credito_vigente_centavos": 55252995482,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 105
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110159000",
+      "jurisdiccion_nombre": "Secretaría de Obras y Espacio Público",
+      "credito_aprobado_documento_centavos": 226816089800,
+      "modificaciones_netas_centavos": 98660816611,
+      "credito_vigente_centavos": 325476906411,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 106
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110160000",
+      "jurisdiccion_nombre": "Secretaría Asuntos Hídricos y Gestión de Riesgos",
+      "credito_aprobado_documento_centavos": 88074221000,
+      "modificaciones_netas_centavos": 30675196716,
+      "credito_vigente_centavos": 118749417716,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 106
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110161000",
+      "jurisdiccion_nombre": "Secretaría de Ambiente",
+      "credito_aprobado_documento_centavos": 206697196700,
+      "modificaciones_netas_centavos": 104745215412,
+      "credito_vigente_centavos": 311442412112,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 107
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110162000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano",
+      "credito_aprobado_documento_centavos": 25505264800,
+      "modificaciones_netas_centavos": 14940043076,
+      "credito_vigente_centavos": 40445307876,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 107
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110163000",
+      "jurisdiccion_nombre": "Sec. de Control y Convivencia Ciudadana",
+      "credito_aprobado_documento_centavos": 109968895400,
+      "modificaciones_netas_centavos": 25231404594,
+      "credito_vigente_centavos": 135200299994,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 108
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110164000",
+      "jurisdiccion_nombre": "Secretaría de Educación y Cultura",
+      "credito_aprobado_documento_centavos": 107068116400,
+      "modificaciones_netas_centavos": 35133505585,
+      "credito_vigente_centavos": 142201621985,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 108
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110165000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Desarrollo Económico",
+      "credito_aprobado_documento_centavos": 20306921900,
+      "modificaciones_netas_centavos": 3766275788,
+      "credito_vigente_centavos": 24073197688,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110166000",
+      "jurisdiccion_nombre": "Dirección de Derechos y Vinculación Ciudadana",
+      "credito_aprobado_documento_centavos": 6753191600,
+      "modificaciones_netas_centavos": 1515446312,
+      "credito_vigente_centavos": 8268637912,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2021,
+      "jurisdiccion_codigo": "1110167000",
+      "jurisdiccion_nombre": "Habitat Santa Fe Capital",
+      "credito_aprobado_documento_centavos": 102315769600,
+      "modificaciones_netas_centavos": 27031553645,
+      "credito_vigente_centavos": 129347323245,
+      "fuente": "CUENTA-INVERSION-2021.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110147000",
+      "jurisdiccion_nombre": "Intendencia Municipal",
+      "credito_aprobado_documento_centavos": 5206406900,
+      "modificaciones_netas_centavos": 5740959889,
+      "credito_vigente_centavos": 10947366789,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 121
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110148000",
+      "jurisdiccion_nombre": "Secretaría de Gobierno",
+      "credito_aprobado_documento_centavos": 58705746200,
+      "modificaciones_netas_centavos": 79913898378,
+      "credito_vigente_centavos": 138619644578,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 121
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110149000",
+      "jurisdiccion_nombre": "Fiscalía Municipal",
+      "credito_aprobado_documento_centavos": 11229762700,
+      "modificaciones_netas_centavos": 3434624680,
+      "credito_vigente_centavos": 14664387380,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 121
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110150000",
+      "jurisdiccion_nombre": "Sindicatura General Municipal",
+      "credito_aprobado_documento_centavos": 4322020400,
+      "modificaciones_netas_centavos": 324054650,
+      "credito_vigente_centavos": 4646075050,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 122
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110151000",
+      "jurisdiccion_nombre": "Servicios de la Deuda",
+      "credito_aprobado_documento_centavos": 149851683500,
+      "modificaciones_netas_centavos": 61862275081,
+      "credito_vigente_centavos": 211713958581,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 122
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "credito_aprobado_documento_centavos": 217120579700,
+      "modificaciones_netas_centavos": 34316059127,
+      "credito_vigente_centavos": 251436638827,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 123
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110153000",
+      "jurisdiccion_nombre": "Órg Control del Sistema Transporte Público",
+      "credito_aprobado_documento_centavos": 1403915000,
+      "modificaciones_netas_centavos": 571916399,
+      "credito_vigente_centavos": 1975831399,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 123
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "credito_aprobado_documento_centavos": 31679822200,
+      "modificaciones_netas_centavos": 17373692257,
+      "credito_vigente_centavos": 49053514457,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 123
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110155000",
+      "jurisdiccion_nombre": "Justicia Mun. Administrativa de Faltas",
+      "credito_aprobado_documento_centavos": 17159543000,
+      "modificaciones_netas_centavos": 5559052236,
+      "credito_vigente_centavos": 22718595236,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 123
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110156000",
+      "jurisdiccion_nombre": "Secretaría de Hacienda",
+      "credito_aprobado_documento_centavos": 83620290600,
+      "modificaciones_netas_centavos": 30522495829,
+      "credito_vigente_centavos": 114142786429,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 124
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110157000",
+      "jurisdiccion_nombre": "Secretaría de Integración y Economía Social",
+      "credito_aprobado_documento_centavos": 64851420300,
+      "modificaciones_netas_centavos": 8792154773,
+      "credito_vigente_centavos": 73643575073,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 124
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110158000",
+      "jurisdiccion_nombre": "Secretaría de Políticas de Cuidado y Acción Social",
+      "credito_aprobado_documento_centavos": 66959190000,
+      "modificaciones_netas_centavos": 22901727232,
+      "credito_vigente_centavos": 89860917232,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 125
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110159000",
+      "jurisdiccion_nombre": "Secretaría de Obras y Espacio Público",
+      "credito_aprobado_documento_centavos": 469720620300,
+      "modificaciones_netas_centavos": -469720620300,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 125
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110160000",
+      "jurisdiccion_nombre": "Secretaría Asuntos Hídricos y Gestión de Riesgos",
+      "credito_aprobado_documento_centavos": 131316591200,
+      "modificaciones_netas_centavos": -131316591200,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 126
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110161000",
+      "jurisdiccion_nombre": "Secretaría de Ambiente",
+      "credito_aprobado_documento_centavos": 299870063400,
+      "modificaciones_netas_centavos": -299870063400,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 126
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110162000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano",
+      "credito_aprobado_documento_centavos": 57176990500,
+      "modificaciones_netas_centavos": -26411541419,
+      "credito_vigente_centavos": 30765449081,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 127
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110163000",
+      "jurisdiccion_nombre": "Sec. de Control y Convivencia Ciudadana",
+      "credito_aprobado_documento_centavos": 181411523300,
+      "modificaciones_netas_centavos": 60269885559,
+      "credito_vigente_centavos": 241681408859,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 127
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110164000",
+      "jurisdiccion_nombre": "Secretaría de Educación y Cultura",
+      "credito_aprobado_documento_centavos": 172528842100,
+      "modificaciones_netas_centavos": 81625190440,
+      "credito_vigente_centavos": 254154032540,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 128
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110165000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Desarrollo Económico",
+      "credito_aprobado_documento_centavos": 31441859200,
+      "modificaciones_netas_centavos": 15816888574,
+      "credito_vigente_centavos": 47258747774,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 128
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110166000",
+      "jurisdiccion_nombre": "Dirección de Derechos y Vinculación Ciudadana",
+      "credito_aprobado_documento_centavos": 10844748200,
+      "modificaciones_netas_centavos": -10844748200,
+      "credito_vigente_centavos": 0,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 128
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110167000",
+      "jurisdiccion_nombre": "Hábitat Santa Fe Capital",
+      "credito_aprobado_documento_centavos": 234534646700,
+      "modificaciones_netas_centavos": 86019916835,
+      "credito_vigente_centavos": 320554563535,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 129
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110168000",
+      "jurisdiccion_nombre": "Secretaría de Infraestructura y Gestión Hídrica",
+      "credito_aprobado_documento_centavos": 0,
+      "modificaciones_netas_centavos": 455770271094,
+      "credito_vigente_centavos": 455770271094,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 129
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110169000",
+      "jurisdiccion_nombre": "Secretaría de Ambiente y Cambio Climático",
+      "credito_aprobado_documento_centavos": 0,
+      "modificaciones_netas_centavos": 484943195649,
+      "credito_vigente_centavos": 484943195649,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 130
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110170000",
+      "jurisdiccion_nombre": "Dirección de Gestión Urbana",
+      "credito_aprobado_documento_centavos": 0,
+      "modificaciones_netas_centavos": 462802897755,
+      "credito_vigente_centavos": 462802897755,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 130
+    },
+    {
+      "anio": 2022,
+      "jurisdiccion_codigo": "1110171000",
+      "jurisdiccion_nombre": "Dirección de Movilidad",
+      "credito_aprobado_documento_centavos": 0,
+      "modificaciones_netas_centavos": 64403734990,
+      "credito_vigente_centavos": 64403734990,
+      "fuente": "CUENTA-INVERSION-2022.pdf",
+      "pagina_pdf": 130
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110147000",
+      "jurisdiccion_nombre": "Intendencia Municipal",
+      "credito_aprobado_documento_centavos": 15811269100,
+      "modificaciones_netas_centavos": 36388522252,
+      "credito_vigente_centavos": 52199791352,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 107
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110148000",
+      "jurisdiccion_nombre": "Secretaría de Gobierno",
+      "credito_aprobado_documento_centavos": 225454185200,
+      "modificaciones_netas_centavos": 91398688997,
+      "credito_vigente_centavos": 316852874197,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110149000",
+      "jurisdiccion_nombre": "Fiscalía Municipal",
+      "credito_aprobado_documento_centavos": 21851950300,
+      "modificaciones_netas_centavos": 11692648386,
+      "credito_vigente_centavos": 33544598686,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110150000",
+      "jurisdiccion_nombre": "Sindicatura General Municipal",
+      "credito_aprobado_documento_centavos": 6957163200,
+      "modificaciones_netas_centavos": 3386205893,
+      "credito_vigente_centavos": 10343369093,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110151000",
+      "jurisdiccion_nombre": "Servicios de la Deuda",
+      "credito_aprobado_documento_centavos": 356095660900,
+      "modificaciones_netas_centavos": 25973709284,
+      "credito_vigente_centavos": 382069370184,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 110
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "credito_aprobado_documento_centavos": 368124704700,
+      "modificaciones_netas_centavos": 533854696438,
+      "credito_vigente_centavos": 901979401138,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 111
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110153000",
+      "jurisdiccion_nombre": "Órg Control del Sistema Transporte Público",
+      "credito_aprobado_documento_centavos": 2776790100,
+      "modificaciones_netas_centavos": 741821763,
+      "credito_vigente_centavos": 3518611863,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 111
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "credito_aprobado_documento_centavos": 85482694200,
+      "modificaciones_netas_centavos": 17990074495,
+      "credito_vigente_centavos": 103472768695,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 113
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110155000",
+      "jurisdiccion_nombre": "Justicia Mun. Administrativa de Faltas",
+      "credito_aprobado_documento_centavos": 35028196900,
+      "modificaciones_netas_centavos": 12339445342,
+      "credito_vigente_centavos": 47367642242,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 113
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110156000",
+      "jurisdiccion_nombre": "Secretaría de Hacienda",
+      "credito_aprobado_documento_centavos": 168372269000,
+      "modificaciones_netas_centavos": 75018041175,
+      "credito_vigente_centavos": 243390310175,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 114
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110157000",
+      "jurisdiccion_nombre": "Secretaría de Integración y Economía Social",
+      "credito_aprobado_documento_centavos": 120616216600,
+      "modificaciones_netas_centavos": 26862789694,
+      "credito_vigente_centavos": 147479006294,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 115
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110158000",
+      "jurisdiccion_nombre": "Secretaría de Políticas de Cuidado y Acción Social",
+      "credito_aprobado_documento_centavos": 131693290000,
+      "modificaciones_netas_centavos": 42181558590,
+      "credito_vigente_centavos": 173874848590,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 117
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110162000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano",
+      "credito_aprobado_documento_centavos": 109554800500,
+      "modificaciones_netas_centavos": -45861428236,
+      "credito_vigente_centavos": 63693372264,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 119
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110163000",
+      "jurisdiccion_nombre": "Sec. de Control y Convivencia Ciudadana",
+      "credito_aprobado_documento_centavos": 343956961800,
+      "modificaciones_netas_centavos": 170978051919,
+      "credito_vigente_centavos": 514935013719,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 120
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110164000",
+      "jurisdiccion_nombre": "Secretaría de Educación y Cultura",
+      "credito_aprobado_documento_centavos": 349721679400,
+      "modificaciones_netas_centavos": 170692740435,
+      "credito_vigente_centavos": 520414419835,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 122
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110165000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Desarrollo Económico",
+      "credito_aprobado_documento_centavos": 64801755900,
+      "modificaciones_netas_centavos": 28895249574,
+      "credito_vigente_centavos": 93697005474,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 124
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110167000",
+      "jurisdiccion_nombre": "Hábitat Santa Fe Capital",
+      "credito_aprobado_documento_centavos": 467548367800,
+      "modificaciones_netas_centavos": 270432233544,
+      "credito_vigente_centavos": 737980601344,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 126
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110168000",
+      "jurisdiccion_nombre": "Secretaría de Infraestructura y Gestión Hídrica",
+      "credito_aprobado_documento_centavos": 477004326500,
+      "modificaciones_netas_centavos": 275456274100,
+      "credito_vigente_centavos": 752460600600,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 131
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110169000",
+      "jurisdiccion_nombre": "Secretaría de Ambiente y Cambio Climático",
+      "credito_aprobado_documento_centavos": 557768166000,
+      "modificaciones_netas_centavos": 570692233602,
+      "credito_vigente_centavos": 1128460399602,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 132
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110170000",
+      "jurisdiccion_nombre": "Dirección de Gestión Urbana",
+      "credito_aprobado_documento_centavos": 531152551100,
+      "modificaciones_netas_centavos": 225343432861,
+      "credito_vigente_centavos": 756495983961,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 136
+    },
+    {
+      "anio": 2023,
+      "jurisdiccion_codigo": "1110171000",
+      "jurisdiccion_nombre": "Dirección de Movilidad",
+      "credito_aprobado_documento_centavos": 94814970700,
+      "modificaciones_netas_centavos": 54849568432,
+      "credito_vigente_centavos": 149664539132,
+      "fuente": "Cuenta-Inversion-2023.pdf",
+      "pagina_pdf": 138
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110147000",
+      "jurisdiccion_nombre": "Intendencia Municipal",
+      "credito_aprobado_documento_centavos": 37328944900,
+      "modificaciones_netas_centavos": -2889993551,
+      "credito_vigente_centavos": 34438951349,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 107
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110149000",
+      "jurisdiccion_nombre": "Fiscalía Municipal",
+      "credito_aprobado_documento_centavos": 64334501600,
+      "modificaciones_netas_centavos": 36085956510,
+      "credito_vigente_centavos": 100420458110,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 107
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110150000",
+      "jurisdiccion_nombre": "Sindicatura General Municipal",
+      "credito_aprobado_documento_centavos": 20946179600,
+      "modificaciones_netas_centavos": 7632760844,
+      "credito_vigente_centavos": 28578940444,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 107
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110151000",
+      "jurisdiccion_nombre": "Servicios de la Deuda",
+      "credito_aprobado_documento_centavos": 818137485600,
+      "modificaciones_netas_centavos": -112260945295,
+      "credito_vigente_centavos": 705876540305,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 107
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "credito_aprobado_documento_centavos": 1152843383300,
+      "modificaciones_netas_centavos": 654731369105,
+      "credito_vigente_centavos": 1807574752405,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 108
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110153000",
+      "jurisdiccion_nombre": "Órg Control del Sistema Transporte Público",
+      "credito_aprobado_documento_centavos": 8763572600,
+      "modificaciones_netas_centavos": 3539019656,
+      "credito_vigente_centavos": 12302592256,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 108
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "credito_aprobado_documento_centavos": 321591252000,
+      "modificaciones_netas_centavos": 165613782950,
+      "credito_vigente_centavos": 487205034950,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110155000",
+      "jurisdiccion_nombre": "Justicia Mun. Administrativa de Faltas",
+      "credito_aprobado_documento_centavos": 91745112100,
+      "modificaciones_netas_centavos": 49259395764,
+      "credito_vigente_centavos": 141004507864,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110167000",
+      "jurisdiccion_nombre": "Hábitat Santa Fe Capital",
+      "credito_aprobado_documento_centavos": 83022433600,
+      "modificaciones_netas_centavos": 116726257377,
+      "credito_vigente_centavos": 199748690977,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110172000",
+      "jurisdiccion_nombre": "Sec. Gobierno, Control, Movilidad y Seg. Ciudadana",
+      "credito_aprobado_documento_centavos": 1330196572400,
+      "modificaciones_netas_centavos": 880891374208,
+      "credito_vigente_centavos": 2211087946608,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 110
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110173000",
+      "jurisdiccion_nombre": "Secretaría de Hacienda y Finanzas",
+      "credito_aprobado_documento_centavos": 371195582500,
+      "modificaciones_netas_centavos": 162372979492,
+      "credito_vigente_centavos": 533568561992,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 110
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "credito_aprobado_documento_centavos": 1066231901100,
+      "modificaciones_netas_centavos": 426629403155,
+      "credito_vigente_centavos": 1492861304255,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 111
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110175000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Empleo",
+      "credito_aprobado_documento_centavos": 208569064000,
+      "modificaciones_netas_centavos": 115524840532,
+      "credito_vigente_centavos": 324093904532,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 111
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110176000",
+      "jurisdiccion_nombre": "Secretaría de Cultura",
+      "credito_aprobado_documento_centavos": 397764877800,
+      "modificaciones_netas_centavos": 159000615152,
+      "credito_vigente_centavos": 556765492952,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 112
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110177000",
+      "jurisdiccion_nombre": "Secretaría de Gestión Urbana y Ambiente",
+      "credito_aprobado_documento_centavos": 3261025021300,
+      "modificaciones_netas_centavos": 2648558912559,
+      "credito_vigente_centavos": 5909583933859,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 112
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "credito_aprobado_documento_centavos": 623971209400,
+      "modificaciones_netas_centavos": 389152018962,
+      "credito_vigente_centavos": 1013123228362,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 113
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110179000",
+      "jurisdiccion_nombre": "Secretaría de Educación",
+      "credito_aprobado_documento_centavos": 614907422200,
+      "modificaciones_netas_centavos": 304606732232,
+      "credito_vigente_centavos": 919514154432,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 114
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110180000",
+      "jurisdiccion_nombre": "Dirección General de Desarrollo Municipal",
+      "credito_aprobado_documento_centavos": 169364210100,
+      "modificaciones_netas_centavos": 101835850956,
+      "credito_vigente_centavos": 271200061056,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 114
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110181000",
+      "jurisdiccion_nombre": "Dir. Der. y Vinculación Ciudadana e Institucional",
+      "credito_aprobado_documento_centavos": 12389119600,
+      "modificaciones_netas_centavos": 39087131252,
+      "credito_vigente_centavos": 51476250852,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 114
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110182000",
+      "jurisdiccion_nombre": "Dir. Gral. Comunicación Púb. y Rel Institucionales",
+      "credito_aprobado_documento_centavos": 58250359900,
+      "modificaciones_netas_centavos": 101562612745,
+      "credito_vigente_centavos": 159812972645,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 115
+    },
+    {
+      "anio": 2024,
+      "jurisdiccion_codigo": "1110183000",
+      "jurisdiccion_nombre": "Dirección de Gestión de Riesgo",
+      "credito_aprobado_documento_centavos": 93896248100,
+      "modificaciones_netas_centavos": 94578258484,
+      "credito_vigente_centavos": 188474506584,
+      "fuente": "CUENTA-INVERSION-2024.pdf",
+      "pagina_pdf": 115
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110147000",
+      "jurisdiccion_nombre": "Intendencia Municipal",
+      "credito_aprobado_documento_centavos": 45822878300,
+      "modificaciones_netas_centavos": 4548103919,
+      "credito_vigente_centavos": 50370982219,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 108
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110149000",
+      "jurisdiccion_nombre": "Fiscalía Municipal",
+      "credito_aprobado_documento_centavos": 129877098700,
+      "modificaciones_netas_centavos": 10382898523,
+      "credito_vigente_centavos": 140259997223,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 108
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110150000",
+      "jurisdiccion_nombre": "Sindicatura General Municipal",
+      "credito_aprobado_documento_centavos": 37478480000,
+      "modificaciones_netas_centavos": 7367230754,
+      "credito_vigente_centavos": 44845710754,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 108
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110151000",
+      "jurisdiccion_nombre": "Servicios de la Deuda",
+      "credito_aprobado_documento_centavos": 2094762981800,
+      "modificaciones_netas_centavos": -401957327789,
+      "credito_vigente_centavos": 1692805654011,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 108
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110152000",
+      "jurisdiccion_nombre": "Obligaciones a Cargo del Tesoro",
+      "credito_aprobado_documento_centavos": 2089555775500,
+      "modificaciones_netas_centavos": 604670423963,
+      "credito_vigente_centavos": 2694226199463,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110153000",
+      "jurisdiccion_nombre": "Órg Control del Sistema Transporte Público",
+      "credito_aprobado_documento_centavos": 15952508900,
+      "modificaciones_netas_centavos": 1213938240,
+      "credito_vigente_centavos": 17166447140,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 109
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110154000",
+      "jurisdiccion_nombre": "Secretaría General",
+      "credito_aprobado_documento_centavos": 628503812500,
+      "modificaciones_netas_centavos": 84760802873,
+      "credito_vigente_centavos": 713264615373,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 110
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110155000",
+      "jurisdiccion_nombre": "Justicia Mun. Administrativa de Faltas",
+      "credito_aprobado_documento_centavos": 180662849700,
+      "modificaciones_netas_centavos": 36756421553,
+      "credito_vigente_centavos": 217419271253,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 110
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110167000",
+      "jurisdiccion_nombre": "Hábitat Santa Fe Capital",
+      "credito_aprobado_documento_centavos": 268576902000,
+      "modificaciones_netas_centavos": -93255548576,
+      "credito_vigente_centavos": 175321353424,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 110
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110172000",
+      "jurisdiccion_nombre": "Sec. Gobierno, Control, Movilidad y Seg. Ciudadana",
+      "credito_aprobado_documento_centavos": 2637506858900,
+      "modificaciones_netas_centavos": 741794704705,
+      "credito_vigente_centavos": 3379301563605,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 111
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110173000",
+      "jurisdiccion_nombre": "Secretaría de Hacienda y Finanzas",
+      "credito_aprobado_documento_centavos": 675890404400,
+      "modificaciones_netas_centavos": 139671525903,
+      "credito_vigente_centavos": 815561930303,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 111
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110174000",
+      "jurisdiccion_nombre": "Secretaría de Desarrollo Urbano y Gestión Hídrica",
+      "credito_aprobado_documento_centavos": 1633097764200,
+      "modificaciones_netas_centavos": 837623681425,
+      "credito_vigente_centavos": 2470721445625,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 112
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110175000",
+      "jurisdiccion_nombre": "Secretaría de Producción y Empleo",
+      "credito_aprobado_documento_centavos": 422022778800,
+      "modificaciones_netas_centavos": 78212435439,
+      "credito_vigente_centavos": 500235214239,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 112
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110176000",
+      "jurisdiccion_nombre": "Secretaría de Cultura",
+      "credito_aprobado_documento_centavos": 626333402800,
+      "modificaciones_netas_centavos": 156571084164,
+      "credito_vigente_centavos": 782904486964,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 113
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110177000",
+      "jurisdiccion_nombre": "Secretaría de Gestión Urbana y Ambiente",
+      "credito_aprobado_documento_centavos": 7730585133100,
+      "modificaciones_netas_centavos": 1446546443698,
+      "credito_vigente_centavos": 9177131576798,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 113
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110178000",
+      "jurisdiccion_nombre": "Secretaría de Políticas Sociales",
+      "credito_aprobado_documento_centavos": 1348239538900,
+      "modificaciones_netas_centavos": 372662732145,
+      "credito_vigente_centavos": 1720902271045,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 114
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110179000",
+      "jurisdiccion_nombre": "Secretaría de Educación",
+      "credito_aprobado_documento_centavos": 1161828131800,
+      "modificaciones_netas_centavos": 330598642585,
+      "credito_vigente_centavos": 1492426774385,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 115
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110180000",
+      "jurisdiccion_nombre": "Dirección General de Desarrollo Municipal",
+      "credito_aprobado_documento_centavos": 314338169600,
+      "modificaciones_netas_centavos": 110637580630,
+      "credito_vigente_centavos": 424975750230,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 115
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110181000",
+      "jurisdiccion_nombre": "Dir. Der. y Vinculación Ciudadana e Institucional",
+      "credito_aprobado_documento_centavos": 65161391300,
+      "modificaciones_netas_centavos": 10877077386,
+      "credito_vigente_centavos": 76038468686,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 115
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110182000",
+      "jurisdiccion_nombre": "Dir. Gral. Comunicación Púb. y Rel Institucionales",
+      "credito_aprobado_documento_centavos": 196442585500,
+      "modificaciones_netas_centavos": 128914026940,
+      "credito_vigente_centavos": 325356612440,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 116
+    },
+    {
+      "anio": 2025,
+      "jurisdiccion_codigo": "1110183000",
+      "jurisdiccion_nombre": "Dirección de Gestión de Riesgo",
+      "credito_aprobado_documento_centavos": 206964433200,
+      "modificaciones_netas_centavos": 42634197580,
+      "credito_vigente_centavos": 249598630780,
+      "fuente": "Cuenta-inversion-2025.pdf",
+      "pagina_pdf": 116
     }
   ]
 }

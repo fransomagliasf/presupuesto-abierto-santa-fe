@@ -457,8 +457,31 @@ th.project-budget-column small { display: block; margin-top: .18rem; font-size: 
 .budget-sort-header { width: 100%; justify-content: flex-end; text-align: right; }
 .budget-sort-label { min-width: 0; }
 .budget-sort-direction { flex: none; }
+.budget-secretaries-panel { border-top: 4px solid #6d4db3; }
+.budget-secretary-tabs { display: inline-flex; width: fit-content; padding: .25rem; border: 1px solid #cfd9e3; border-radius: 9px; background: #f3f6f9; }
+.budget-secretary-tabs button { padding: .55rem .85rem; border: 0; border-radius: 7px; color: #526176; background: transparent; cursor: pointer; font: 800 .74rem/1.2 system-ui, sans-serif; }
+.budget-secretary-tabs button.active { color: #fff; background: #5c4198; box-shadow: 0 2px 6px rgb(46 32 82 / 18%); }
+.budget-secretary-ranking-heading { display: flex; gap: 1rem; align-items: end; justify-content: space-between; margin-bottom: 1rem; }
+.budget-secretary-ranking-heading h3 { margin: 0; color: #173b5d; font-size: 1.05rem; }
+.budget-secretary-ranking-heading span { display: flex; gap: .35rem; align-items: center; margin-top: .25rem; color: var(--muted); font-size: .72rem; }
+.budget-secretary-ranking-heading span .budget-project-key { display: inline-block; width: 1rem; height: .7rem; flex: none; border-radius: 2px; }
+.budget-secretary-ranking-heading label { width: min(230px, 100%); color: #526176; font-size: .7rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
+.budget-secretary-ranking-heading select { margin-top: .3rem; text-transform: none; }
+.budget-secretary-ranking { display: grid; gap: .8rem; margin: 0; padding: 0; list-style: none; }
+.budget-secretary-ranking li { display: grid; grid-template-columns: minmax(260px, .8fr) minmax(300px, 1.8fr); gap: 1rem; align-items: center; }
+.budget-secretary-rank-label { display: flex; min-width: 0; gap: .75rem; align-items: baseline; justify-content: space-between; }
+.budget-secretary-rank-label strong { overflow: hidden; color: #263b58; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+.budget-secretary-rank-label span { flex: none; color: #60708a; font-size: .68rem; font-weight: 750; }
+.budget-secretary-bar-track { height: 15px; overflow: hidden; border-radius: 999px; background: #e9eef3; }
+.budget-secretary-bar-track i { display: block; min-width: 2px; height: 100%; border-radius: inherit; }
+.budget-secretary-bar-track i.budget-secretary-project-bar { background-image: repeating-linear-gradient(135deg, transparent 0 7px, rgb(255 255 255 / 42%) 7px 8px, transparent 8px 14px); }
+.budget-secretary-table-help { margin: 0 0 .8rem; color: var(--muted); font-size: .74rem; }
+.budget-secretaries-table td:first-child { min-width: 240px; color: #33415a; font-size: .76rem; }
+#budget-secretary-table-view > .public-inline-link { margin-top: .8rem; }
+#budget-secretary-table-view > .public-inline-link[hidden] { display: none; }
 @media (max-width: 650px) { .budget-years-chart { height: 350px; padding-inline: 0; }.budget-years-chart-inner { min-width: 820px; }.budget-years-legend { gap: .45rem 1rem; font-size: .68rem; }.budget-chart-mobile-note { display: block; }.budget-analysis-divider { gap: .5rem; }.budget-analysis-divider span { padding-inline: .6rem; white-space: nowrap; } }
 @media (max-width: 650px) { .budget-history-control { align-items: stretch; flex-direction: column; }.budget-history-control div { align-items: flex-start; flex-direction: column; gap: .15rem; }.budget-history-control .public-inline-link { justify-content: center; } }
+@media (max-width: 700px) { .budget-secretary-tabs { display: grid; width: 100%; grid-template-columns: 1fr 1fr; }.budget-secretary-ranking-heading { align-items: stretch; flex-direction: column; }.budget-secretary-ranking-heading label { width: 100%; }.budget-secretary-ranking li { grid-template-columns: 1fr; gap: .35rem; }.budget-secretary-rank-label { align-items: flex-start; flex-direction: column; gap: .15rem; }.budget-secretary-rank-label strong { white-space: normal; }.budget-secretary-bar-track { height: 12px; } }
 
 /* Descripciones institucionales del Presupuesto 2026 */
 .description-trigger { display: inline-flex; width: fit-content; gap: .4rem; align-items: center; justify-content: center; padding: .42rem .65rem; border: 1px solid #8ab5d4; border-radius: 6px; color: var(--blue); background: #f7fbfe; cursor: pointer; font: 700 .76rem/1.2 system-ui, sans-serif; }.description-trigger[hidden] { display: none; }.description-trigger > span { display: grid; width: 1.1rem; height: 1.1rem; place-items: center; border-radius: 50%; color: white; background: var(--blue); font-size: .68rem; font-weight: 850; }.description-trigger:hover { border-color: var(--blue); background: #eaf3fa; }.description-trigger-compact { width: 1.65rem; height: 1.65rem; flex: none; padding: 0; border-radius: 50%; }.description-trigger-compact > span { width: 1rem; height: 1rem; }.program-option-actions, .guide-name-actions { display: flex; gap: .4rem; align-items: center; }.guide-name-actions { justify-content: space-between; }.guide-programs li { display: flex; gap: .45rem; align-items: center; }.guide-program-name { min-width: 0; flex: 1; }

@@ -34,6 +34,7 @@ let descriptionData = { source: "Presupuesto 2026 de la Municipalidad de Santa F
 let budgetFunctionData = [], selectedBudgetFunction = "310", selectedBudgetTableFinality = "", budgetYearsChart = null, budgetFunctionChart = null, budgetCompositionChart = null, budgetTableExpanded = false, budgetTableSort = { key: BUDGET_PROJECT_YEAR, direction: "desc" };
 let projectBudgetData = { meta: {}, programas: [], recursos: [], objetos_gasto: [], fuentes_financiamiento: [] };
 let closingBudgetData = { meta: {}, cierres: [] }, budgetEarlierYearsExpanded = false;
+let budgetSecretaryView = "bars", selectedBudgetSecretaryYear = BUDGET_PROJECT_YEAR, budgetSecretaryTableExpanded = false, budgetSecretarySort = { key: BUDGET_PROJECT_YEAR, direction: "desc" };
 const TABLE_PAGE_SIZE = 5;
 let expenseTablePage = 1, resourceTablePage = 1, fundTablePage = 1, guideTablePage = 1, guideExpandedSecretaries = new Set(), activeDownloadView = "expenses";
 let heatmapExpanded = false;
@@ -1132,13 +1133,61 @@ function renderBudgetFunctionsTable() {
   $("#budget-functions-table").innerHTML = visible.map((item) => `<tr><td>${escapeHtml(item.finality)}</td><td><strong>${escapeHtml(item.name)}</strong></td>${item.values.map((value, index) => `<td class="number ${years[index] === BUDGET_PROJECT_YEAR ? "budget-project-column" : ""}"><strong>${value.row ? budgetShare(value.share) : "—"}</strong><small>${value.row ? formatAxisAmount(value.value) : "Sin partida"}</small></td>`).join("")}<td class="number ${budgetChangeClass(item.change)}">${budgetPointChange(item.change)}</td></tr>`).join("");
   $("#toggle-budget-functions").hidden = functions.length <= 10; $("#toggle-budget-functions").setAttribute("aria-expanded", String(budgetTableExpanded)); $("#toggle-budget-functions").innerHTML = budgetTableExpanded ? 'Ver solo las 10 principales <span aria-hidden="true">↑</span>' : 'Ver todas las funciones <span aria-hidden="true">↓</span>';
 }
+function budgetSecretaryRecords() {
+  const records = (closingBudgetData.jurisdicciones || []).map((row) => ({ year: String(row.anio), code: row.jurisdiccion_codigo, name: row.jurisdiccion_nombre, value: row.credito_vigente_centavos }));
+  const latestPeriod = periods().at(-1), monthlyGroups = new Map();
+  data.filter((row) => row.fecha_corte === latestPeriod).forEach((row) => {
+    const key = `${row.jurisdiccion_codigo}|${row.jurisdiccion_nombre}`, item = monthlyGroups.get(key) || { year: "2026", code: row.jurisdiccion_codigo, name: row.jurisdiccion_nombre, value: 0 };
+    item.value += cents(row, "credito_vigente_centavos"); monthlyGroups.set(key, item);
+  });
+  const projectGroups = new Map();
+  projectBudgetData.programas.forEach((row) => {
+    const key = `${row.jurisdiccion_codigo}|${row.jurisdiccion_nombre}`, item = projectGroups.get(key) || { year: BUDGET_PROJECT_YEAR, code: row.jurisdiccion_codigo, name: row.jurisdiccion_nombre, value: 0 };
+    item.value += Number(row.monto_centavos || 0); projectGroups.set(key, item);
+  });
+  return [...records, ...monthlyGroups.values(), ...projectGroups.values()].filter((row) => row.value > 0);
+}
+function budgetSecretaryComparison() {
+  const years = visibleBudgetYears(), yearSet = new Set(years), records = budgetSecretaryRecords().filter((row) => yearSet.has(row.year)), totals = new Map(years.map((year) => [year, records.filter((row) => row.year === year).reduce((total, row) => total + row.value, 0)])), groups = new Map();
+  records.forEach((row) => {
+    const key = normalizeDescriptionKey(row.name), item = groups.get(key) || { key, name: row.name, byYear: new Map() };
+    item.name = row.name; item.byYear.set(row.year, (item.byYear.get(row.year) || 0) + row.value); groups.set(key, item);
+  });
+  const items = [...groups.values()].map((item) => {
+    const values = years.map((year) => { const value = item.byYear.get(year) || 0, total = totals.get(year) || 0; return { year, value, share: value && total ? value / total * 100 : null }; }), baseline = values[years.indexOf("2024")], latest = values.at(-1);
+    return { ...item, values, change: baseline?.share !== null && latest?.share !== null ? latest.share - baseline.share : null };
+  });
+  return { years, totals, items };
+}
+function renderBudgetSecretaryRanking() {
+  const { years, totals, items } = budgetSecretaryComparison();
+  if (!years.includes(selectedBudgetSecretaryYear)) selectedBudgetSecretaryYear = years.at(-1);
+  $("#budget-secretary-year").innerHTML = years.map((year) => `<option value="${year}" ${year === selectedBudgetSecretaryYear ? "selected" : ""}>${year}${year === BUDGET_PROJECT_YEAR ? " · Proyecto" : year === "2026" ? " · Octubre" : " · Cierre"}</option>`).join("");
+  const yearIndex = years.indexOf(selectedBudgetSecretaryYear), ranked = items.map((item) => ({ name: item.name, ...item.values[yearIndex] })).filter((item) => item.value > 0).sort((a, b) => b.value - a.value), top = ranked.slice(0, 5), othersValue = ranked.slice(5).reduce((total, item) => total + item.value, 0), total = totals.get(selectedBudgetSecretaryYear) || 0, displayed = [...top, ...(othersValue ? [{ name: "Otros", value: othersValue, share: othersValue / total * 100 }] : [])], maxShare = Math.max(...displayed.map((item) => item.share), 1), colors = ["#1264a3", "#008a81", "#7b3fc6", "#d08b16", "#c45059", "#8c99a9"];
+  const projectClass = selectedBudgetSecretaryYear === BUDGET_PROJECT_YEAR ? " budget-secretary-project-bar" : "";
+  $("#budget-secretary-ranking").innerHTML = displayed.map((item, index) => `<li><div class="budget-secretary-rank-label"><strong>${escapeHtml(item.name)}</strong><span>${formatAxisAmount(item.value)} · ${budgetShare(item.share)}</span></div><div class="budget-secretary-bar-track" aria-hidden="true"><i class="${projectClass}" style="width:${item.share / maxShare * 100}%;background-color:${colors[index]}"></i></div></li>`).join("");
+  $("#budget-secretary-ranking-context").innerHTML = selectedBudgetSecretaryYear === BUDGET_PROJECT_YEAR ? '<i class="budget-project-key" aria-hidden="true"></i> Proyecto de Presupuesto 2027' : selectedBudgetSecretaryYear === "2026" ? "Crédito vigente a octubre de 2026" : `Crédito vigente al cierre de ${selectedBudgetSecretaryYear}`;
+}
+function renderBudgetSecretariesTable() {
+  const { years, items } = budgetSecretaryComparison(), selectedYearIndex = years.indexOf(budgetSecretarySort.key), sortValue = (item) => budgetSecretarySort.key === "change" ? item.change : item.values[selectedYearIndex]?.share, direction = budgetSecretarySort.direction === "asc" ? 1 : -1;
+  const sorted = items.sort((a, b) => { const valueA = sortValue(a), valueB = sortValue(b), comparableA = Number.isFinite(valueA), comparableB = Number.isFinite(valueB); if (!comparableA && !comparableB) return a.name.localeCompare(b.name, "es"); if (!comparableA) return 1; if (!comparableB) return -1; return (valueA - valueB) * direction || a.name.localeCompare(b.name, "es"); }), visible = budgetSecretaryTableExpanded ? sorted : sorted.slice(0, 12);
+  const sortHeader = (key, label, project = false) => { const active = budgetSecretarySort.key === key, arrow = active ? budgetSecretarySort.direction === "asc" ? "↑" : "↓" : "", ariaSort = active ? budgetSecretarySort.direction === "asc" ? "ascending" : "descending" : "none", nextDirection = active && budgetSecretarySort.direction === "desc" ? "menor a mayor" : "mayor a menor"; return `<th class="number ${project ? "budget-project-column" : ""}" aria-sort="${ariaSort}"><button class="budget-sort-header ${active ? "active" : ""}" type="button" data-budget-secretary-sort="${key}" title="Ordenar de ${nextDirection}"><span class="budget-sort-label">${label}${project ? "<small>Proyecto</small>" : ""}</span><span class="budget-sort-direction" aria-hidden="true">${arrow}</span></button></th>`; };
+  $("#budget-secretaries-head").innerHTML = `<th>Secretaría o área</th>${years.map((year) => sortHeader(year, year, year === BUDGET_PROJECT_YEAR)).join("")}${sortHeader("change", `Cambio ${years.at(-1)} vs. 2024`)}`;
+  $("#budget-secretaries-table").innerHTML = visible.map((item) => `<tr><td><strong>${escapeHtml(item.name)}</strong></td>${item.values.map((value) => `<td class="number ${value.year === BUDGET_PROJECT_YEAR ? "budget-project-column" : ""}"><strong>${value.share === null ? "—" : budgetShare(value.share)}</strong><small>${value.share === null ? "Sin partida" : formatAxisAmount(value.value)}</small></td>`).join("")}<td class="number ${budgetChangeClass(item.change)}">${budgetPointChange(item.change)}</td></tr>`).join("");
+  $("#toggle-budget-secretaries").hidden = sorted.length <= 12; $("#toggle-budget-secretaries").setAttribute("aria-expanded", String(budgetSecretaryTableExpanded)); $("#toggle-budget-secretaries").innerHTML = budgetSecretaryTableExpanded ? 'Ver solo las 12 principales <span aria-hidden="true">↑</span>' : 'Ver todas las áreas <span aria-hidden="true">↓</span>';
+}
+function renderBudgetSecretaries() {
+  document.querySelectorAll("[data-budget-secretary-view]").forEach((button) => { const active = button.dataset.budgetSecretaryView === budgetSecretaryView; button.classList.toggle("active", active); button.setAttribute("aria-selected", String(active)); });
+  $("#budget-secretary-bars-view").hidden = budgetSecretaryView !== "bars"; $("#budget-secretary-table-view").hidden = budgetSecretaryView !== "table";
+  renderBudgetSecretaryRanking(); renderBudgetSecretariesTable();
+}
 function renderBudgetHistoryControl() {
   const button = $("#toggle-budget-history");
   button.setAttribute("aria-expanded", String(budgetEarlierYearsExpanded));
   button.innerHTML = budgetEarlierYearsExpanded ? 'Ocultar gestión Jatón <span aria-hidden="true">↑</span>' : 'Mostrar gestión Jatón (2020–2023) <span aria-hidden="true">↓</span>';
   $("#budget-history-status").textContent = budgetEarlierYearsExpanded ? "Se muestran 2020–2027." : "Vista inicial: 2024–2027.";
 }
-function renderBudgets(renderGraphs = true) { renderBudgetHistoryControl(); renderBudgetYearsChart(renderGraphs); renderBudgetFunction(renderGraphs); renderBudgetComposition(renderGraphs); renderBudgetFunctionsTable(); }
+function renderBudgets(renderGraphs = true) { renderBudgetHistoryControl(); renderBudgetYearsChart(renderGraphs); renderBudgetFunction(renderGraphs); renderBudgetComposition(renderGraphs); renderBudgetFunctionsTable(); renderBudgetSecretaries(); }
 async function init() {
   try {
     if (typeof Chart !== "undefined") Chart.defaults.devicePixelRatio = 2;
@@ -1187,10 +1236,14 @@ async function init() {
     document.querySelectorAll("[data-page-target]").forEach((button) => button.addEventListener("click", () => document.querySelector(`.header-tabs [data-page="${button.dataset.pageTarget}"]`)?.click()));
     document.querySelectorAll("[data-tracking-target]").forEach((button) => button.addEventListener("click", () => { document.querySelector('.header-tabs [data-page="tracking"]')?.click(); document.querySelector(`.tracking-tabs [data-tracking="${button.dataset.trackingTarget}"]`)?.click(); }));
     $("#budget-function-filter").addEventListener("change", (event) => { selectedBudgetFunction = event.target.value; renderBudgetFunction(); });
-    $("#toggle-budget-history").addEventListener("click", () => { budgetEarlierYearsExpanded = !budgetEarlierYearsExpanded; if (!visibleBudgetYears().includes(budgetTableSort.key) && budgetTableSort.key !== "change") budgetTableSort = { key: BUDGET_PROJECT_YEAR, direction: "desc" }; renderBudgets(); });
+    $("#toggle-budget-history").addEventListener("click", () => { budgetEarlierYearsExpanded = !budgetEarlierYearsExpanded; if (!visibleBudgetYears().includes(budgetTableSort.key) && budgetTableSort.key !== "change") budgetTableSort = { key: BUDGET_PROJECT_YEAR, direction: "desc" }; if (!visibleBudgetYears().includes(budgetSecretarySort.key) && budgetSecretarySort.key !== "change") budgetSecretarySort = { key: BUDGET_PROJECT_YEAR, direction: "desc" }; renderBudgets(); });
     $("#budget-finality-filter").addEventListener("change", (event) => { selectedBudgetTableFinality = event.target.value; budgetTableExpanded = false; renderBudgetFunctionsTable(); });
     $("#budget-functions-head").addEventListener("click", (event) => { const button = event.target.closest("[data-budget-sort]"); if (!button) return; const key = button.dataset.budgetSort; if (budgetTableSort.key === key) budgetTableSort.direction = budgetTableSort.direction === "asc" ? "desc" : "asc"; else budgetTableSort = { key, direction: "desc" }; renderBudgetFunctionsTable(); });
     $("#toggle-budget-functions").addEventListener("click", () => { budgetTableExpanded = !budgetTableExpanded; renderBudgetFunctionsTable(); });
+    document.querySelectorAll("[data-budget-secretary-view]").forEach((button) => button.addEventListener("click", () => { budgetSecretaryView = button.dataset.budgetSecretaryView; renderBudgetSecretaries(); }));
+    $("#budget-secretary-year").addEventListener("change", (event) => { selectedBudgetSecretaryYear = event.target.value; renderBudgetSecretaryRanking(); });
+    $("#budget-secretaries-head").addEventListener("click", (event) => { const button = event.target.closest("[data-budget-secretary-sort]"); if (!button) return; const key = button.dataset.budgetSecretarySort; if (budgetSecretarySort.key === key) budgetSecretarySort.direction = budgetSecretarySort.direction === "asc" ? "desc" : "asc"; else budgetSecretarySort = { key, direction: "desc" }; renderBudgetSecretariesTable(); });
+    $("#toggle-budget-secretaries").addEventListener("click", () => { budgetSecretaryTableExpanded = !budgetSecretaryTableExpanded; renderBudgetSecretariesTable(); });
     document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((button) => button.addEventListener("click", () => { const tracking = button.dataset.tracking; document.querySelectorAll(".tracking-view").forEach((view) => { view.hidden = view.id !== `tracking-${tracking}`; }); document.querySelectorAll(".tracking-tabs [data-tracking]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); if (tracking === "resources") requestAnimationFrame(() => renderResources()); if (tracking === "funds") requestAnimationFrame(() => renderFunds()); }));
     $("#detail-table").addEventListener("click", (event) => { const button = event.target.closest(".expand-row"); if (!button) return; const name = button.dataset.secretary; expandedSecretaries.has(name) ? expandedSecretaries.delete(name) : expandedSecretaries.add(name); renderTable(filteredRows()); });
     document.querySelectorAll(".sort-header").forEach((button) => button.addEventListener("click", () => { const key = button.dataset.sort; expenseTablePage = 1; if (tableSort.key === key) tableSort.direction = tableSort.direction === "asc" ? "desc" : "asc"; else { tableSort.key = key; tableSort.direction = key === "name" || key === "breakdown" ? "asc" : "desc"; } renderTable(filteredRows()); }));

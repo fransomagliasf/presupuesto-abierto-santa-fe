@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261118-2" />
+    <link rel="stylesheet" href="styles.css?v=20261118-3" />
   </head>
   <body>
     <header class="site-header">
@@ -126,6 +126,24 @@
           <div class="table-wrap"><table class="budget-functions-table"><thead><tr id="budget-functions-head"></tr></thead><tbody id="budget-functions-table"></tbody></table></div>
           <button id="toggle-budget-functions" class="public-inline-link" type="button" aria-expanded="false">Ver todas las funciones <span aria-hidden="true">↓</span></button>
           <p class="budget-source-note">Fuente: presupuestos municipales 2020–2025 y proyectos de Presupuesto 2026 y 2027, cuadros “Presupuesto de gastos por finalidad y función”.</p>
+        </section>
+
+        <section class="budgets-section panel budget-secretaries-panel" aria-labelledby="budget-secretaries-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Organización del presupuesto</p><h2 id="budget-secretaries-title">Secretarías y áreas</h2></div><p>Compará cuánto concentra cada área dentro del crédito vigente anual. La vista resumida reúne las cinco principales y agrupa el resto como “Otros”.</p></div>
+          <div class="budget-secretary-tabs" role="tablist" aria-label="Vista de secretarías y áreas">
+            <button class="active" type="button" role="tab" aria-selected="true" data-budget-secretary-view="bars">Resumen en barras</button>
+            <button type="button" role="tab" aria-selected="false" data-budget-secretary-view="table">Tabla comparativa</button>
+          </div>
+          <div id="budget-secretary-bars-view" role="tabpanel">
+            <div class="budget-secretary-ranking-heading"><div><h3>Principales áreas</h3><span id="budget-secretary-ranking-context"></span></div><label>Año<select id="budget-secretary-year" aria-label="Año para el resumen por secretaría"></select></label></div>
+            <ol id="budget-secretary-ranking" class="budget-secretary-ranking"></ol>
+          </div>
+          <div id="budget-secretary-table-view" role="tabpanel" hidden>
+            <p class="budget-secretary-table-help">Hacé clic en cualquier año o en la columna de cambio para ordenar de mayor a menor o a la inversa.</p>
+            <div class="table-wrap"><table class="budget-functions-table budget-secretaries-table"><thead><tr id="budget-secretaries-head"></tr></thead><tbody id="budget-secretaries-table"></tbody></table></div>
+            <button id="toggle-budget-secretaries" class="public-inline-link" type="button" aria-expanded="false">Ver todas las áreas <span aria-hidden="true">↓</span></button>
+          </div>
+          <p class="budget-source-note">Fuente: crédito vigente al cierre de las Cuentas de Inversión 2020–2025; crédito vigente a octubre para 2026; Proyecto de Presupuesto para 2027. Los nombres reflejan el organigrama de cada año, por lo que un cambio de denominación puede interrumpir una serie.</p>
         </section>
       </section>
 
@@ -512,6 +530,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261118-2"></script>
+    <script src="app.js?v=20261118-3"></script>
   </body>
 </html>

@@ -27,9 +27,14 @@ from pathlib import Path
 AMOUNT = re.compile(r"-?[\d.]+,\d{2}")
 REPORT_TITLE = "ESTADO DE EJECUCION PRESUPUESTARIA DE RECURSOS"
 FUNCTION_REPORT_TITLE = "(POR FINALIDAD Y FUNCIÓN)"
+JURISDICTION_REPORT_TITLE = "(POR CATEGORIA PROGRAMATICA)"
 FINALITY_LINE = re.compile(r"^\s*(\d{3})\s+-\s+([^\d].*?)\s*$")
 FUNCTION_LINE = re.compile(
     r"^\s+(\d{3})\s+(.+?)\s+(-?[\d.]+,\d{2})\s+(-?[\d.]+,\d{2})\s+(-?[\d.]+,\d{2})(?:\s|$)"
+)
+JURISDICTION_LINE = re.compile(r"Jurisdicción:\s*(\d{10})\s*-\s*(.*?)\s*$")
+TOTAL_LINE = re.compile(
+    r"^\s*Total\s+(.+?)\s+(-?[\d.]+,\d{2})\s+(-?[\d.]+,\d{2})\s+(-?[\d.]+,\d{2})(?:\s|$)"
 )
 
 
@@ -100,7 +105,74 @@ def extract_functions(year: int, path: Path, pages: list[str], expected_total: i
     return rows
 
 
-def extract_pdf(year: int, path: Path) -> tuple[dict, list[dict]]:
+def extract_jurisdictions(year: int, path: Path, pages: list[str], expected_total: int) -> list[dict]:
+    start = next(
+        (
+            index
+            for index, page in enumerate(pages)
+            if JURISDICTION_REPORT_TITLE in page
+            and "Municipalidad de" in page
+            and "Hoja: 1 de" in page
+        ),
+        None,
+    )
+    if start is None:
+        raise ValueError(f"{year}: consolidated programmatic jurisdiction table not found")
+
+    rows = []
+    current = None
+    candidate = None
+
+    def append_current() -> None:
+        nonlocal candidate
+        if current is None or candidate is None:
+            return
+        approved_text, modifications_text, current_text, page_number = candidate
+        approved, modifications, current_credit = map(cents, (approved_text, modifications_text, current_text))
+        if approved + modifications != current_credit:
+            raise ValueError(f"{year}, jurisdiction {current[0]}: approved plus modifications does not reconcile")
+        rows.append(
+            {
+                "anio": year,
+                "jurisdiccion_codigo": current[0],
+                "jurisdiccion_nombre": current[1],
+                "credito_aprobado_documento_centavos": approved,
+                "modificaciones_netas_centavos": modifications,
+                "credito_vigente_centavos": current_credit,
+                "fuente": path.name,
+                "pagina_pdf": page_number,
+            }
+        )
+        candidate = None
+
+    for index in range(start, len(pages)):
+        page = pages[index]
+        if index > start and JURISDICTION_REPORT_TITLE not in page:
+            break
+        for line in page.splitlines():
+            jurisdiction_match = JURISDICTION_LINE.search(line)
+            if jurisdiction_match:
+                append_current()
+                current = jurisdiction_match.groups()
+                candidate = None
+                continue
+            total_match = TOTAL_LINE.match(line)
+            if current is not None and total_match:
+                candidate = (*total_match.groups()[1:4], index + 1)
+        if "TOTALES GENERALES" in page:
+            append_current()
+            break
+
+    codes = [row["jurisdiccion_codigo"] for row in rows]
+    if not rows or len(codes) != len(set(codes)):
+        raise ValueError(f"{year}: missing or duplicated jurisdictions in consolidated table")
+    actual_total = sum(row["credito_vigente_centavos"] for row in rows)
+    if actual_total != expected_total:
+        raise ValueError(f"{year}: jurisdiction current total {actual_total} does not match closing total {expected_total}")
+    return rows
+
+
+def extract_pdf(year: int, path: Path) -> tuple[dict, list[dict], list[dict]]:
     with tempfile.TemporaryDirectory() as directory:
         text_path = Path(directory) / "cuenta.txt"
         subprocess.run(["pdftotext", "-layout", str(path), str(text_path)], check=True)
@@ -130,7 +202,7 @@ def extract_pdf(year: int, path: Path) -> tuple[dict, list[dict]]:
             "fuente": path.name,
             "pagina_pdf": page_number,
         }
-        return closing, extract_functions(year, path, pages, current)
+        return closing, extract_functions(year, path, pages, current), extract_jurisdictions(year, path, pages, current)
     raise ValueError(f"{year}: consolidated resource-execution total not found")
 
 
@@ -177,16 +249,18 @@ def main() -> None:
         raise ValueError(f"Expected PDF years {sorted(expected)}, received {sorted(pdfs)}")
 
     extracted = [extract_pdf(year, pdfs[year]) for year in sorted(pdfs)]
-    records = [closing for closing, _ in extracted]
-    functions = [row for _, rows in extracted for row in rows]
+    records = [closing for closing, _, _ in extracted]
+    functions = [row for _, rows, _ in extracted for row in rows]
+    jurisdictions = [row for _, _, rows in extracted for row in rows]
     records.append(extract_monthly_2026(args.monthly_2026))
     output = {
         "meta": {
-            "descripcion": "Crédito vigente total y por finalidad/función al cierre anual 2020–2025, más el último corte mensual total de 2026",
-            "criterio": "El cierre anual surge del total general de recursos y del cuadro de gastos por finalidad y función de cada Cuenta de Inversión. El dato 2026 es provisorio, corresponde al último informe mensual disponible y no incluye apertura comparable por función.",
+            "descripcion": "Crédito vigente total, por finalidad/función y por jurisdicción al cierre anual 2020–2025, más el último corte mensual total de 2026",
+            "criterio": "El cierre anual surge del total general de recursos y de los cuadros de gastos por finalidad/función y categoría programática de cada Cuenta de Inversión. El dato 2026 es provisorio y corresponde al último informe mensual disponible.",
         },
         "cierres": records,
         "finalidad_funcion": functions,
+        "jurisdicciones": jurisdictions,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
