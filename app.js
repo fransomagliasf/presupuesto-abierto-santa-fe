@@ -1120,43 +1120,22 @@ function budgetClassificationValues(key) {
   const items = [...new Map(rows.map((row) => [row.codigo, { code: row.codigo, name: row.nombre, group: row.grupo || "" }])).values()].map((item) => ({ ...item, values: years.map((year) => { const row = rows.find((entry) => String(entry.anio) === year && entry.codigo === item.code), value = Number(row?.monto_centavos || 0), total = totals.get(year) || 0; return { year, row, value, share: total ? value / total * 100 : null }; }) }));
   return { years, totals, items };
 }
-const budgetCompositionLabelsPlugin = {
-  id: "budgetCompositionLabels",
-  afterDatasetsDraw(chart) {
-    const context = chart.ctx, outsideLabels = new Map();
-    context.save(); context.font = "800 9px system-ui, sans-serif"; context.textAlign = "center"; context.textBaseline = "middle";
-    chart.data.datasets.forEach((dataset, datasetIndex) => {
-      chart.getDatasetMeta(datasetIndex).data.forEach((bar, index) => {
-        const value = Number(dataset.data[index]);
-        if (!Number.isFinite(value) || value <= 0 || bar.skip) return;
-        const label = `${value.toLocaleString("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`, segmentWidth = Math.abs(bar.x - bar.base), textWidth = context.measureText(label).width, centerX = (bar.x + bar.base) / 2, project = chart.data.labels[index] === BUDGET_PROJECT_YEAR;
-        if (segmentWidth >= textWidth + 9) {
-          context.fillStyle = project || datasetIndex === 3 ? "#3f3211" : "#fff"; context.fillText(label, centerX, bar.y);
-          return;
-        }
-        if (value < 1) return;
-        const halfWidth = textWidth / 2 + 4, rowLabels = outsideLabels.get(index) || []; let labelX = Math.max(chart.chartArea.left + halfWidth, Math.min(chart.chartArea.right - halfWidth, centerX));
-        const previous = rowLabels.at(-1); if (previous && labelX - halfWidth < previous.right + 3) labelX = previous.right + halfWidth + 3;
-        if (labelX + halfWidth > chart.chartArea.right) return;
-        const labelY = bar.y - bar.height / 2 - 7; rowLabels.push({ right: labelX + halfWidth }); outsideLabels.set(index, rowLabels);
-        context.strokeStyle = dataset.borderColor[index] || "#60708a"; context.lineWidth = 1; context.beginPath(); context.moveTo(centerX, bar.y - bar.height / 2); context.lineTo(labelX, labelY + 5); context.stroke();
-        context.fillStyle = "rgba(255,255,255,.96)"; context.beginPath(); context.roundRect(labelX - halfWidth, labelY - 6, halfWidth * 2, 12, 3); context.fill(); context.strokeRect(labelX - halfWidth, labelY - 6, halfWidth * 2, 12); context.fillStyle = "#33415a"; context.fillText(label, labelX, labelY);
-      });
-    });
-    context.restore();
-  },
-};
 function renderBudgetObjectComposition(renderGraph = true) {
   const { years, items } = budgetClassificationValues("objeto_gasto"), colors = ["#1264a3", "#008a81", "#7b3fc6", "#d08b16", "#c45059", "#5570a5", "#8b5f3d", "#8c99a9"];
   $("#budget-composition-legend").innerHTML = items.map((item, index) => `<li><i style="background:${colors[index]}"></i><span>${escapeHtml(item.name)}</span></li>`).join("");
-  $(".budget-composition-chart").classList.toggle("expanded", years.length > 4);
-  const latestIndex = years.length - 1, baselineIndex = years.indexOf("2024"), latestYear = years[latestIndex], ranked = items.map((item) => ({ ...item, share: item.values[latestIndex]?.share, change: baselineIndex >= 0 ? item.values[latestIndex]?.share - item.values[baselineIndex]?.share : null })).filter((item) => Number.isFinite(item.share)).sort((a, b) => b.share - a.share), largest = ranked[0], increases = ranked.filter((item) => Number.isFinite(item.change)).sort((a, b) => b.change - a.change), decreases = [...increases].sort((a, b) => a.change - b.change), increase = increases[0], decrease = decreases[0];
-  $("#budget-object-reading-title").textContent = `${latestYear === BUDGET_PROJECT_YEAR ? "Proyecto" : "Presupuesto"} ${latestYear}: claves`;
-  $("#budget-object-reading").innerHTML = largest ? `<p><strong>${escapeHtml(largest.name)}</strong> es el principal componente: representa <strong>${budgetShare(largest.share)}</strong> del total.</p>${increase?.change > 0 ? `<p>Frente a 2024, la mayor suba corresponde a <strong>${escapeHtml(increase.name)}</strong>: <strong class="positive">${budgetPointChange(increase.change)}</strong>.</p>` : ""}${decrease?.change < 0 ? `<p>La mayor reducción de participación se observa en <strong>${escapeHtml(decrease.name)}</strong>: <strong class="negative">${budgetPointChange(decrease.change)}</strong>.</p>` : ""}<p class="budget-composition-reading-note">Las variaciones son puntos de participación, no cambios reales descontando inflación.</p>` : "<p>No hay datos suficientes para elaborar la lectura.</p>";
   if (!renderGraph || typeof Chart === "undefined") return;
   if (budgetCompositionChart) budgetCompositionChart.destroy();
-  budgetCompositionChart = new Chart($("#budget-composition-chart"), { type: "bar", plugins: [budgetCompositionLabelsPlugin], data: { labels: years, datasets: items.map((item, index) => ({ label: item.name, data: item.values.map((value) => value.share), rawValues: item.values.map((value) => value.value), backgroundColor: item.values.map((_, valueIndex) => years[valueIndex] === BUDGET_PROJECT_YEAR ? budgetProjectPatternStrong(colors[index]) : colors[index]), borderColor: item.values.map((_, valueIndex) => years[valueIndex] === BUDGET_PROJECT_YEAR ? colors[index] : "#fff"), borderWidth: item.values.map((_, valueIndex) => years[valueIndex] === BUDGET_PROJECT_YEAR ? 1.5 : 1), borderRadius: 2, barThickness: 34 })) }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, layout: { padding: { top: 12 } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${years[context.dataIndex] === BUDGET_PROJECT_YEAR ? "Proyecto 2027 · " : ""}${context.dataset.label}: ${budgetShare(context.parsed.x)} · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { stacked: true, min: 0, max: 100, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` } }, y: { stacked: true, grid: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } } } } });
+  budgetCompositionChart = new Chart($("#budget-composition-chart"), { type: "bar", data: { labels: years, datasets: items.map((item, index) => ({ label: item.name, data: item.values.map((value) => value.share), rawValues: item.values.map((value) => value.value), backgroundColor: item.values.map((_, valueIndex) => years[valueIndex] === BUDGET_PROJECT_YEAR ? budgetProjectPatternStrong(colors[index]) : colors[index]), borderColor: item.values.map((_, valueIndex) => years[valueIndex] === BUDGET_PROJECT_YEAR ? colors[index] : "#fff"), borderWidth: item.values.map((_, valueIndex) => years[valueIndex] === BUDGET_PROJECT_YEAR ? 1.5 : 1), borderRadius: 2, barThickness: 38 })) }, options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${years[context.dataIndex] === BUDGET_PROJECT_YEAR ? "Proyecto 2027 · " : ""}${context.dataset.label}: ${budgetShare(context.parsed.x)} · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { stacked: true, min: 0, max: 100, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` } }, y: { stacked: true, grid: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } } } } });
 }
+const budgetEconomicLabelsPlugin = {
+  id: "budgetEconomicLabels",
+  afterDatasetsDraw(chart) {
+    const dataset = chart.data.datasets[0], meta = chart.getDatasetMeta(0), context = chart.ctx;
+    context.save(); context.font = "800 10px system-ui, sans-serif"; context.textAlign = "center"; context.textBaseline = "bottom";
+    meta.data.forEach((bar, index) => { const value = Number(dataset.data[index]); if (!Number.isFinite(value) || bar.skip) return; context.fillStyle = chart.data.labels[index] === BUDGET_PROJECT_YEAR ? "#72570b" : "#49337d"; context.fillText(budgetShare(value), bar.x, Math.max(chart.chartArea.top + 11, bar.y - 7)); });
+    context.restore();
+  },
+};
 function renderBudgetEconomicTable() {
   const { years, items } = budgetClassificationValues("caracter_economico"), baselineIndex = years.indexOf("2024"), latestIndex = years.length - 1, selectedYearIndex = years.indexOf(budgetEconomicSort.key), direction = budgetEconomicSort.direction === "asc" ? 1 : -1;
   const enriched = items.filter((item) => item.values.some((value) => value.value > 0)).map((item) => ({ ...item, change: item.values[baselineIndex]?.share !== null && item.values[latestIndex]?.share !== null ? item.values[latestIndex].share - item.values[baselineIndex].share : null }));
@@ -1172,10 +1151,15 @@ function renderBudgetEconomic(renderGraph = true) {
   $("#budget-economic-filter").innerHTML = items.filter((item) => item.values.some((value) => value.value > 0)).map((item) => `<option value="${item.code}" ${item.code === selectedBudgetEconomicConcept ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("");
   const selected = items.find((item) => item.code === selectedBudgetEconomicConcept);
   $("#budget-economic-chart-title").textContent = selected ? `Evolución de ${selected.name}` : "Evolución por carácter económico";
+  if (selected) {
+    const baseline = selected.values.find((value) => value.year === "2024"), latest = selected.values.at(-1), peak = [...selected.values].filter((value) => Number.isFinite(value.share)).sort((a, b) => b.share - a.share)[0], change = baseline && latest ? latest.share - baseline.share : null;
+    $("#budget-economic-reading-title").textContent = `${selected.name}: lectura`;
+    $("#budget-economic-reading").innerHTML = `<p>En el <strong>Proyecto 2027</strong> representa <strong>${budgetShare(latest.share)}</strong> del gasto: <strong>${formatAxisAmount(latest.value)}</strong>.</p>${change !== null ? `<p>Frente a 2024, su participación muestra <strong class="${budgetChangeClass(change)}">${budgetPointChange(change)}</strong>.</p>` : ""}${peak ? `<p>Su mayor peso en el período visible se observa en <strong>${peak.year}</strong>, con <strong>${budgetShare(peak.share)}</strong>.</p>` : ""}<p class="budget-economic-reading-note">2027 es una previsión presupuestaria y no implica ejecución.</p>`;
+  }
   renderBudgetEconomicTable();
   if (!renderGraph || typeof Chart === "undefined" || !selected) return;
   if (budgetEconomicChart) budgetEconomicChart.destroy();
-  budgetEconomicChart = new Chart($("#budget-economic-chart"), { type: "bar", data: { labels: years, datasets: [{ label: selected.name, data: selected.values.map((value) => value.share), rawValues: selected.values.map((value) => value.value), backgroundColor: years.map((year) => year === BUDGET_PROJECT_YEAR ? budgetProjectPatternStrong("#9a7711") : "rgba(92, 65, 152, .78)"), borderColor: years.map((year) => year === BUDGET_PROJECT_YEAR ? "#8b6810" : "#5c4198"), borderWidth: years.map((year) => year === BUDGET_PROJECT_YEAR ? 2 : 1), borderRadius: 6, maxBarThickness: 58 }] }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 8 } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${context.label === BUDGET_PROJECT_YEAR ? "Proyecto 2027 · " : ""}${budgetShare(context.parsed.y)} · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { grid: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } }, y: { beginAtZero: true, grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` }, title: { display: true, text: "Participación en el total", color: "#60708a" } } } } });
+  budgetEconomicChart = new Chart($("#budget-economic-chart"), { type: "bar", plugins: [budgetEconomicLabelsPlugin], data: { labels: years, datasets: [{ label: selected.name, data: selected.values.map((value) => value.share), rawValues: selected.values.map((value) => value.value), backgroundColor: years.map((year) => year === BUDGET_PROJECT_YEAR ? budgetProjectPatternStrong("#9a7711") : "rgba(92, 65, 152, .78)"), borderColor: years.map((year) => year === BUDGET_PROJECT_YEAR ? "#8b6810" : "#5c4198"), borderWidth: years.map((year) => year === BUDGET_PROJECT_YEAR ? 2 : 1), borderRadius: 6, categoryPercentage: .78, barPercentage: .92, maxBarThickness: 72 }] }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 24 } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: "#fff", titleColor: "#15233b", bodyColor: "#46556d", borderColor: "#c7d5e2", borderWidth: 1, padding: 11, callbacks: { label: (context) => `${context.label === BUDGET_PROJECT_YEAR ? "Proyecto 2027 · " : ""}${budgetShare(context.parsed.y)} · ${formatCents(context.dataset.rawValues[context.dataIndex])}` } } }, scales: { x: { grid: { display: false }, ticks: { color: "#33415a", font: { weight: "700" } } }, y: { beginAtZero: true, grace: "12%", grid: { color: "#e2e7ed" }, ticks: { callback: (value) => `${value}%` }, title: { display: true, text: "Participación en el total", color: "#60708a" } } } } });
 }
 function renderBudgetComposition(renderGraph = true) {
   document.querySelectorAll("[data-budget-composition-view]").forEach((button) => { const active = button.dataset.budgetCompositionView === budgetCompositionView; button.classList.toggle("active", active); button.setAttribute("aria-selected", String(active)); });
