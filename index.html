@@ -6,7 +6,7 @@
     <link rel="icon" href="data:," />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261123-5" />
+    <link rel="stylesheet" href="styles.css?v=20261123-6" />
   </head>
   <body>
     <header class="site-header">
@@ -39,41 +39,49 @@
     <main>
       <section id="page-summary" class="page-view public-summary-page">
         <header class="public-summary-hero summary-project-hero">
-          <div><p class="eyebrow">Primera lectura · Proyecto de Presupuesto 2027</p><h2>Qué cambia en las prioridades de la ciudad</h2><p>Una síntesis verificable para entender el proyecto presentado por el Ejecutivo: cuánto prevé gastar, qué áreas ganan o pierden peso y de dónde espera obtener los recursos.</p><div class="summary-hero-actions"><button class="public-guide-link" type="button" data-page-target="budgets">Explorar todos los presupuestos <span aria-hidden="true">→</span></button><span class="summary-project-badge">Proyecto · no es ejecución</span></div></div>
+          <div><p class="eyebrow">Documento de análisis presupuestario · Santa Fe Capital</p><h2>Dos modelos de ciudad: radiografía del Presupuesto 2027 de Poletti</h2><p>Una lectura política y técnica de los números oficiales. Analizamos qué prioridades consolida el Ejecutivo, qué políticas pierden peso y quién termina financiando el modelo de ciudad.</p><div class="summary-hero-actions"><button class="public-guide-link" type="button" data-page-target="budgets">Explorar los datos completos <span aria-hidden="true">→</span></button><span class="summary-project-badge">Proyecto · no es ejecución</span></div></div>
           <div class="summary-hero-total"><span>Total proyectado</span><strong id="summary-project-total">—</strong><small id="summary-project-growth">—</small></div>
         </header>
 
-        <section class="summary-comparison" aria-labelledby="summary-comparison-title">
-          <div><p class="eyebrow">Criterio de comparación</p><h2 id="summary-comparison-title">¿Comparar con 2023 o con 2024?</h2><p id="summary-baseline-explanation">Usamos 2024 como base principal porque es el primer presupuesto de la gestión Poletti. Podés cambiar a 2023 para ver el cierre de la gestión anterior y sumar perspectiva histórica.</p></div>
-          <div class="summary-baseline-tabs" role="tablist" aria-label="Año base para la comparación">
-            <button class="active" type="button" role="tab" aria-selected="true" data-summary-baseline="2024"><strong>2024</strong><span>Inicio de gestión</span><small>Comparación principal</small></button>
-            <button type="button" role="tab" aria-selected="false" data-summary-baseline="2023"><strong>2023</strong><span>Gestión anterior</span><small>Contexto histórico</small></button>
-          </div>
-        </section>
-
-        <section class="public-summary-section" aria-labelledby="summary-keys-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Cinco claves verificadas</p><h2 id="summary-keys-title">El proyecto 2027, de un vistazo</h2></div><p>Variaciones nominales y cambios de participación calculados sobre los cuadros presupuestarios oficiales.</p></div>
+        <section class="public-summary-section summary-chapter" aria-labelledby="summary-keys-title">
+          <div class="summary-chapter-heading"><span>01</span><div><p class="eyebrow">Resumen ejecutivo</p><h2 id="summary-keys-title">El Presupuesto 2027 en cinco claves</h2><p>Detrás del discurso oficial de austeridad, equilibrio y eficiencia, los cuadros presupuestarios muestran tendencias concretas sobre el rumbo de la gestión.</p></div></div>
           <div id="summary-key-cards" class="summary-key-cards"></div>
         </section>
 
-        <section class="public-summary-section" aria-labelledby="summary-priorities-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Composición del gasto</p><h2 id="summary-priorities-title">Cómo cambiaron las prioridades</h2></div><p id="summary-priorities-note">Participación de cada categoría en el presupuesto inicial de 2024 y en el proyecto 2027.</p></div>
+        <aside class="summary-model-statement"><p class="eyebrow">El contrapunto de modelos de ciudad</p><p>Frente a una gestión que administra el repliegue estatal y descarga una parte creciente del financiamiento sobre las tasas locales, proponemos un Estado municipal activo como igualador territorial y social: con obra pública en los barrios postergados, prioridades claras en salud, trabajo y hábitat, y una política tributaria progresiva que cuide a las familias y al comercio de cercanía.</p></aside>
+
+        <section class="public-summary-section summary-chapter" aria-labelledby="summary-priorities-title">
+          <div class="summary-chapter-heading"><span>02</span><div><p class="eyebrow">Evolución de prioridades</p><h2 id="summary-priorities-title">Dónde pone la plata la gestión Poletti</h2><p id="summary-priorities-note">Para comparar presupuestos sin que la inflación distorsione el análisis, observamos qué porción de cada $100 se asigna a cada política en 2024 y en el proyecto 2027.</p></div></div>
           <div class="summary-priorities-layout">
             <article class="panel summary-priorities-panel"><div id="summary-priority-bars" class="summary-priority-bars"></div><p class="summary-scale-note">La longitud representa el porcentaje sobre el presupuesto total de cada año.</p></article>
-            <aside class="summary-social-card"><p class="eyebrow">Funciones sociales específicas</p><h3>Participaciones pequeñas, impacto directo</h3><div id="summary-social-functions"></div><p>Los porcentajes muestran prioridad presupuestaria, no calidad del servicio ni nivel de ejecución.</p></aside>
+            <aside class="summary-social-card"><p class="eyebrow">El ajuste en políticas directas</p><h3>Salud, Vivienda y Trabajo quedan relegadas</h3><div id="summary-social-functions"></div><p>Mientras el presupuesto general aumenta 39,2% frente a 2026, Trabajo cae 21,2% en términos nominales. Los porcentajes expresan prioridad presupuestaria, no calidad del servicio ni ejecución.</p></aside>
           </div>
+          <div class="summary-analysis-grid"><article><strong>1 de cada 5 pesos</strong><p>El rubro Sin Clasificar llega al 19,1% del proyecto. Allí se concentran cancelación de deuda, cuentas a pagar y transferencias figurativas.</p></article><article><strong>$3.730 millones</strong><p>Es el presupuesto de la Dirección General de Comunicación Pública: más del doble de todo lo asignado a la función Salud o a Vivienda.</p></article><article><strong>$19 millones</strong><p>Es lo previsto para el Programa Vivienda dentro de Hábitat Santa Fe Capital. La estructura administrativa absorbe la mayor parte de los recursos del área.</p></article></div>
         </section>
 
-        <section class="public-summary-section" aria-labelledby="summary-resources-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Recursos estimados</p><h2 id="summary-resources-title">De dónde prevé obtener fondos en 2027</h2></div><p>Son previsiones del proyecto. No equivalen a dinero efectivamente recaudado.</p></div>
+        <section class="public-summary-section summary-chapter" aria-labelledby="summary-staff-title">
+          <div class="summary-chapter-heading"><span>03</span><div><p class="eyebrow">Estructura política y contrataciones</p><h2 id="summary-staff-title">Más cargos políticos y menos transparencia</h2><p>Los anexos de planta muestran que el discurso de achicamiento no se traduce en una reducción de la estructura política del Ejecutivo.</p></div></div>
+          <div class="summary-stat-band"><article><span>Planta política 2027</span><strong>282</strong><p>cargos políticos consolidados</p></article><article><span>Autoridades</span><strong>45</strong><p>autoridades de gobierno</p></article><article><span>Gabinete</span><strong>237</strong><p>cargos de personal de gabinete</p></article><article><span>Desde 2024</span><strong>+12</strong><p>cargos políticos adicionales</p></article></div>
+          <div class="summary-editorial-copy"><p><strong>La planta política pasó de 270 cargos en 2024 a 282 en el proyecto 2027.</strong> La gestión consolida así la estructura más alta de la serie relevada en el informe, con 91 direcciones ejecutivas y 112 coordinaciones.</p><p><strong>La caja negra sigue siendo Servicios No Personales:</strong> el inciso representa $107.742 millones, el 26,2% del presupuesto. El cuadro general no permite identificar cuánto corresponde a servicios urbanos, obra pública, locaciones u honorarios. La publicación desagregada de la partida 3.4 es indispensable para el control opositor.</p></div>
+        </section>
+
+        <section class="public-summary-section summary-chapter summary-works-chapter" aria-labelledby="summary-works-title">
+          <div class="summary-chapter-heading"><span>04</span><div><p class="eyebrow">Obra pública y territorio</p><h2 id="summary-works-title">Una ciudad partida: inversión concentrada y barrios excluidos</h2><p>El proyecto recupera inversión desde el piso de 2024, pero conserva fuertes límites territoriales y amplias facultades para trasladar recursos hacia gastos corrientes.</p></div></div>
+          <div class="summary-works-grid"><article class="summary-big-fact"><span>Gastos de capital</span><strong>9,8% <i>2024</i> → 12,1% <i>2027</i></strong><p>La participación mejora dentro de la gestión, aunque el proyecto sigue concentrando la ejecución en partidas generales y obras con financiamiento provincial.</p></article><article><span class="summary-fact-number">16</span><h3>barrios enumerados</h3><p>El esquema de intervenciones integrales identifica solo 16 barrios. Nuestra posición es que las obras deben estar georreferenciadas y alcanzar también a los sectores que quedaron fuera del listado.</p></article><article><span class="summary-fact-number">40%</span><h3>de capital a corriente</h3><p>El Ejecutivo solicita autorización para trasladar hasta el 40% del presupuesto de gastos de capital hacia gastos corrientes, reduciendo el control previo del Concejo.</p></article></div>
+        </section>
+
+        <section class="public-summary-section summary-chapter" aria-labelledby="summary-resources-title">
+          <div class="summary-chapter-heading"><span>05</span><div><p class="eyebrow">Quién paga la cuenta</p><h2 id="summary-resources-title">Nación recorta, el Municipio aumenta tasas</h2><p>Los recursos son estimaciones del proyecto, no dinero recaudado. La estructura proyectada combina menor financiamiento nacional para obras con una mayor carga sobre ingresos locales.</p></div></div>
           <div id="summary-resource-cards" class="summary-resource-cards"></div>
+          <div class="summary-resource-story"><article><strong>+68,2%</strong><h3>en Tasas frente a 2026</h3><p>El proyecto estima $35.129 millones por Tasas, principalmente TGI. Al mismo tiempo, la Ordenanza Tributaria habilita topes anuales de aumento de hasta 190% según zona inmobiliaria.</p></article><article><strong>0,4%</strong><h3>para transferencias nacionales de capital</h3><p>Son $1.678 millones previstos para obras de origen nacional. El retiro de Nación no puede ser una excusa para abandonar la inversión territorial.</p></article><article><strong>casi 7 veces</strong><h3>el presupuesto de Salud</h3><p>Los $10.048 millones estimados por intereses financieros equivalen a casi siete presupuestos completos de la función Salud, que recibe $1.469 millones.</p></article></div>
         </section>
 
-        <section class="summary-evidence" aria-labelledby="summary-evidence-title">
-          <div><p class="eyebrow">Alcance de esta primera propuesta</p><h2 id="summary-evidence-title">Qué incorporamos y qué falta validar</h2></div>
-          <article class="summary-evidence-card summary-evidence-confirmed"><h3>Datos incorporados</h3><ul><li>Total del proyecto y variación nominal.</li><li>Finalidades y funciones del gasto.</li><li>Objeto y carácter económico.</li><li>Principales recursos estimados para 2027.</li></ul></article>
-          <article class="summary-evidence-card summary-evidence-pending"><h3>Temas pendientes de fuente específica</h3><ul><li>Serie histórica de cargos políticos y personal.</li><li>Topes tributarios de la ordenanza 2027.</li><li>Alcance territorial detallado de las obras.</li><li>Comparación homogénea de recursos nacionales afectados.</li></ul></article>
-          <p class="summary-evidence-note">El informe recibido se usó como guía temática. Las afirmaciones políticas y los datos que todavía no pudimos contrastar con una fuente oficial específica no se presentan como hechos en este resumen.</p>
+        <section class="public-summary-section summary-chapter summary-proposals" aria-labelledby="summary-proposals-title">
+          <div class="summary-chapter-heading"><span>06</span><div><p class="eyebrow">Nuestra propuesta</p><h2 id="summary-proposals-title">Otra Santa Fe es posible</h2><p>La crítica presupuestaria tiene que traducirse en prioridades concretas. Proponemos cinco cambios para discutir el proyecto 2027.</p></div></div>
+          <ol><li><strong>Tope real a la TGI.</strong><p>Alinear los aumentos a la pauta inflacionaria proyectada y proteger a familias, pequeños comercios y pymes.</p></li><li><strong>Fondo de Integración Barrial.</strong><p>Reorientar rentas financieras y comunicación hacia desagües, pavimento, iluminación y hábitat en los barrios excluidos.</p></li><li><strong>Emergencia en Salud, Trabajo y Hábitat.</strong><p>Revertir los recortes y reforzar Atención Primaria, el Programa Vivienda y las políticas de empleo.</p></li><li><strong>Freno a la planta política y contratos transparentes.</strong><p>Reducir cargos políticos y publicar la partida 3.4 de servicios técnicos y profesionales.</p></li><li><strong>Límite a las reasignaciones.</strong><p>Impedir que el Ejecutivo traslade hasta el 40% de gastos de capital a gastos corrientes sin control del Concejo.</p></li></ol>
+        </section>
+
+        <section class="summary-methodology" aria-label="Metodología y alcance"><strong>Cómo leer este resumen</strong><p>Las cifras provienen de los cuadros oficiales del Proyecto de Presupuesto 2027, presupuestos anteriores y anexos citados en el informe de análisis. Los datos se presentan junto con una interpretación política elaborada desde una banca opositora. Las variaciones en pesos son nominales; 2027 es un proyecto y no registra ejecución.</p>
         </section>
       </section>
 
@@ -552,6 +560,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261123-5"></script>
+    <script src="app.js?v=20261123-6"></script>
   </body>
 </html>

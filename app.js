@@ -37,7 +37,6 @@ let projectBudgetData = { meta: {}, programas: [], recursos: [], objetos_gasto: 
 let closingBudgetData = { meta: {}, cierres: [] }, budgetEarlierYearsExpanded = false;
 let budgetClassificationData = { meta: {}, totales: [], objeto_gasto: [], caracter_economico: [] }, budgetCompositionView = "object", selectedBudgetEconomicConcept = "2121000", budgetEconomicChart = null, budgetEconomicSort = { key: BUDGET_PROJECT_YEAR, direction: "desc" };
 let budgetSecretaryView = "bars", selectedBudgetSecretaryYear = BUDGET_PROJECT_YEAR, budgetSecretaryTableExpanded = false, budgetSecretarySort = { key: BUDGET_PROJECT_YEAR, direction: "desc" };
-let summaryBaselineYear = "2024";
 const TABLE_PAGE_SIZE = 5;
 let expenseTablePage = 1, resourceTablePage = 1, fundTablePage = 1, guideTablePage = 1, guideExpandedSecretaries = new Set(), activeDownloadView = "expenses";
 let heatmapExpanded = false;
@@ -512,24 +511,23 @@ function summaryClassificationShare(collection, year, predicate) { const total =
 function summaryPointChange(value) { if (value === null || !Number.isFinite(value)) return "—"; const decimals = Math.abs(value) < 1 ? 2 : 1; return `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value).toLocaleString("es-AR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })} p.p.`; }
 function summaryChangeMarkup(value, comparison) { const direction = value > 0 ? "up" : value < 0 ? "down" : "flat"; return `<span class="summary-change summary-change-${direction}">${summaryPointChange(value)} <small>${escapeHtml(comparison)}</small></span>`; }
 function renderPublicSummary() {
-  const baseline = summaryBaselineYear, totalByYear = budgetTotalsByYear(), projectTotal = totalByYear.get(BUDGET_PROJECT_YEAR) || projectBudgetData.meta.total_centavos || 0, previousTotal = totalByYear.get("2026") || 0, totalGrowth = previousTotal ? (projectTotal / previousTotal - 1) * 100 : null;
+  const baseline = "2024", totalByYear = budgetTotalsByYear(), projectTotal = totalByYear.get(BUDGET_PROJECT_YEAR) || projectBudgetData.meta.total_centavos || 0, previousTotal = totalByYear.get("2026") || 0, totalGrowth = previousTotal ? (projectTotal / previousTotal - 1) * 100 : null;
   const social2027 = summaryFinalityShare("300", "2027"), socialBase = summaryFinalityShare("300", baseline), unclassified2027 = summaryFinalityShare("900", "2027"), unclassifiedBase = summaryFinalityShare("900", baseline);
   const capitalShare = (year) => summaryClassificationShare("caracter_economico", year, (row) => row.grupo === "Gastos de capital"), servicesShare = (year) => summaryClassificationShare("objeto_gasto", year, (row) => row.codigo === "3.0.0.0"), useGoodsShare = (year) => summaryClassificationShare("objeto_gasto", year, (row) => row.codigo === "4.0.0.0");
   const capital2027 = capitalShare("2027"), capitalBase = capitalShare(baseline), work2027 = summaryFunctionAmount("360", "2027"), work2026 = summaryFunctionAmount("360", "2026"), workChange = work2026 ? (work2027 / work2026 - 1) * 100 : null;
+  const projectResources = projectBudgetData.recursos || [], resourceAmount = (codes) => projectResources.filter((row) => codes.includes(row.rubro_codigo)).reduce((result, row) => result + Number(row.monto_centavos || 0), 0), localRates = projectResources.filter((row) => row.rubro_codigo.startsWith("12.1.")).reduce((result, row) => result + Number(row.monto_centavos || 0), 0);
 
   $("#summary-project-total").textContent = formatBillions(projectTotal);
   $("#summary-project-growth").textContent = `${totalGrowth >= 0 ? "+" : "−"}${formatPercent(Math.abs(totalGrowth))} nominal frente al presupuesto 2026`;
-  $("#summary-baseline-explanation").textContent = baseline === "2024" ? "Usamos 2024 como base principal porque es el primer presupuesto de la gestión Poletti. Podés cambiar a 2023 para ver el cierre de la gestión anterior y sumar perspectiva histórica." : "Esta vista compara con 2023, último presupuesto de la gestión anterior. Sirve como contexto estructural; para evaluar cambios dentro de la gestión Poletti, la base 2024 es más precisa.";
-  document.querySelectorAll("[data-summary-baseline]").forEach((button) => { const active = button.dataset.summaryBaseline === baseline; button.classList.toggle("active", active); button.setAttribute("aria-selected", String(active)); });
 
   const keyCards = [
-    { index: "01", label: "Tamaño del proyecto", value: formatBillions(projectTotal), detail: `${totalGrowth >= 0 ? "+" : "−"}${formatPercent(Math.abs(totalGrowth))} nominal vs. 2026`, tone: "blue" },
-    { index: "02", label: "Servicios sociales", value: budgetShare(social2027), detail: summaryChangeMarkup(social2027 - socialBase, `vs. ${baseline}`), tone: "teal" },
-    { index: "03", label: "Sin clasificar", value: budgetShare(unclassified2027), detail: summaryChangeMarkup(unclassified2027 - unclassifiedBase, `vs. ${baseline}`), tone: "amber" },
-    { index: "04", label: "Gastos de capital", value: budgetShare(capital2027), detail: summaryChangeMarkup(capital2027 - capitalBase, `vs. ${baseline}`), tone: "violet" },
-    { index: "05", label: "Función Trabajo", value: formatBillions(work2027), detail: `<span class="summary-change summary-change-${workChange < 0 ? "down" : "up"}">${workChange >= 0 ? "+" : "−"}${formatPercent(Math.abs(workChange))} <small>nominal vs. 2026</small></span>`, tone: "red" },
+    { index: "1", title: "Retroceso del gasto social", value: budgetShare(social2027), kicker: summaryChangeMarkup(social2027 - socialBase, "desde 2024"), copy: `Servicios Sociales representaba ${budgetShare(socialBase)} del presupuesto al inicio de la gestión. En 2027 baja a ${budgetShare(social2027)}: pierde peso aun cuando el presupuesto total crece.`, tone: "teal" },
+    { index: "2", title: "Deuda y pasivos ganan lugar", value: budgetShare(unclassified2027), kicker: summaryChangeMarkup(unclassified2027 - unclassifiedBase, "desde 2024"), copy: `El rubro Sin Clasificar alcanza ${formatBillions(summaryFunctionAmount("990", "2027"))}. Casi uno de cada cinco pesos se destina a deuda, cuentas a pagar y transferencias figurativas.`, tone: "amber" },
+    { index: "3", title: "Salud, Vivienda y Trabajo relegados", value: "0,36% / 0,34%", kicker: `<span class="summary-change summary-change-down">−${formatPercent(Math.abs(workChange))} <small>Trabajo vs. 2026</small></span>`, copy: `Salud recibe ${formatBillions(summaryFunctionAmount("310", "2027"))} y Vivienda ${formatBillions(summaryFunctionAmount("370", "2027"))}. Trabajo baja nominalmente de $2.551 millones a $2.011 millones.`, tone: "red" },
+    { index: "4", title: "La planta política no se achica", value: "282 cargos", kicker: `<span class="summary-change summary-change-up">+12 <small>desde 2024</small></span>`, copy: "El proyecto consolida 45 Autoridades de Gobierno y 237 cargos de Gabinete. Es el máximo de la serie histórica relevada por el informe.", tone: "violet" },
+    { index: "5", title: "Más peso sobre los ingresos locales", value: "+68,2%", kicker: `<span class="summary-change">${formatBillions(localRates)} <small>previstos en Tasas</small></span>`, copy: "La recaudación proyectada por Tasas crece muy por encima del presupuesto general, mientras se habilitan topes de aumento de la TGI de hasta 190% según la zona.", tone: "blue" },
   ];
-  $("#summary-key-cards").innerHTML = keyCards.map((card) => `<article class="summary-key-card summary-key-${card.tone}"><span class="summary-key-index">${card.index}</span><p>${escapeHtml(card.label)}</p><strong>${card.value}</strong>${card.detail}<small class="summary-key-source">Proyecto 2027</small></article>`).join("");
+  $("#summary-key-cards").innerHTML = keyCards.map((card) => `<article class="summary-key-card summary-key-${card.tone}"><span class="summary-key-index">${card.index}</span><h3>${escapeHtml(card.title)}</h3><div class="summary-key-value">${card.value}</div>${card.kicker}<p class="summary-key-copy">${card.copy}</p></article>`).join("");
 
   const priorities = [
     { label: "Servicios sociales", baseline: socialBase, project: social2027 },
@@ -538,13 +536,11 @@ function renderPublicSummary() {
     { label: "Gastos de capital", baseline: capitalBase, project: capital2027 },
     { label: "Bienes de uso", baseline: useGoodsShare(baseline), project: useGoodsShare("2027") },
   ];
-  $("#summary-priorities-note").textContent = `Participación de cada categoría en el presupuesto inicial de ${baseline} y en el proyecto 2027.`;
   $("#summary-priority-bars").innerHTML = priorities.map((item) => `<div class="summary-priority-row"><div class="summary-priority-heading"><strong>${escapeHtml(item.label)}</strong>${summaryChangeMarkup(item.project - item.baseline, `vs. ${baseline}`)}</div><div class="summary-bar-line"><span>${baseline}</span><div class="summary-bar-track"><i class="summary-bar-baseline" style="width:${Math.max(item.baseline, .5)}%"></i></div><b>${budgetShare(item.baseline)}</b></div><div class="summary-bar-line"><span>2027</span><div class="summary-bar-track summary-bar-project-track"><i class="summary-bar-project" style="width:${Math.max(item.project, .5)}%"></i></div><b>${budgetShare(item.project)}</b></div></div>`).join("");
 
   const socialFunctions = [{ code: "310", name: "Salud" }, { code: "370", name: "Vivienda" }, { code: "360", name: "Trabajo" }].map((item) => ({ ...item, baseline: summaryFunctionShare(item.code, baseline), project: summaryFunctionShare(item.code, "2027"), amount: summaryFunctionAmount(item.code, "2027") }));
   $("#summary-social-functions").innerHTML = socialFunctions.map((item) => `<article><div><strong>${escapeHtml(item.name)}</strong><span>${formatBillions(item.amount)}</span></div><b>${budgetShare(item.project)}</b>${summaryChangeMarkup(item.project - item.baseline, `vs. ${baseline}`)}</article>`).join("");
 
-  const projectResources = projectBudgetData.recursos || [], resourceAmount = (codes) => projectResources.filter((row) => codes.includes(row.rubro_codigo)).reduce((result, row) => result + Number(row.monto_centavos || 0), 0);
   const resources = [
     { label: "Derecho de Registro e Inspección", short: "DReI", value: resourceAmount(["12.2.01.00"]) },
     { label: "Coparticipación Federal", short: "Recursos nacionales", value: resourceAmount(["11.4.04.00"]) },
@@ -1305,7 +1301,6 @@ async function init() {
     document.querySelectorAll(".header-tabs [data-page]").forEach((button) => button.addEventListener("click", () => { const page = button.dataset.page; document.querySelectorAll(".page-view").forEach((view) => { view.hidden = view.id !== `page-${page}`; }); $("#header-tracking-tabs").hidden = page !== "tracking"; document.querySelectorAll(".header-tabs [data-page]").forEach((item) => { item.classList.toggle("active", item === button); item.setAttribute("aria-selected", String(item === button)); }); if (page === "tracking") requestAnimationFrame(() => { const tracking = document.querySelector(".tracking-tabs [data-tracking].active")?.dataset.tracking; if (tracking === "resources") renderResources(); else if (tracking === "funds") renderFunds(); else render(); }); else if (page === "budgets") requestAnimationFrame(() => renderBudgets()); window.scrollTo({ top: 0, behavior: "smooth" }); }));
     document.querySelectorAll("[data-page-target]").forEach((button) => button.addEventListener("click", () => document.querySelector(`.header-tabs [data-page="${button.dataset.pageTarget}"]`)?.click()));
     document.querySelectorAll("[data-tracking-target]").forEach((button) => button.addEventListener("click", () => { document.querySelector('.header-tabs [data-page="tracking"]')?.click(); document.querySelector(`.tracking-tabs [data-tracking="${button.dataset.trackingTarget}"]`)?.click(); }));
-    document.querySelectorAll("[data-summary-baseline]").forEach((button) => button.addEventListener("click", () => { summaryBaselineYear = button.dataset.summaryBaseline; renderPublicSummary(); }));
     $("#budget-function-filter").addEventListener("change", (event) => { selectedBudgetFunction = event.target.value; renderBudgetFunction(); });
     document.querySelectorAll("[data-budget-composition-view]").forEach((button) => button.addEventListener("click", () => { budgetCompositionView = button.dataset.budgetCompositionView; renderBudgetComposition(); }));
     $("#budget-economic-filter").addEventListener("change", (event) => { selectedBudgetEconomicConcept = event.target.value; renderBudgetEconomic(); });
