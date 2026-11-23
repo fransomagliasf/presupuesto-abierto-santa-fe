@@ -6,7 +6,7 @@
     <link rel="icon" href="data:," />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261123-4" />
+    <link rel="stylesheet" href="styles.css?v=20261123-5" />
   </head>
   <body>
     <header class="site-header">
@@ -38,41 +38,42 @@
 
     <main>
       <section id="page-summary" class="page-view public-summary-page">
-        <header class="public-summary-hero">
-          <div><p class="eyebrow">Presupuesto abierto</p><h2>Entender las cuentas de la ciudad puede ser simple</h2><p>La Municipalidad publica la ejecución del presupuesto una vez por mes. Acá resumimos los últimos datos disponibles con palabras claras para mostrar cuánto se presupuestó, cuánto ingresó y cómo se distribuye.</p><button class="public-guide-link" type="button" data-page-target="guide">Aprender a leer el presupuesto <span aria-hidden="true">→</span></button></div>
-          <p id="public-summary-period" class="public-summary-period">Último cierre disponible</p>
+        <header class="public-summary-hero summary-project-hero">
+          <div><p class="eyebrow">Primera lectura · Proyecto de Presupuesto 2027</p><h2>Qué cambia en las prioridades de la ciudad</h2><p>Una síntesis verificable para entender el proyecto presentado por el Ejecutivo: cuánto prevé gastar, qué áreas ganan o pierden peso y de dónde espera obtener los recursos.</p><div class="summary-hero-actions"><button class="public-guide-link" type="button" data-page-target="budgets">Explorar todos los presupuestos <span aria-hidden="true">→</span></button><span class="summary-project-badge">Proyecto · no es ejecución</span></div></div>
+          <div class="summary-hero-total"><span>Total proyectado</span><strong id="summary-project-total">—</strong><small id="summary-project-growth">—</small></div>
         </header>
 
-        <section class="public-summary-section public-overview-section" aria-labelledby="public-budget-title">
-          <div class="public-section-heading"><div><p class="eyebrow">La ciudad en números</p><h2 id="public-budget-title">El presupuesto municipal, de un vistazo</h2></div><p>El presupuesto prevé gastos e ingresos por el mismo total. Por eso mostramos una sola vez esos montos y destacamos qué cambió durante el año.</p></div>
-          <article class="public-overview-strip" aria-label="Principales números del presupuesto municipal">
-            <div><span>Presupuesto inicial</span><strong id="public-budget-approved">—</strong><small>Aprobado al comenzar el año</small></div>
-            <div><span>Presupuesto actualizado</span><strong id="public-budget-current">—</strong><small>Incluye los cambios posteriores</small></div>
-            <div><span>Aumento</span><strong id="public-budget-change">—</strong><small id="public-budget-change-note">—</small></div>
-            <div><span>Pagado hasta ahora</span><strong id="public-total-paid">—</strong><small>Dinero que ya salió</small></div>
-            <div><span>Recaudado hasta ahora</span><strong id="public-total-collected">—</strong><small>Dinero que ya ingresó</small></div>
-            <div><span>Avance de recaudación</span><strong id="public-resource-rate">—</strong><small id="public-resource-rate-note">Sobre lo previsto actualmente</small></div>
-          </article>
-          <div class="public-overview-help">
-            <p><strong>Inicial y actualizado:</strong> permiten ver si el presupuesto creció o se redujo desde su aprobación.</p>
-            <p><strong>Pagado y recaudado:</strong> son movimientos efectivamente realizados hasta el mes informado, no proyecciones para todo el año.</p>
-            <p><strong>Avance de recaudación:</strong> indica qué porcentaje de los ingresos previstos ya entró a las cuentas municipales.</p>
+        <section class="summary-comparison" aria-labelledby="summary-comparison-title">
+          <div><p class="eyebrow">Criterio de comparación</p><h2 id="summary-comparison-title">¿Comparar con 2023 o con 2024?</h2><p id="summary-baseline-explanation">Usamos 2024 como base principal porque es el primer presupuesto de la gestión Poletti. Podés cambiar a 2023 para ver el cierre de la gestión anterior y sumar perspectiva histórica.</p></div>
+          <div class="summary-baseline-tabs" role="tablist" aria-label="Año base para la comparación">
+            <button class="active" type="button" role="tab" aria-selected="true" data-summary-baseline="2024"><strong>2024</strong><span>Inicio de gestión</span><small>Comparación principal</small></button>
+            <button type="button" role="tab" aria-selected="false" data-summary-baseline="2023"><strong>2023</strong><span>Gestión anterior</span><small>Contexto histórico</small></button>
           </div>
         </section>
 
-        <section class="public-summary-section" aria-labelledby="public-expenses-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Sector 1 · Gastos</p><h2 id="public-expenses-title">¿Cómo se distribuye el presupuesto?</h2></div><p>Cada porcentaje muestra qué parte del total municipal corresponde a cada secretaría o jurisdicción.</p></div>
-          <div class="public-expense-layout">
-            <article class="panel public-table-card"><div class="table-wrap"><table><thead><tr><th>Secretaría o área</th><th class="number">% inicial</th><th class="number">% actualizado</th><th class="number">Cambio en el total</th></tr></thead><tbody id="public-expense-table"></tbody></table></div></article>
-            <aside class="panel public-ranking-copy"><p class="eyebrow">Para entender la tabla</p><h3>¿Qué nos cuenta esta distribución?</h3><div id="public-expense-explanation"></div><button class="public-inline-link" type="button" data-page-target="guide">¿Qué significa crédito vigente? <span aria-hidden="true">→</span></button><p class="public-method-note">El orden se calcula sobre el presupuesto actualizado del último cierre disponible.</p></aside>
+        <section class="public-summary-section" aria-labelledby="summary-keys-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Cinco claves verificadas</p><h2 id="summary-keys-title">El proyecto 2027, de un vistazo</h2></div><p>Variaciones nominales y cambios de participación calculados sobre los cuadros presupuestarios oficiales.</p></div>
+          <div id="summary-key-cards" class="summary-key-cards"></div>
+        </section>
+
+        <section class="public-summary-section" aria-labelledby="summary-priorities-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Composición del gasto</p><h2 id="summary-priorities-title">Cómo cambiaron las prioridades</h2></div><p id="summary-priorities-note">Participación de cada categoría en el presupuesto inicial de 2024 y en el proyecto 2027.</p></div>
+          <div class="summary-priorities-layout">
+            <article class="panel summary-priorities-panel"><div id="summary-priority-bars" class="summary-priority-bars"></div><p class="summary-scale-note">La longitud representa el porcentaje sobre el presupuesto total de cada año.</p></article>
+            <aside class="summary-social-card"><p class="eyebrow">Funciones sociales específicas</p><h3>Participaciones pequeñas, impacto directo</h3><div id="summary-social-functions"></div><p>Los porcentajes muestran prioridad presupuestaria, no calidad del servicio ni nivel de ejecución.</p></aside>
           </div>
         </section>
 
-        <section class="public-summary-section" aria-labelledby="public-resources-title">
-          <div class="public-section-heading public-income-heading"><div><p class="eyebrow">De dónde viene el dinero</p><h2 id="public-resources-title">Cinco ingresos clave para la ciudad</h2></div><p>Estos valores muestran dinero efectivamente recaudado, no lo que todavía se espera cobrar.</p></div>
-          <div id="public-resource-cards" class="public-resource-cards"></div>
-          <article id="public-resource-highlight-summary" class="public-highlight-summary"></article>
-          <div class="public-section-actions"><button class="public-inline-link" type="button" data-tracking-target="resources">Explorar todos los recursos <span aria-hidden="true">→</span></button><button class="public-inline-link public-inline-link-secondary" type="button" data-page-target="guide">Entender cómo se registran los ingresos <span aria-hidden="true">→</span></button></div>
+        <section class="public-summary-section" aria-labelledby="summary-resources-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Recursos estimados</p><h2 id="summary-resources-title">De dónde prevé obtener fondos en 2027</h2></div><p>Son previsiones del proyecto. No equivalen a dinero efectivamente recaudado.</p></div>
+          <div id="summary-resource-cards" class="summary-resource-cards"></div>
+        </section>
+
+        <section class="summary-evidence" aria-labelledby="summary-evidence-title">
+          <div><p class="eyebrow">Alcance de esta primera propuesta</p><h2 id="summary-evidence-title">Qué incorporamos y qué falta validar</h2></div>
+          <article class="summary-evidence-card summary-evidence-confirmed"><h3>Datos incorporados</h3><ul><li>Total del proyecto y variación nominal.</li><li>Finalidades y funciones del gasto.</li><li>Objeto y carácter económico.</li><li>Principales recursos estimados para 2027.</li></ul></article>
+          <article class="summary-evidence-card summary-evidence-pending"><h3>Temas pendientes de fuente específica</h3><ul><li>Serie histórica de cargos políticos y personal.</li><li>Topes tributarios de la ordenanza 2027.</li><li>Alcance territorial detallado de las obras.</li><li>Comparación homogénea de recursos nacionales afectados.</li></ul></article>
+          <p class="summary-evidence-note">El informe recibido se usó como guía temática. Las afirmaciones políticas y los datos que todavía no pudimos contrastar con una fuente oficial específica no se presentan como hechos en este resumen.</p>
         </section>
       </section>
 
@@ -551,6 +552,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261123-4"></script>
+    <script src="app.js?v=20261123-5"></script>
   </body>
 </html>

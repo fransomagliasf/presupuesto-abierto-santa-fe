@@ -17,6 +17,7 @@ de las mismas fuentes sin volver a subir los documentos al chat.
 | `presupuestos` | `2026-presupuesto.pdf` | Presupuesto aprobado 2026 |
 | `presupuestos` | `2027-finalidad-funcion.pdf` | Finalidad y función del Proyecto 2027 |
 | `presupuestos` | `2027-mensaje-presupuesto.pdf` | Mensaje completo del Proyecto 2027 |
+| `informes` | `2027-informe-oposicion.docx` | Documento de referencia temática para el nuevo Resumen 2027; sus afirmaciones se verifican contra fuentes oficiales antes de publicarse |
 
 Las fuentes históricas de finalidad y función que no fueron subidas en esta
 sesión todavía no están disponibles como PDF en el repositorio. Sus datos
