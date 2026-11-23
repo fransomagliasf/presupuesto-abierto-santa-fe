@@ -112,33 +112,6 @@
           </div>
         </section>
 
-        <section class="budgets-section panel budget-composition-panel" aria-labelledby="budget-composition-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Composición del gasto</p><h2 id="budget-composition-title">Cómo se reparte cada presupuesto</h2></div><p>Alterná entre el objeto del gasto y el carácter económico para comparar la estructura de cada año.</p></div>
-          <div class="budget-secretary-tabs budget-composition-tabs" role="tablist" aria-label="Clasificación del gasto">
-            <button class="active" type="button" role="tab" aria-selected="true" data-budget-composition-view="object">Por objeto del gasto</button>
-            <button type="button" role="tab" aria-selected="false" data-budget-composition-view="economic">Por carácter económico</button>
-          </div>
-          <div id="budget-object-view" role="tabpanel">
-            <p class="budget-composition-help">Cada barra suma 100%. La comparación muestra cuánto representan personal, bienes, servicios, transferencias y los demás objetos dentro de cada presupuesto.</p>
-            <div class="budget-composition-chart"><canvas id="budget-composition-chart"></canvas></div>
-            <div class="budget-project-legend"><i class="budget-project-key"></i><span>La barra 2027 corresponde al Proyecto de Presupuesto.</span></div>
-            <ul id="budget-composition-legend" class="budget-composition-legend" aria-label="Objetos del gasto"></ul>
-          </div>
-          <div id="budget-economic-view" role="tabpanel" hidden>
-            <div class="budget-economic-layout">
-              <div class="budget-economic-visual">
-                <div class="budget-economic-heading"><div><h3 id="budget-economic-chart-title">Evolución por carácter económico</h3><p>Las barras muestran qué porcentaje representa cada concepto dentro del presupuesto total.</p></div><label>Concepto<select id="budget-economic-filter" aria-label="Concepto económico a comparar"></select></label></div>
-                <div class="budget-economic-chart"><canvas id="budget-economic-chart"></canvas></div>
-                <div class="budget-project-legend"><i class="budget-project-key"></i><span>La barra 2027 corresponde al Proyecto de Presupuesto.</span></div>
-              </div>
-              <aside class="budget-economic-reading" aria-labelledby="budget-economic-reading-title"><p class="eyebrow">Lectura rápida</p><h3 id="budget-economic-reading-title">Carácter económico: lectura</h3><div id="budget-economic-reading"></div></aside>
-            </div>
-            <p class="budget-secretary-table-help">En la tabla, hacé clic en cualquier año o en la columna de cambio para ordenar de mayor a menor o a la inversa.</p>
-            <div class="table-wrap"><table class="budget-functions-table budget-economic-table"><thead><tr id="budget-economic-head"></tr></thead><tbody id="budget-economic-table"></tbody></table></div>
-          </div>
-          <p class="budget-source-note">Fuente: crédito aprobado de las Cuentas de Inversión 2020–2025, Presupuesto 2026 y Proyecto de Presupuesto 2027. En 2020, 2023 y 2025 el total publicado en la Cuenta difiere del cuadro histórico por finalidad y función; para no mezclar bases, cada composición se calcula con el total de su misma fuente. En 2020 la diferencia principal responde a la reconducción registrada.</p>
-        </section>
-
         <section class="budgets-section panel budget-functions-table-panel" aria-labelledby="budget-functions-table-title">
           <div class="public-section-heading"><div><p class="eyebrow">Detalle comparado</p><h2 id="budget-functions-table-title">Funciones con mayor participación</h2></div><p>El cambio compara la participación del Proyecto 2027 con 2024. Hacé clic en cualquier año o en “Cambio vs. 2024” para ordenar la tabla.</p></div>
           <div class="budget-functions-filter-row">
@@ -165,6 +138,33 @@
             <button id="toggle-budget-secretaries" class="public-inline-link" type="button" aria-expanded="false">Ver todas las áreas <span aria-hidden="true">↓</span></button>
           </div>
           <p class="budget-source-note">Fuente: crédito vigente al cierre de las Cuentas de Inversión 2020–2025; crédito vigente a octubre para 2026; Proyecto de Presupuesto para 2027. Los nombres reflejan el organigrama de cada año, por lo que un cambio de denominación puede interrumpir una serie.</p>
+        </section>
+
+        <section class="budgets-section panel budget-composition-panel" aria-labelledby="budget-composition-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Composición del gasto</p><h2 id="budget-composition-title">Cómo se reparte cada presupuesto</h2></div><p>Alterná entre el objeto del gasto y el carácter económico para comparar la estructura de cada año.</p></div>
+          <div class="budget-secretary-tabs budget-composition-tabs" role="tablist" aria-label="Clasificación del gasto">
+            <button class="active" type="button" role="tab" aria-selected="true" data-budget-composition-view="object">Por objeto del gasto</button>
+            <button type="button" role="tab" aria-selected="false" data-budget-composition-view="economic">Por carácter económico</button>
+          </div>
+          <div id="budget-object-view" role="tabpanel">
+            <p class="budget-composition-help">Cada barra suma 100%. La comparación muestra cuánto representan personal, bienes, servicios, transferencias y los demás objetos dentro de cada presupuesto.</p>
+            <div class="budget-composition-chart"><canvas id="budget-composition-chart"></canvas></div>
+            <div class="budget-project-legend"><i class="budget-project-key"></i><span>La barra 2027 corresponde al Proyecto de Presupuesto.</span></div>
+            <ul id="budget-composition-legend" class="budget-composition-legend" aria-label="Objetos del gasto"></ul>
+          </div>
+          <div id="budget-economic-view" role="tabpanel" hidden>
+            <div class="budget-economic-layout">
+              <div class="budget-economic-visual">
+                <div class="budget-economic-heading"><div><h3 id="budget-economic-chart-title">Evolución por carácter económico</h3><p>Las barras muestran qué porcentaje representa cada concepto dentro del presupuesto total.</p></div><label>Concepto<select id="budget-economic-filter" aria-label="Concepto económico a comparar"></select></label></div>
+                <div class="budget-economic-chart"><canvas id="budget-economic-chart"></canvas></div>
+                <div class="budget-project-legend"><i class="budget-project-key"></i><span>La barra 2027 corresponde al Proyecto de Presupuesto.</span></div>
+              </div>
+              <aside class="budget-economic-reading" aria-labelledby="budget-economic-reading-title"><p class="eyebrow">Lectura rápida</p><h3 id="budget-economic-reading-title">Carácter económico: lectura</h3><div id="budget-economic-reading"></div></aside>
+            </div>
+            <p class="budget-secretary-table-help">En la tabla, hacé clic en cualquier año o en la columna de cambio para ordenar de mayor a menor o a la inversa.</p>
+            <div class="table-wrap"><table class="budget-functions-table budget-economic-table"><thead><tr id="budget-economic-head"></tr></thead><tbody id="budget-economic-table"></tbody></table></div>
+          </div>
+          <p class="budget-source-note">Fuente: crédito aprobado de las Cuentas de Inversión 2020–2025, Presupuesto 2026 y Proyecto de Presupuesto 2027. En 2020, 2023 y 2025 el total publicado en la Cuenta difiere del cuadro histórico por finalidad y función; para no mezclar bases, cada composición se calcula con el total de su misma fuente. En 2020 la diferencia principal responde a la reconducción registrada.</p>
         </section>
       </section>
 
