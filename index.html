@@ -6,7 +6,7 @@
     <link rel="icon" href="data:," />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261123-1" />
+    <link rel="stylesheet" href="styles.css?v=20261123-2" />
   </head>
   <body>
     <header class="site-header">
@@ -125,9 +125,9 @@
             <ul id="budget-composition-legend" class="budget-composition-legend" aria-label="Objetos del gasto"></ul>
           </div>
           <div id="budget-economic-view" role="tabpanel" hidden>
-            <div class="budget-economic-heading"><div><h3 id="budget-economic-chart-title">Evolución por carácter económico</h3><p>La línea muestra qué porcentaje representa cada concepto dentro del presupuesto total.</p></div><label>Concepto<select id="budget-economic-filter" aria-label="Concepto económico a comparar"></select></label></div>
+            <div class="budget-economic-heading"><div><h3 id="budget-economic-chart-title">Evolución por carácter económico</h3><p>Las barras muestran qué porcentaje representa cada concepto dentro del presupuesto total.</p></div><label>Concepto<select id="budget-economic-filter" aria-label="Concepto económico a comparar"></select></label></div>
             <div class="budget-economic-chart"><canvas id="budget-economic-chart"></canvas></div>
-            <div class="budget-project-legend"><i class="budget-project-key"></i><span>El punto 2027 corresponde al Proyecto de Presupuesto.</span></div>
+            <div class="budget-project-legend"><i class="budget-project-key"></i><span>La barra 2027 corresponde al Proyecto de Presupuesto.</span></div>
             <p class="budget-secretary-table-help">En la tabla, hacé clic en cualquier año o en la columna de cambio para ordenar de mayor a menor o a la inversa.</p>
             <div class="table-wrap"><table class="budget-functions-table budget-economic-table"><thead><tr id="budget-economic-head"></tr></thead><tbody id="budget-economic-table"></tbody></table></div>
           </div>
@@ -546,6 +546,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261123-1"></script>
+    <script src="app.js?v=20261123-2"></script>
   </body>
 </html>
