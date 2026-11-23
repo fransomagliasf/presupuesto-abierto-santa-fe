@@ -6,7 +6,7 @@
     <link rel="icon" href="data:," />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261123-7" />
+    <link rel="stylesheet" href="styles.css?v=20261123-8" />
   </head>
   <body>
     <header class="site-header">
@@ -402,8 +402,8 @@
             <div class="filter-sidebar-heading"><div><p class="eyebrow">Combinar categorías</p><h2 id="resource-filters-title">Filtros de recursos</h2></div><button id="toggle-resource-filters" class="small-action filter-collapse-toggle" type="button" aria-expanded="true">Reducir</button></div>
             <div id="resource-filter-body" class="resource-filter-stack">
               <section class="resource-filter-block resource-period-block"><div class="filter-heading"><p class="filter-label">Períodos</p><button id="resource-toggle-periods" class="small-action" type="button">Quitar todos</button></div><div id="resource-period-filter" class="period-picker"></div></section>
-              <section class="resource-filter-block resource-major-block"><div class="filter-heading"><p class="filter-label">Rubros</p><button class="small-action" type="button" data-clear-resource="major">Todos</button></div><div id="resource-major-options" class="multi-chip-list" role="group" aria-label="Rubros"></div></section>
-              <section class="resource-filter-block resource-detail-block"><div class="filter-heading"><p class="filter-label">Detalles por rubro</p><button class="small-action" type="button" data-clear-resource="detail">Todos</button></div><div id="resource-detail-options" class="resource-detail-groups" role="group" aria-label="Detalles agrupados por rubro"></div></section>
+              <section class="resource-filter-block resource-major-block"><div class="filter-heading"><div><p class="filter-label">Rubros</p><p class="filter-helper">Marcá uno o varios rubros.</p></div><button class="small-action" type="button" data-clear-resource="major">Todos</button></div><div id="resource-major-options" class="resource-check-list" role="group" aria-label="Rubros"></div></section>
+              <section class="resource-filter-block resource-detail-block"><div class="filter-heading"><div><p class="filter-label">Detalles por rubro</p><p class="filter-helper">Elegí cualquier combinación dentro de los rubros seleccionados.</p></div><button class="small-action" type="button" data-clear-resource="detail">Todos</button></div><div id="resource-detail-options" class="resource-detail-groups" role="group" aria-label="Detalles agrupados por rubro" aria-live="polite"></div></section>
               <button id="resource-clear-filters" class="text-button resource-clear" type="button">Restablecer filtros</button>
             </div>
           </aside>
@@ -559,6 +559,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261123-7"></script>
+    <script src="app.js?v=20261123-8"></script>
   </body>
 </html>

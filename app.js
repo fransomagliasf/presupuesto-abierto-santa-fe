@@ -696,14 +696,14 @@ function resourceTotals(rows) {
 }
 function collectionPercent(perceived, current) { return current > 0 ? perceived / current * 100 : null; }
 function renderResourceOptionButtons() {
-  const majorNames = unique(resourceData.map((row) => row.rubro_mayor_nombre));
+  const majorOptions = [...new Map(resourceData.map((row) => [row.rubro_mayor_codigo, { code: row.rubro_mayor_codigo, name: row.rubro_mayor_nombre }])).values()].sort((a, b) => a.code.localeCompare(b.code, "es", { numeric: true })), majorNames = majorOptions.map((option) => option.name);
   const detailRows = resourceSelectedMajors.size ? resourceData.filter((row) => resourceSelectedMajors.has(row.rubro_mayor_nombre)) : [];
   const detailNames = unique(detailRows.map((row) => row.rubro_nombre));
   resourceSelectedDetails = new Set([...resourceSelectedDetails].filter((name) => detailNames.includes(name)));
-  const buttons = (names, selected, type) => names.length ? names.map((name) => `<button type="button" class="${selected.has(name) ? "active" : ""}" data-resource-filter="${type}" data-value="${escapeHtml(name)}" aria-pressed="${selected.has(name)}">${escapeHtml(name)}</button>`).join("") : '<span class="multi-chip-empty">No hay opciones para esta combinación.</span>';
-  $("#resource-major-options").innerHTML = buttons(majorNames, resourceSelectedMajors, "major");
-  const groupedDetails = new Map(); detailRows.forEach((row) => { const group = groupedDetails.get(row.rubro_mayor_nombre) || new Set(); group.add(row.rubro_nombre); groupedDetails.set(row.rubro_mayor_nombre, group); });
-  $("#resource-detail-options").innerHTML = [...groupedDetails.entries()].sort(([a], [b]) => a.localeCompare(b, "es")).map(([major, details]) => { const names = [...details].sort((a, b) => a.localeCompare(b, "es")); return `<section class="resource-detail-group"><div class="resource-detail-group-heading"><h3>${escapeHtml(major)}</h3><span class="resource-detail-count">${names.length} ${names.length === 1 ? "detalle" : "detalles"}</span></div><div class="resource-detail-tags">${buttons(names, resourceSelectedDetails, "detail")}</div></section>`; }).join("") || '<span class="multi-chip-empty">Seleccioná un rubro para conocer sus detalles.</span>';
+  const checks = (names, selected, type) => names.length ? names.map((name) => `<label class="resource-check-option ${selected.has(name) ? "active" : ""}"><input type="checkbox" data-resource-filter="${type}" data-value="${escapeHtml(name)}" ${selected.has(name) ? "checked" : ""}><span>${escapeHtml(name)}</span></label>`).join("") : '<span class="multi-chip-empty">No hay opciones para esta combinación.</span>';
+  $("#resource-major-options").innerHTML = checks(majorNames, resourceSelectedMajors, "major");
+  const groupedDetails = new Map(); detailRows.forEach((row) => { const group = groupedDetails.get(row.rubro_mayor_nombre) || new Map(); group.set(row.rubro_codigo, row.rubro_nombre); groupedDetails.set(row.rubro_mayor_nombre, group); });
+  $("#resource-detail-options").innerHTML = majorOptions.filter((option) => groupedDetails.has(option.name)).map((option) => { const names = [...groupedDetails.get(option.name).entries()].sort(([codeA], [codeB]) => codeA.localeCompare(codeB, "es", { numeric: true })).map(([, name]) => name); return `<section class="resource-detail-group"><div class="resource-detail-group-heading"><h3>${escapeHtml(option.name)}</h3><span class="resource-detail-count">${names.length} ${names.length === 1 ? "detalle" : "detalles"}</span></div><div class="resource-detail-checks">${checks(names, resourceSelectedDetails, "detail")}</div></section>`; }).join("") || '<span class="multi-chip-empty">Seleccioná uno o más rubros para ver y combinar sus detalles.</span>';
 }
 function fillResourceFilters() {
   resourceSelectedPeriods = new Set(resourcePeriods());
