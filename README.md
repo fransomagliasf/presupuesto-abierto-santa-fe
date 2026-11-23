@@ -2,7 +2,7 @@
 
 Sitio estático para explorar la ejecución presupuestaria municipal. Actualmente
 incluye los informes mensuales de gastos por objeto y fuente de financiamiento,
-recursos por rubro y Fondos Especiales de enero a septiembre de 2026.
+recursos por rubro y Fondos Especiales de enero a octubre de 2026.
 
 La interfaz usa JavaScript y CSS nativos. Las visualizaciones se renderizan con
 **Chart.js 4.4.7**, cargado desde jsDelivr con una versión fijada en
@@ -29,3 +29,11 @@ sitio carga los CSV con `fetch`.
 
 El formato y las reglas de validación están explicados en
 [`data/README.md`](data/README.md).
+
+## Fuentes documentales
+
+Los PDF originales disponibles se conservan en [`recursos/fuentes`](recursos/fuentes)
+y están inventariados en [`recursos/README.md`](recursos/README.md). GitHub Pages
+publica únicamente la aplicación y los datos procesados: los PDF quedan en el
+repositorio para poder auditarlos y volver a ejecutar los extractores sin
+recargarlos en una conversación futura.

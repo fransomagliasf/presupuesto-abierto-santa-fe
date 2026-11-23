@@ -166,3 +166,31 @@ La extracción reproducible se ejecuta con:
 ```sh
 python3 scripts/extract_proyecto_presupuesto.py 'Mensaje 22 Presupuesto 2027.pdf' data/processed/proyecto_presupuesto_2027.json
 ```
+
+## Clasificaciones por objeto y carácter económico
+
+`presupuesto_clasificaciones_2020_2027.json` reúne la composición del gasto
+por objeto y por carácter económico. Para 2020–2025 se toma el `Crédito
+Aprobado` de la primera tabla consolidada de cada Cuenta de Inversión; 2026
+proviene del presupuesto aprobado y 2027 del proyecto.
+
+Las ocho categorías por objeto y las trece aperturas económicas se validan por
+separado contra el total impreso de cada año. En 2020, 2023 y 2025 el total de
+`Crédito Aprobado` de la Cuenta difiere del cuadro histórico por finalidad y
+función. Para no mezclar denominadores, las participaciones se calculan siempre
+contra el total de la misma Cuenta. En 2020 ese total es el crédito reconducido
+de `$ 19.418.795.052,00`, no el presupuesto sancionado originalmente.
+
+La extracción se puede repetir con los PDF conservados en `recursos/fuentes`:
+
+```sh
+python3 scripts/extract_clasificaciones_presupuesto.py data/processed/presupuesto_clasificaciones_2020_2027.json \
+  2020=cuenta=recursos/fuentes/cuentas-inversion/2020-cuenta-inversion.pdf \
+  2021=cuenta=recursos/fuentes/cuentas-inversion/2021-cuenta-inversion.pdf \
+  2022=cuenta=recursos/fuentes/cuentas-inversion/2022-cuenta-inversion.pdf \
+  2023=cuenta=recursos/fuentes/cuentas-inversion/2023-cuenta-inversion.pdf \
+  2024=cuenta=recursos/fuentes/cuentas-inversion/2024-cuenta-inversion.pdf \
+  2025=cuenta=recursos/fuentes/cuentas-inversion/2025-cuenta-inversion.pdf \
+  2026=presupuesto=recursos/fuentes/presupuestos/2026-presupuesto.pdf \
+  2027=proyecto=recursos/fuentes/presupuestos/2027-mensaje-presupuesto.pdf
+```

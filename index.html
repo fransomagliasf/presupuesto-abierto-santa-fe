@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
     <meta name="description" content="Seguimiento de la ejecución presupuestaria de la Ciudad de Santa Fe." />
     <title>Presupuesto abierto de la ciudad de Santa Fe</title>
-    <link rel="stylesheet" href="styles.css?v=20261118-3" />
+    <link rel="stylesheet" href="styles.css?v=20261123-1" />
   </head>
   <body>
     <header class="site-header">
@@ -111,11 +112,26 @@
           </div>
         </section>
 
-        <section class="budgets-section panel" aria-labelledby="budget-composition-title">
-          <div class="public-section-heading"><div><p class="eyebrow">Panorama completo</p><h2 id="budget-composition-title">Cómo se reparte cada presupuesto</h2></div><p>Cada barra suma 100%. Así se observan cambios de prioridad sin comparar pesos de años diferentes.</p></div>
-          <div class="budget-composition-chart"><canvas id="budget-composition-chart"></canvas></div>
-          <div class="budget-project-legend"><i class="budget-project-key"></i><span>La barra 2027 corresponde al Proyecto de Presupuesto.</span></div>
-          <ul id="budget-composition-legend" class="budget-composition-legend" aria-label="Finalidades presupuestarias"></ul>
+        <section class="budgets-section panel budget-composition-panel" aria-labelledby="budget-composition-title">
+          <div class="public-section-heading"><div><p class="eyebrow">Composición del gasto</p><h2 id="budget-composition-title">Cómo se reparte cada presupuesto</h2></div><p>Alterná entre el objeto del gasto y el carácter económico para comparar la estructura de cada año.</p></div>
+          <div class="budget-secretary-tabs budget-composition-tabs" role="tablist" aria-label="Clasificación del gasto">
+            <button class="active" type="button" role="tab" aria-selected="true" data-budget-composition-view="object">Por objeto del gasto</button>
+            <button type="button" role="tab" aria-selected="false" data-budget-composition-view="economic">Por carácter económico</button>
+          </div>
+          <div id="budget-object-view" role="tabpanel">
+            <p class="budget-composition-help">Cada barra suma 100%. La comparación muestra cuánto representan personal, bienes, servicios, transferencias y los demás objetos dentro de cada presupuesto.</p>
+            <div class="budget-composition-chart"><canvas id="budget-composition-chart"></canvas></div>
+            <div class="budget-project-legend"><i class="budget-project-key"></i><span>La barra 2027 corresponde al Proyecto de Presupuesto.</span></div>
+            <ul id="budget-composition-legend" class="budget-composition-legend" aria-label="Objetos del gasto"></ul>
+          </div>
+          <div id="budget-economic-view" role="tabpanel" hidden>
+            <div class="budget-economic-heading"><div><h3 id="budget-economic-chart-title">Evolución por carácter económico</h3><p>La línea muestra qué porcentaje representa cada concepto dentro del presupuesto total.</p></div><label>Concepto<select id="budget-economic-filter" aria-label="Concepto económico a comparar"></select></label></div>
+            <div class="budget-economic-chart"><canvas id="budget-economic-chart"></canvas></div>
+            <div class="budget-project-legend"><i class="budget-project-key"></i><span>El punto 2027 corresponde al Proyecto de Presupuesto.</span></div>
+            <p class="budget-secretary-table-help">En la tabla, hacé clic en cualquier año o en la columna de cambio para ordenar de mayor a menor o a la inversa.</p>
+            <div class="table-wrap"><table class="budget-functions-table budget-economic-table"><thead><tr id="budget-economic-head"></tr></thead><tbody id="budget-economic-table"></tbody></table></div>
+          </div>
+          <p class="budget-source-note">Fuente: crédito aprobado de las Cuentas de Inversión 2020–2025, Presupuesto 2026 y Proyecto de Presupuesto 2027. En 2020, 2023 y 2025 el total publicado en la Cuenta difiere del cuadro histórico por finalidad y función; para no mezclar bases, cada composición se calcula con el total de su misma fuente. En 2020 la diferencia principal responde a la reconducción registrada.</p>
         </section>
 
         <section class="budgets-section panel budget-functions-table-panel" aria-labelledby="budget-functions-table-title">
@@ -530,6 +546,6 @@
       <div><strong>Datos y metodología</strong><p>Fuente: <a href="https://transparencia.santafeciudad.gov.ar/" target="_blank" rel="noopener noreferrer">Portal de Transparencia de la Municipalidad de Santa Fe</a>. Importes publicados en los informes mensuales de ejecución.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="app.js?v=20261118-3"></script>
+    <script src="app.js?v=20261123-1"></script>
   </body>
 </html>
